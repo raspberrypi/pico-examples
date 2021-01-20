@@ -1,0 +1,11 @@
+add_executable(pio_manchester_encoding)
+
+pico_generate_pio_header(pio_manchester_encoding ${CMAKE_CURRENT_LIST_DIR}/manchester_encoding.pio)
+
+target_sources(pio_manchester_encoding PRIVATE manchester_encoding.c)
+
+target_link_libraries(pio_manchester_encoding PRIVATE pico_stdlib hardware_pio)
+pico_add_extra_outputs(pio_manchester_encoding)
+
+# add url via pico_set_program_url
+example_auto_set_url(pio_manchester_encoding)

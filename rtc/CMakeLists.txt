@@ -1,0 +1,5 @@
+if (NOT PICO_NO_HARDWARE)
+    add_subdirectory(hello_rtc)
+    add_subdirectory(rtc_alarm)
+    add_subdirectory(rtc_alarm_repeat)
+endif ()

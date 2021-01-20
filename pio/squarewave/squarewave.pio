@@ -1,0 +1,13 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+.program squarewave
+    set pindirs, 1   ; Set pin to output
+again:
+    set pins, 1 [1]  ; Drive pin high and then delay for one cycle
+    set pins, 0      ; Drive pin low
+    jmp again        ; Set PC to label `again`
+

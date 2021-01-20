@@ -1,0 +1,19 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+; Note that if you modify squarewave.c to include this program, you'll also
+; need to set the wrap registers yourself. This would be handled for you by
+; squarewave_program_get_default_config().
+
+.program squarewave_wrap
+; Like squarewave, but use the state machine's .wrap hardware instead of an
+; explicit jmp. This is a free (0-cycle) unconditional jump.
+
+    set pindirs, 1   ; Set pin to output
+.wrap_target
+	set pins, 1 [1]  ; Drive pin high and then delay for one cycle
+	set pins, 0 [1]  ; Drive pin low and then delay for one cycle
+.wrap

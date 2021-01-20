@@ -1,0 +1,7 @@
+if (NOT PICO_NO_HARDWARE)
+    add_subdirectory(cache_perfctr)
+    add_subdirectory(nuke)
+    add_subdirectory(program)
+    add_subdirectory(ssi_dma)
+    add_subdirectory(xip_stream)
+endif ()

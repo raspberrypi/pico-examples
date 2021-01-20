@@ -1,0 +1,122 @@
+.program hub75_row
+
+; side-set pin 0 is LATCH
+; side-set pin 1 is OEn
+; OUT pins are row select A-E
+;
+; Each FIFO record consists of:
+; - 5-bit row select (LSBs)
+; - Pulse width - 1 (27 MSBs)
+;
+; Repeatedly select a row, pulse LATCH, and generate a pulse of a certain
+; width on OEn.
+
+.side_set 2
+
+.wrap_target
+    out pins, 5 [7]    side 0x2 ; Deassert OEn, output row select
+    out x, 27   [7]    side 0x3 ; Pulse LATCH, get OEn pulse width
+pulse_loop:
+    jmp x-- pulse_loop side 0x0 ; Assert OEn for x+1 cycles
+.wrap
+
+% c-sdk {
+static inline void hub75_row_program_init(PIO pio, uint sm, uint offset, uint row_base_pin, uint n_row_pins, uint latch_base_pin) {
+    pio_sm_set_consecutive_pindirs(pio, sm, row_base_pin, n_row_pins, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, latch_base_pin, 2, true);
+    for (uint i = row_base_pin; i < row_base_pin + n_row_pins; ++i)
+        pio_gpio_init(pio, i);
+    pio_gpio_init(pio, latch_base_pin);
+    pio_gpio_init(pio, latch_base_pin + 1);
+
+    pio_sm_config c = hub75_row_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, row_base_pin, n_row_pins);
+    sm_config_set_sideset_pins(&c, latch_base_pin);
+    sm_config_set_out_shift(&c, true, true, 32);
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+static inline void hub75_wait_tx_stall(PIO pio, uint sm) {
+    uint32_t txstall_mask = 1u << (PIO_FDEBUG_TXSTALL_LSB + sm);
+    pio->fdebug = txstall_mask;
+    while (!(pio->fdebug & txstall_mask))
+        tight_loop_contents();
+}
+%}
+
+.program hub75_data_rgb888
+.side_set 1
+
+; Each FIFO record consists of a RGB888 pixel. (This is ok for e.g. an RGB565
+; source which has been gamma-corrected)
+;
+; Even pixels are sent on R0, G0, B0 and odd pixels on R1, G1, B1 (typically
+; these are for different parts of the screen, NOT for adjacent pixels, so the
+; frame buffer must be interleaved before passing to PIO.)
+;
+; Each pass through, we take bit n, n + 8 and n + 16 from each pixel, for n in
+; {0...7}. Therefore the pixels need to be transmitted 8 times (ouch) to build
+; up the full 8 bit value for each channel, and perform bit-planed PWM by
+; varying pulse widths on the other state machine, in ascending powers of 2.
+; This avoids a lot of bit shuffling on the processors, at the cost of DMA
+; bandwidth (which we have loads of).
+
+; Might want to close your eyes before you read this
+public entry_point:
+.wrap_target
+public shift0:
+    pull             side 0 ; gets patched to `out null, n` if n nonzero (otherwise the PULL is required for fencing)
+    in osr, 1        side 0 ; shuffle shuffle shuffle
+    out null, 8      side 0
+    in osr, 1        side 0
+    out null, 8      side 0
+    in osr, 1        side 0
+    out null, 32     side 0 ; Discard remainder of OSR contents
+public shift1:
+    pull             side 0 ; gets patched to out null, n if n is nonzero (otherwise PULL required)
+    in osr, 1        side 1 ; Note this posedge clocks in the data from the previous iteration
+    out null, 8      side 1
+    in osr, 1        side 1
+    out null, 8      side 1
+    in osr, 1        side 1
+    out null, 32     side 1
+    in null, 26      side 1 ; Note we are just doing this little manoeuvre here to get GPIOs in the order
+    mov pins, ::isr  side 1 ; R0, G0, B0, R1, G1, B1. Can go 1 cycle faster if reversed
+.wrap
+; Note that because the clock edge for pixel n is in the middle of pixel n +
+; 1, a dummy pixel at the end is required to clock the last piece of genuine
+; data. (Also 1 pixel of garbage is clocked out at the start, but this is
+; harmless)
+
+% c-sdk {
+static inline void hub75_data_rgb888_program_init(PIO pio, uint sm, uint offset, uint rgb_base_pin, uint clock_pin) {
+    pio_sm_set_consecutive_pindirs(pio, sm, rgb_base_pin, 6, true);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin, 1, true);
+    for (uint i = rgb_base_pin; i < rgb_base_pin + 6; ++i)
+        pio_gpio_init(pio, i);
+    pio_gpio_init(pio, clock_pin);
+
+    pio_sm_config c = hub75_data_rgb888_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, rgb_base_pin, 6);
+    sm_config_set_sideset_pins(&c, clock_pin);
+    sm_config_set_out_shift(&c, true, true, 24);
+    // ISR shift to left. R0 ends up at bit 5. We push it up to MSB and then flip the register.
+    sm_config_set_in_shift(&c, false, false, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_exec(pio, sm, offset + hub75_data_rgb888_offset_entry_point);
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+// Patch a data program at `offset` to preshift pixels by `shamt`
+static inline void hub75_data_rgb888_set_shift(PIO pio, uint sm, uint offset, uint shamt) {
+    uint16_t instr;
+    if (shamt == 0)
+        instr = pio_encode_pull(false, true); // blocking PULL
+    else
+        instr = pio_encode_out(pio_null, shamt);
+    pio->instr_mem[offset + hub75_data_rgb888_offset_shift0] = instr;
+    pio->instr_mem[offset + hub75_data_rgb888_offset_shift1] = instr;
+}
+%}

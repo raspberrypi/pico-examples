@@ -1,0 +1,89 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+.program apa102_mini
+.side_set 1
+
+; This is really just a TX-only SPI. CLK is side-set pin 0, DIN is OUT pin 0.
+; Autopull enabled, threshold 32.
+;
+; Every word (32 bits) written to the FIFO will be shifted out in its entirety, MSB-first.
+
+    out pins, 1   side 0   ; Stall here when no data (still asserts clock low)
+    nop           side 1
+
+% c-sdk {
+#include "hardware/clocks.h"
+static inline void apa102_mini_program_init(PIO pio, uint sm, uint offset,
+        uint baud, uint pin_clk, uint pin_din) {
+    pio_sm_set_pins_with_mask(pio, sm, 0, (1u << pin_clk) | (1u << pin_din));
+    pio_sm_set_pindirs_with_mask(pio, sm, ~0u, (1u << pin_clk) | (1u << pin_din));
+    pio_gpio_init(pio, pin_clk);
+    pio_gpio_init(pio, pin_din);
+
+    pio_sm_config c = apa102_mini_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, pin_din, 1);
+    sm_config_set_sideset_pins(&c, pin_clk);
+    // Shift to right, autopull with threshold 32
+    sm_config_set_out_shift(&c, false, true, 32);
+    // Deeper FIFO as we're not doing any RX
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    // We transmit 1 bit every 2 execution cycles
+    float div = (float)clock_get_hz(clk_sys) / (2 * baud);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+.program apa102_rgb555
+
+; Alternative program to unpack two RGB555 pixels from a FIFO word and transmit.
+; This makes it easier to DMA large buffers without processor involvement.
+
+; OSR: shift to right
+; ISR: shift to right
+
+; To set brightness, set ISR to bit-reverse of 5-bit brightness,
+; followed by 111. (00...00_b0b1b2b3b4_111)
+
+; DMA pixel format is 0RRRRRGGGGGBBBBB x2 (15 bpp, 2px per FIFO word)
+
+; APA102 command structure:
+; increasing time ---->>
+;             | byte 3 | byte 2 | byte 1 | byte 0 |
+;             |7      0|7      0|7      0|7      0|
+;             -------------------------------------
+; Pixel       |111bbbbb|BBBBBBBB|GGGGGGGG|RRRRRRRR|
+; Start Frame |00000000|00000000|00000000|00000000|
+; Stop Frame  |11111111|11111111|11111111|11111111|
+
+.wrap_target
+public pixel_out:
+    ; pixel_out formats an APA102 colour command in the ISR.
+    ; bit_run shifts 32 bits out of the ISR, with clock.
+    pull ifempty
+    set x, 2
+colour_loop:
+    in osr, 5
+    out null, 5
+    in null, 3
+    jmp x-- colour_loop
+    in y, 8
+    mov isr, ::isr ; reverse for msb-first wire order
+    out null, 1
+public bit_run:
+    ; in isr, n rotates ISR by n bits (right rotation only)
+    ; Use this to perform out shifts from ISR, via mov pins
+    set x, 31
+bit_out:
+    set pins, 0
+    mov pins, isr [6]
+    set pins, 1
+    in isr, 1 [6]
+    jmp x-- bit_out
+.wrap

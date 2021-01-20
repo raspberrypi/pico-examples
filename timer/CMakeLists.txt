@@ -1,0 +1,5 @@
+if (NOT PICO_NO_HARDWARE)
+    add_subdirectory(hello_timer)
+endif ()
+add_subdirectory(periodic_sampler)
+add_subdirectory(timer_lowlevel)

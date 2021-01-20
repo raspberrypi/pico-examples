@@ -1,0 +1,11 @@
+add_executable(pio_differential_manchester)
+
+pico_generate_pio_header(pio_differential_manchester ${CMAKE_CURRENT_LIST_DIR}/differential_manchester.pio)
+
+target_sources(pio_differential_manchester PRIVATE differential_manchester.c)
+
+target_link_libraries(pio_differential_manchester PRIVATE pico_stdlib hardware_pio)
+pico_add_extra_outputs(pio_differential_manchester)
+
+# add url via pico_set_program_url
+example_auto_set_url(pio_differential_manchester)

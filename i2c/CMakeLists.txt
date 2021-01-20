@@ -1,0 +1,5 @@
+if (NOT PICO_NO_HARDWARE)
+    add_subdirectory(bus_scan)
+    add_subdirectory(lcd_1602_i2c)
+    add_subdirectory(mpu6050_i2c)
+endif ()

@@ -1,0 +1,168 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+; These programs implement full-duplex SPI, with a SCK period of 4 clock
+; cycles. A different program is provided for each value of CPHA, and CPOL is
+; achieved using the hardware GPIO inversion available in the IO controls.
+;
+; Transmit-only SPI can go twice as fast -- see the ST7789 example!
+
+
+.program spi_cpha0
+.side_set 1
+
+; Pin assignments:
+; - SCK is side-set pin 0
+; - MOSI is OUT pin 0
+; - MISO is IN pin 0
+;
+; Autopush and autopull must be enabled, and the serial frame size is set by
+; configuring the push/pull threshold. Shift left/right is fine, but you must
+; justify the data yourself. This is done most conveniently for frame sizes of
+; 8 or 16 bits by using the narrow store replication and narrow load byte
+; picking behaviour of RP2040's IO fabric.
+
+; Clock phase = 0: data is captured on the leading edge of each SCK pulse, and
+; transitions on the trailing edge, or some time before the first leading edge.
+
+    out pins, 1 side 0 [1] ; Stall here on empty (sideset proceeds even if
+    in pins, 1  side 1 [1] ; instruction stalls, so we stall with SCK low)
+
+.program spi_cpha1
+.side_set 1
+
+; Clock phase = 1: data transitions on the leading edge of each SCK pulse, and
+; is captured on the trailing edge.
+
+    out x, 1    side 0     ; Stall here on empty (keep SCK deasserted)
+    mov pins, x side 1 [1] ; Output data, assert SCK (mov pins uses OUT mapping)
+    in pins, 1  side 0     ; Input data, deassert SCK
+
+% c-sdk {
+#include "hardware/gpio.h"
+static inline void pio_spi_init(PIO pio, uint sm, uint prog_offs, uint n_bits,
+        float clkdiv, bool cpha, bool cpol, uint pin_sck, uint pin_mosi, uint pin_miso) {
+    pio_sm_config c = cpha ? spi_cpha1_program_get_default_config(prog_offs) : spi_cpha0_program_get_default_config(prog_offs);
+    sm_config_set_out_pins(&c, pin_mosi, 1);
+    sm_config_set_in_pins(&c, pin_miso);
+    sm_config_set_sideset_pins(&c, pin_sck);
+    // Only support MSB-first in this example code (shift to left, auto push/pull, threshold=nbits)
+    sm_config_set_out_shift(&c, false, true, n_bits);
+    sm_config_set_in_shift(&c, false, true, n_bits);
+    sm_config_set_clkdiv(&c, clkdiv);
+
+    // MOSI, SCK output are low, MISO is input
+    pio_sm_set_pins_with_mask(pio, sm, 0, (1u << pin_sck) | (1u << pin_mosi));
+    pio_sm_set_pindirs_with_mask(pio, sm, (1u << pin_sck) | (1u << pin_mosi), (1u << pin_sck) | (1u << pin_mosi) | (1u << pin_miso));
+    pio_gpio_init(pio, pin_mosi);
+    pio_gpio_init(pio, pin_miso);
+    pio_gpio_init(pio, pin_sck);
+
+    // The pin muxes can be configured to invert the output (among other things
+    // and this is a cheesy way to get CPOL=1
+    gpio_set_outover(pin_sck, cpol ? GPIO_OVERRIDE_INVERT : GPIO_OVERRIDE_NORMAL);
+    // SPI is synchronous, so bypass input synchroniser to reduce input delay.
+    hw_set_bits(&pio->input_sync_bypass, 1u << pin_miso);
+
+    pio_sm_init(pio, sm, prog_offs, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+; SPI with Chip Select
+; -----------------------------------------------------------------------------
+;
+; For your amusement, here are some SPI programs with an automatic chip select
+; (asserted once data appears in TX FIFO, deasserts when FIFO bottoms out, has
+; a nice front/back porch).
+;
+; The number of bits per FIFO entry is configured via the Y register
+; and the autopush/pull threshold. From 2 to 32 bits.
+;
+; Pin assignments:
+; - SCK is side-set bit 0
+; - CSn is side-set bit 1
+; - MOSI is OUT bit 0 (host-to-device)
+; - MISO is IN bit 0 (device-to-host)
+;
+; This program only supports one chip select -- use GPIO if more are needed
+;
+; Provide a variation for each possibility of CPHA; for CPOL we can just
+; invert SCK in the IO muxing controls (downstream from PIO)
+
+
+; CPHA=0: data is captured on the leading edge of each SCK pulse (including
+; the first pulse), and transitions on the trailing edge
+
+.program spi_cpha0_cs
+.side_set 2
+
+.wrap_target
+bitloop:
+    out pins, 1        side 0x0 [1]
+    in pins, 1         side 0x1
+    jmp x-- bitloop    side 0x1
+
+    out pins, 1        side 0x0
+    mov x, y           side 0x0     ; Reload bit counter from Y
+    in pins, 1         side 0x1
+    jmp !osre bitloop  side 0x1     ; Fall-through if TXF empties
+
+    nop                side 0x0 [1] ; CSn back porch
+public entry_point:                 ; Must set X,Y to n-2 before starting!
+    pull ifempty       side 0x2 [1] ; Block with CSn high (minimum 2 cycles)
+.wrap                               ; Note ifempty to avoid time-of-check race
+
+; CPHA=1: data transitions on the leading edge of each SCK pulse, and is
+; captured on the trailing edge
+
+.program spi_cpha1_cs
+.side_set 2
+
+.wrap_target
+bitloop:
+    out pins, 1        side 0x1 [1]
+    in pins, 1         side 0x0
+    jmp x-- bitloop    side 0x0
+
+    out pins, 1        side 0x1
+    mov x, y           side 0x1
+    in pins, 1         side 0x0
+    jmp !osre bitloop  side 0x0
+
+public entry_point:                 ; Must set X,Y to n-2 before starting!
+    pull ifempty       side 0x2 [1] ; Block with CSn high (minimum 2 cycles)
+    nop                side 0x0 [1]; CSn front porch
+.wrap
+
+% c-sdk {
+#include "hardware/gpio.h"
+static inline void pio_spi_cs_init(PIO pio, uint sm, uint prog_offs, uint n_bits, float clkdiv, bool cpha, bool cpol,
+        uint pin_sck, uint pin_mosi, uint pin_miso) {
+    pio_sm_config c = cpha ? spi_cpha1_cs_program_get_default_config(prog_offs) : spi_cpha0_cs_program_get_default_config(prog_offs);
+    sm_config_set_out_pins(&c, pin_mosi, 1);
+    sm_config_set_in_pins(&c, pin_miso);
+    sm_config_set_sideset_pins(&c, pin_sck);
+    sm_config_set_out_shift(&c, false, true, n_bits);
+    sm_config_set_in_shift(&c, false, true, n_bits);
+    sm_config_set_clkdiv(&c, clkdiv);
+
+    pio_sm_set_pins_with_mask(pio, sm, (2u << pin_sck), (3u << pin_sck) | (1u << pin_mosi));
+    pio_sm_set_pindirs_with_mask(pio, sm, (3u << pin_sck) | (1u << pin_mosi), (3u << pin_sck) | (1u << pin_mosi) | (1u << pin_miso));
+    pio_gpio_init(pio, pin_mosi);
+    pio_gpio_init(pio, pin_miso);
+    pio_gpio_init(pio, pin_sck);
+    pio_gpio_init(pio, pin_sck + 1);
+    gpio_set_outover(pin_sck, cpol ? GPIO_OVERRIDE_INVERT : GPIO_OVERRIDE_NORMAL);
+    hw_set_bits(&pio->input_sync_bypass, 1u << pin_miso);
+
+    uint entry_point = prog_offs + (cpha ? spi_cpha1_cs_offset_entry_point : spi_cpha0_cs_offset_entry_point);
+    pio_sm_init(pio, sm, entry_point, &c);
+    pio_sm_exec(pio, sm, pio_encode_set(pio_x, n_bits - 2));
+    pio_sm_exec(pio, sm, pio_encode_set(pio_y, n_bits - 2));
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

@@ -1,0 +1,5 @@
+if (NOT PICO_NO_HARDWARE)
+    add_subdirectory(adc_console)
+    add_subdirectory(hello_adc)
+    add_subdirectory(joystick_display)
+endif ()

@@ -1,0 +1,102 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+.program differential_manchester_tx
+.side_set 1 opt
+
+; Transmit one bit every cycles. In each bit period:
+; - A '0' is encoded as a transition at the start of the bit period
+; - A '1' is encoded as a transition at the start *and* in the middle
+;
+; Side-set bit 0 must be mapped to the data output pin.
+; Autopull must be enabled.
+
+public start:
+initial_high:
+    out x, 1          side 1     ; Start of bit period: always assert transition
+    jmp !x high_0            [6] ; Test the data bit we just shifted out of OSR
+high_1:
+    jmp initial_high  side 0 [7] ; For `1` bits, also transition in the middle
+high_0:
+    jmp initial_low          [7] ; Otherwise, the line is stable in the middle
+
+initial_low:
+    out x, 1          side 0     ; Always shift 1 bit from OSR to X so we can
+    jmp !x low_0             [6] ; branch on it. Autopull refills OSR for us.
+low_1:
+    jmp initial_low   side 1 [7] ; If there are two transitions, return to
+low_0:                           ; initial_low on the next bit. If just one,
+    jmp initial_high         [7] ; the initial line state is flipped!
+
+% c-sdk {
+static inline void differential_manchester_tx_program_init(PIO pio, uint sm, uint offset, uint pin, float div) {
+    pio_sm_set_pins_with_mask(pio, sm, 0, 1u << pin);
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+    pio_gpio_init(pio, pin);
+
+    pio_sm_config c = differential_manchester_tx_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&c, pin);
+    sm_config_set_out_shift(&c, true, true, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    sm_config_set_clkdiv(&c, div);
+    pio_sm_init(pio, sm, offset + differential_manchester_tx_offset_start, &c);
+
+    // Execute a blocking pull so that we maintain the initial line state until data is available
+    pio_sm_exec(pio, sm, pio_encode_pull(false, true));
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+.program differential_manchester_rx
+
+; Assumes line is idle low
+; One bit is 16 cycles. In each bit period:
+; - A '0' is encoded as a transition at time 0
+; - A '1' is encoded as a transition at time 0 and a transition at time T/2
+;
+; The IN mapping and the JMP pin select must both be mapped to the GPIO used for
+; RX data. Autopush must be enabled.
+
+public start:
+initial_high:           ; Find rising edge at start of bit period
+    wait 1 pin, 0  [11] ; Delay to eye of second half-period (i.e 3/4 of way
+    jmp pin high_0      ; through bit) and branch on RX pin high/low.
+high_1:
+    in x, 1             ; Second transition detected (a `1` data symbol)
+    jmp initial_high
+high_0:
+    in y, 1 [1]         ; Line still high, no centre transition (data is `0`)
+    ; Fall-through
+
+.wrap_target
+initial_low:            ; Find falling edge at start of bit period
+    wait 0 pin, 0 [11]  ; Delay to eye of second half-period
+    jmp pin low_1
+low_0:
+    in y, 1             ; Line still low, no centre transition (data is `0`)
+    jmp initial_high
+low_1:                  ; Second transition detected (data is `1`)
+    in x, 1 [1]
+.wrap
+
+% c-sdk {
+static inline void differential_manchester_rx_program_init(PIO pio, uint sm, uint offset, uint pin, float div) {
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
+    pio_gpio_init(pio, pin);
+
+    pio_sm_config c = differential_manchester_rx_program_get_default_config(offset);
+    sm_config_set_in_pins(&c, pin); // for WAIT
+    sm_config_set_jmp_pin(&c, pin); // for JMP
+    sm_config_set_in_shift(&c, true, true, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
+    sm_config_set_clkdiv(&c, div);
+    pio_sm_init(pio, sm, offset, &c);
+
+    // X and Y are set to 0 and 1, to conveniently emit these to ISR/FIFO.
+    pio_sm_exec(pio, sm, pio_encode_set(pio_x, 1));
+    pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0));
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

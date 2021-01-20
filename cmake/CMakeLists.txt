@@ -1,0 +1,1 @@
+add_subdirectory(build_variants)

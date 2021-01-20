@@ -1,0 +1,19 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+; Note that if you modify squarewave.c to include this program, you'll also
+; need to set the wrap registers yourself. This would be handled for you by
+; squarewave_program_get_default_config().
+
+
+.program squarewave_fast
+; Like squarewave_wrap, but remove the delay cycles so we can run twice as fast.
+    set pindirs, 1   ; Set pin to output
+.wrap_target
+	set pins, 1      ; Drive pin high
+	set pins, 0      ; Drive pin low
+.wrap
+

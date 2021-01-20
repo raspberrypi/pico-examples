@@ -1,0 +1,52 @@
+= Attaching a MPU9250 accelerometer/gyroscope via SPI
+
+This example code shows how to interface the Raspberry Pi Pico to the MPU9250 accelerometer/gyroscope board. The particular device used can be interfaced via I2C or SPI, we are using SPI, and interfacing at 3.3v.
+
+[NOTE]
+======
+This is a very basic example, and only recovers raw data from the sensor. There are various calibration options available that should be used to ensure that the final results are accurate. It is also possible to wire up the interrupt pin to a GPIO and read data only when it is ready, rather than using the polling approach in the example.
+======
+
+== Wiring information
+
+Wiring up the device requires 6 jumpers as follows:
+
+   * GPIO 4 (pin 6) MISO/spi0_rx-> ADO on MPU9250 board
+   * GPIO 5 (pin 7) Chip select -> NCS on MPU9250 board
+   * GPIO 6 (pin 9) SCK/spi0_sclk -> SCL on MPU9250 board
+   * GPIO 7 (pin 10) MOSI/spi0_tx -> SDA on MPU9250 board
+   * 3.3v (pin 36) -> VCC on MPU9250 board
+   * GND (pin 38)  -> GND on MPU9250 board
+
+The example here uses SPI port 0. Power is supplied from the 3.3V pin.
+
+[NOTE]
+======
+There are many different manufacturers who sell boards with the MPU9250. Whilst they all appear slightly different, they all have, at least, the same 6 pins required to power and communicate. When wiring up a board that is different to the one in the diagram, ensure you connect up as described in the previous paragraph.
+======
+
+
+[[mpu9250_spi_wiring]]
+[pdfwidth=75%]
+.Wiring Diagram for MPU9250.
+image::mpu9250_spi_bb.png[]
+
+== List of Files
+
+CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
+mpu9250_spi.c:: The example code.
+
+== Bill of Materials
+
+.A list of materials required for the example
+[[MPU9250-bom-table]]
+[cols=3]
+|===
+| *Item* | *Quantity* | Details
+| Breadboard | 1 | generic part
+| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| MPU9250 board| 1 | generic part
+| M/M Jumper wires | 6 | generic part
+|===
+
+
