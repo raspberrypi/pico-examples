@@ -17,5 +17,7 @@
         }
     },
     "cmake.buildBeforeRun": true,
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    // This may need to be arm-none-eabi-gdb depending on your system
+    "cortex-debug.gdbPath": "gdb-multiarch"
 }
