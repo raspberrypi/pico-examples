@@ -1,0 +1,38 @@
+;
+; Copyright (c) 2021 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+.program resistor_dac_5bit
+
+; Drive one of the 5-bit resistor DACs on the VGA reference board. (this isn't
+; a good way to do VGA -- just want a nice sawtooth for the ADC example!)
+
+    out pins, 5
+
+
+
+% c-sdk {
+#include "hardware/clocks.h"
+static inline void resistor_dac_5bit_program_init(PIO pio, uint sm, uint offset,
+        uint sample_rate_hz, uint pin_base) {
+
+    pio_sm_set_pins_with_mask(pio, sm, 0, 0x1fu << pin_base);
+    pio_sm_set_pindirs_with_mask(pio, sm, ~0u, 0x1fu << pin_base);
+    for (int i = 0; i < 5; ++i)
+        pio_gpio_init(pio, pin_base + i);
+
+    pio_sm_config c = resistor_dac_5bit_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, pin_base, 5);
+    // Shift to right, autopull threshold 5
+    sm_config_set_out_shift(&c, true, true, 5);
+    // Deeper FIFO as we're not doing any RX
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    float div = (float)clock_get_hz(clk_sys) / sample_rate_hz;
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
