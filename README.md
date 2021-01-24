@@ -158,7 +158,7 @@ App|Description
 ---|---
 [hello_double_tap](system/hello_double_tap) | On dev boards with a reset button (but no BOOTSEL), a magic number in RAM can be used to enter the USB bootloader, when the reset button is pressed twice quickly.
 [narrow_io_write](system/narrow_io_write) | Demonstrate the effects of 8-bit and 16-bit writes on a 32-bit IO register.
-
+[unique_board_id](system/unique_board_id) | Read the 64 bit unique ID from external flash, which serves as a unique identifier for the board.
 ### Timer
 
 App|Description
