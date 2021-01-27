@@ -1,4 +1,5 @@
 add_subdirectory(dev_audio_headset)
+add_subdirectory(dev_cdc_msc)
 add_subdirectory(dev_hid_composite)
 add_subdirectory(dev_hid_generic_inout)
 add_subdirectory(dev_lowlevel)
