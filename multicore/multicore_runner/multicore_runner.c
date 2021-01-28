@@ -8,7 +8,7 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
-///tag::multicore_dispatch[]
+/// \tag::multicore_dispatch[]
 
 #define FLAG_VALUE 123
 
@@ -80,4 +80,4 @@ int main() {
 
 }
 
-///end::multicore_dispatch[]
+/// \end::multicore_dispatch[]

@@ -480,7 +480,7 @@ static void usb_handle_buff_status() {
  * @brief USB interrupt handler
  *
  */
-// tag::isr_setup_packet[]
+/// \tag::isr_setup_packet[]
 void isr_usbctrl(void) {
     // USB interrupt handler
     uint32_t status = usb_hw->ints;
@@ -492,7 +492,7 @@ void isr_usbctrl(void) {
         usb_hw_clear->sie_status = USB_SIE_STATUS_SETUP_REC_BITS;
         usb_handle_setup_packet();
     }
-// end::isr_setup_packet[]
+/// \end::isr_setup_packet[]
 
     // Buffer status, one or more buffers have completed
     if (status & USB_INTS_BUFF_STATUS_BITS) {
