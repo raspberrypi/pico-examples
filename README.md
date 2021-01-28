@@ -1,4 +1,4 @@
-# PICO SDK Examples
+# Raspberry Pi Pico SDK Examples
 
 ## Getting started
 
@@ -7,9 +7,9 @@ on getting up and running.
 
 ### First  Examples
 
-App | Description | Link to prebuilt UF2
+App|Description | Link to prebuilt UF2
 ---|---|---
-[hello_serial](hello_world/serial) | The obligatory Hello World program for Pico (Output over serial version) | https://rptl.io/pico-hello-serial
+[hello_serial](hello_world/serial) | The obligatory Hello World program for Pico (Output over serial version) | 
 [hello_usb](hello_world/usb) | The obligatory Hello World program for Pico (Output over USB version) | https://rptl.io/pico-hello-usb
 [blink](blink) | Blink an LED on and off. | https://rptl.io/pico-blink
 
