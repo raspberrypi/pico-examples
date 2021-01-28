@@ -29,7 +29,7 @@ int main() {
     stdio_init_all();
     printf("Hello, multicore!\n");
 
-    ///tag::setup_multicore[]
+    /// \tag::setup_multicore[]
 
     multicore_launch_core1(core1_entry);
 
@@ -44,5 +44,5 @@ int main() {
         printf("It's all gone well on core 0!");
     }
 
-    ///end::setup_multicore[]
+    /// \end::setup_multicore[]
 }

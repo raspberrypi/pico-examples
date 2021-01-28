@@ -26,7 +26,7 @@ void __no_inline_not_in_flash_func(check)(bool cond, const char *msg) {
 void __no_inline_not_in_flash_func(check_hit_miss_invalidate)() {
     io_rw_32 *test_data_ptr = (io_rw_32 *) test_data;
 
-    //tag::check_hit_miss_invalidate[]
+    /// \tag::check_hit_miss_invalidate[]
     // Flush cache to make sure we miss the first time we access test_data
     xip_ctrl_hw->flush = 1;
     while (!(xip_ctrl_hw->stat & XIP_STAT_FLUSH_READY_BITS))
@@ -53,7 +53,7 @@ void __no_inline_not_in_flash_func(check_hit_miss_invalidate)() {
     (void) *test_data_ptr;
     check(xip_ctrl_hw->ctr_hit == 2 && xip_ctrl_hw->ctr_acc == 4,
           "Second access after invalidation should hit again");
-    //end::check_hit_miss_invalidate[]
+    /// \end::check_hit_miss_invalidate[]
 }
 
 // Some code which achieves a very high cache hit rate:
