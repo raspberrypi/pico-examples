@@ -10,7 +10,7 @@
 #include "hardware/pwm.h"
 
 int main() {
-    ///tag::setup_pwm[]
+    /// \tag::setup_pwm[]
 
     // Tell GPIO 0 and 1 they are allocated to the PWM
     gpio_set_function(0, GPIO_FUNC_PWM);
@@ -27,7 +27,7 @@ int main() {
     pwm_set_chan_level(slice_num, PWM_CHAN_B, 3);
     // Set the PWM running
     pwm_set_enabled(slice_num, true);
-    ///end::setup_pwm[]
+    /// \end::setup_pwm[]
 
     // Note we could also use pwm_set_gpio_level(gpio, x) which looks up the
     // correct slice and channel for a given GPIO.

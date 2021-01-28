@@ -42,7 +42,7 @@ int bits[10] = {
         0x67   // 9
 };
 
-// tag::hello_gpio[]
+/// \tag::hello_gpio[]
 int main() {
     stdio_init_all();
     printf("Hello, 7segment - press button to count down!\n");
@@ -92,4 +92,4 @@ int main() {
 
     return 0;
 }
-// end::hello_gpio[]
+/// \end::hello_gpio[]

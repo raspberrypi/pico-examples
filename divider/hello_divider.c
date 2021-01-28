@@ -8,7 +8,7 @@
 #include "pico/stdlib.h"
 #include "hardware/divider.h"
 
-// tag::hello_divider[]
+/// \tag::hello_divider[]
 int main() {
     stdio_init_all();
     printf("Hello, divider!\n");
@@ -72,4 +72,4 @@ int main() {
     printf("outer divide %d / %d = %d\n", dividend, divisor, tmp);
     return 0;
 }
-// end::hello_divider[]
+/// \end::hello_divider[]

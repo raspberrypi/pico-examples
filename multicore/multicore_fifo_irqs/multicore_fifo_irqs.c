@@ -9,7 +9,7 @@
 #include "pico/multicore.h"
 #include "hardware/irq.h"
 
-///tag::multicore_fifo_irqs[]
+/// \tag::multicore_fifo_irqs[]
 
 #define FLAG_VALUE1 123
 #define FLAG_VALUE2 321
@@ -73,4 +73,4 @@ int main() {
         tight_loop_contents();
 }
 
-///end::multicore_fifo_irqs[]
+/// \end::multicore_fifo_irqs[]
