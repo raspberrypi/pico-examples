@@ -102,7 +102,7 @@ int main() {
     gpio_put(PIN_BL, 1);
 
     // Other SDKs: static image on screen, lame, boring
-    // Pico SDK: spinning image on screen, bold, exciting
+    // Raspberry Pi Pico SDK: spinning image on screen, bold, exciting
 
     // Lane 0 will be u coords (bits 8:1 of addr offset), lane 1 will be v
     // coords (bits 16:9 of addr offset), and we'll represent coords with
