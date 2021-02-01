@@ -15,7 +15,6 @@ example_auto_set_url(pio_squarewave)
 # generate .hex file and .pio.h file for the RP2040 datasheet (to make sure
 # the datasheet always shows the output of the latest pioasm version)
 add_custom_target(pio_squarewave_datasheet DEPENDS
-		Pioasm
 		${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.hex
 		${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.pio.h
 		${CMAKE_CURRENT_LIST_DIR}/generated/squarewave_wrap.pio.h
