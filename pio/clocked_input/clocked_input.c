@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+ * Copyright (c) 2021 Raspberry Pi (Trading) Ltd.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -61,7 +61,11 @@ int main() {
     // return until the full transmission is finished.
     spi_write_blocking(spi0, (const uint8_t*)txbuf, BUF_SIZE);
 
-    // The data we just sent should now be present in the state machine's FIFO.
+    // The data we just sent should now be present in the state machine's
+    // FIFO. We only sent 8 bytes, so all the data received by the state
+    // machine will fit into the FIFO. Generally you want to be continuously
+    // reading data out as it appears in the FIFO -- either with polling, FIFO
+    // interrupts, or DMA.
     puts("Reading back from RX FIFO:");
     for (int i = 0; i < BUF_SIZE; ++i) {
         uint8_t rxdata = pio_sm_get_blocking(pio, sm);
