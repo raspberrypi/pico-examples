@@ -1,0 +1,43 @@
+= Attaching a SSD1306 OLED display via I2C
+
+This example code shows how to interface the Raspberry Pi Pico to the SSD1306 OLED display board. This device uses I2C for communications, and SSD1306 parts are happy running at 3.3.
+
+[NOTE]
+======
+======
+
+== Wiring information
+
+Wiring up the device requires 4 jumpers, to connect VCC (3.3v), GND, SDA and SCL. The example here uses I2C port 0, which is assigned to GPIO 12 (SDA) and 13 (SCL) in software. Power is supplied from the 3.3V pin.
+
+[NOTE]
+======
+There are many different manufacturers who sell boards with the SSD1306 with an I2C interface. Whilst they all appear slightly different, they all have, at least, the same 4 pins required to power and communicate. When wiring up a board that is different to the one in the diagram, ensure you connect up as described in the previous paragraph.
+======
+
+
+[[ssd1306_i2c_wiring]]
+[pdfwidth=75%]
+.Wiring Diagram for SSD1306.
+image::SSD1306_i2c_bb.png[]
+
+== List of Files
+
+CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
+ssd1306_i2c.c:: The example code.
+ssd1306_font.h:: Header file with a simple font definition.
+
+== Bill of Materials
+
+.A list of materials required for the example
+[[SSD1306-bom-table]]
+[cols=3]
+|===
+| *Item* | *Quantity* | Details
+| Breadboard | 1 | generic part
+| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| SSD1306 board| 1 | generic part
+| M/M Jumper wires | 4 | generic part
+|===
+
+
