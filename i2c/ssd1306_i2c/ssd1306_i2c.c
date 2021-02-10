@@ -35,7 +35,7 @@ static int DEVICE_ADDRESS = 0x3C;
  // This can be overclocked, 2000 seems to work on the device being tested
  // Spec says 400 is the maximum. Try faster clocks until it stops working!
  // KHz.
-#define I2C_CLOCK  400
+#define I2C_CLOCK  1000
 
 #define SSD1306_LCDWIDTH            128
 #define SSD1306_LCDHEIGHT           64
@@ -193,29 +193,36 @@ static uint8_t reverse(uint8_t b) {
    return b;
 }
 
-static void WriteChar(int x, int y, uint8_t ch) {
-    static uint8_t reversed[sizeof(font)] = {0};
 
-    if (reversed[0] == 0) {
-        // calculate and cache a reversed version of fhe font, because I defined it upside down...doh!
-        for (int i=0;i<sizeof(font);i++)
-            reversed[i] = reverse(font[i]);
-    }
+static inline int GetFontIndex(uint8_t ch) {
+    if (ch >= 'A' && ch <='Z')
+        return  ch - 'A' + 1;
+    else if (ch >= '0' && ch <='9')
+        return  ch - '0' + 27;
+    else
+        return  0; // Not got that char so space.
+}
+
+static uint8_t reversed[sizeof(font)] = {0};
+
+static void FillReversedCache() {
+    // calculate and cache a reversed version of fhe font, because I defined it upside down...doh!
+    for (int i=0;i<sizeof(font);i++)
+        reversed[i] = reverse(font[i]);
+}
+
+static void WriteChar(uint x, uint y, uint8_t ch) {
+    if (reversed[0] == 0)
+        FillReversedCache();
+
+    if (x > SSD1306_LCDWIDTH - 8 || y > SSD1306_LCDHEIGHT - 8)
+        return;
 
     // For the moment, only write on Y row boundaries (every 8 vertical pixels)
     y = y/8;
 
     ch = toupper(ch);
-
-    int idx;
-
-    if (ch >= 'A' && ch <='Z')
-        idx = ch - 'A' + 1;
-    else if (ch >= '0' && ch <='9')
-        idx = ch - '0' + 27;
-    else
-        idx = 0; // Not got that char so space.
-
+    int idx = GetFontIndex(ch);
     int fb_idx = y * 128 + x;
 
     for (int i=0;i<8;i++) {
@@ -223,13 +230,62 @@ static void WriteChar(int x, int y, uint8_t ch) {
     }
 }
 
+static uint16_t ExpandByte(uint8_t b) {
+    uint16_t w = 0;
+    for (int i=7;i>=0;i--) {
+        uint16_t t = (b & (1 << i));
+        w |= (t << i);
+        w |= (t << (i + 1));
+    }
+    return w;
+}
+
+static void WriteBigChar(uint x, uint y, uint8_t ch) {
+    if (reversed[0] == 0)
+        FillReversedCache();
+
+    if (x > SSD1306_LCDWIDTH - 16 || y > SSD1306_LCDHEIGHT - 16)
+        return;
+
+    // For the moment, only write on Y row boundaries (every 8 vertical pixels)
+    y = y/8;
+
+    ch = toupper(ch);
+    int idx = GetFontIndex(ch);
+    int fb_idx = y * 128 + x;
+
+    for (int i=0;i<8;i++) {
+        uint16_t w = ExpandByte(reversed[idx * 8 + i]);
+        Framebuffer[fb_idx] = w & 0x0ff;
+        Framebuffer[fb_idx+1] = w & 0x0ff;
+        Framebuffer[fb_idx+128] = w >> 8;
+        Framebuffer[fb_idx+129] = w >> 8;
+        fb_idx+=2;
+
+    }
+}
+
 static void WriteString(int x, int y, uint8_t *str) {
+    // Cull out any string off the screen
+    if (x > SSD1306_LCDWIDTH - 8 || y > SSD1306_LCDHEIGHT - 8)
+        return;
+
     while (*str) {
         WriteChar(x,y, *str++);
         x+=8;
     }
 }
 
+static void WriteBigString(int x, int y, uint8_t *str) {
+    // Cull out any string off the screen
+    if (x > SSD1306_LCDWIDTH - 16 || y > SSD1306_LCDHEIGHT - 16)
+        return;
+
+    while (*str) {
+        WriteBigChar(x,y, *str++);
+        x+=16;
+    }
+}
 
 int main() {
     stdio_init_all();
@@ -244,31 +300,46 @@ int main() {
 
     SSD1306_initialise();
 
-    ClearDisplay();
+    while (1) {
+        ClearDisplay();
 
-    DrawLine(0,0,SSD1306_LCDWIDTH-1, 0, true);
-    DrawLine(0,0,0,SSD1306_LCDHEIGHT-1, true);
-    DrawLine(SSD1306_LCDWIDTH-1, 0,SSD1306_LCDWIDTH-1, SSD1306_LCDHEIGHT-1, true);
-    DrawLine(0,SSD1306_LCDHEIGHT-1,SSD1306_LCDWIDTH-1, SSD1306_LCDHEIGHT-1, true);
+        DrawLine(0,0,SSD1306_LCDWIDTH-1, 0, true);
+        DrawLine(0,0,0,SSD1306_LCDHEIGHT-1, true);
+        DrawLine(SSD1306_LCDWIDTH-1, 0,SSD1306_LCDWIDTH-1, SSD1306_LCDHEIGHT-1, true);
+        DrawLine(0,SSD1306_LCDHEIGHT-1,SSD1306_LCDWIDTH-1, SSD1306_LCDHEIGHT-1, true);
 
-    WriteString(13,8,"HELLO SSD1306");
+        WriteString(13,8,"HELLO SSD1306");
 
-    for (int ch = '9'; ch>='0';ch--)
-    {
-        WriteChar(60, 36, ch);
+        for (int ch = '9'; ch>='1';ch--)
+        {
+            WriteBigChar(56, 36, ch);
+            UpdateDisplay();
+            sleep_ms(500);
+        }
+
+        WriteBigString(0,35,"BLASTOFF");
         UpdateDisplay();
-        sleep_ms(500);
-    }
 
-    WriteString(35,35,"BLASTOFF");
-    UpdateDisplay();
+        for (int i = 0;i<10;i++)
+        {
+            InvertDisplay(true);
+            sleep_ms(100);
+            InvertDisplay(false);
+            sleep_ms(100);
+        }
 
-    for (int i = 0;i<14;i++)
-    {
-        InvertDisplay(true);
-        sleep_ms(100);
-        InvertDisplay(false);
-        sleep_ms(100);
+        for (int i=0;i<SSD1306_LCDWIDTH;i++) {
+            if (i >= SSD1306_LCDWIDTH/2) {
+                DrawLine(i,0,i, SSD1306_LCDHEIGHT-1, false);
+                DrawLine(SSD1306_LCDWIDTH - i - 1,0,SSD1306_LCDWIDTH - i - 1, SSD1306_LCDHEIGHT-1, false);
+            }
+            else {
+                DrawLine(i,0,i, SSD1306_LCDHEIGHT-1, true);
+                DrawLine(SSD1306_LCDWIDTH - i - 1,0,SSD1306_LCDWIDTH - i - 1, SSD1306_LCDHEIGHT-1,  true);
+            }
+            UpdateDisplay();
+        }
+
     }
 
     printf("Done\n");
