@@ -65,7 +65,10 @@ void logic_analyser_init(PIO pio, uint sm, uint pin_base, uint pin_count, float 
 void logic_analyser_arm(PIO pio, uint sm, uint dma_chan, uint32_t *capture_buf, size_t capture_size_words,
                         uint trigger_pin, bool trigger_level) {
     pio_sm_set_enabled(pio, sm, false);
+    // Need to clear _input shift counter_, as well as FIFO, because there may be
+    // partial ISR contents left over from a prevoius run. sm_restart does this.
     pio_sm_clear_fifos(pio, sm);
+    pio_sm_restart(pio, sm);
 
     dma_channel_config c = dma_channel_get_default_config(dma_chan);
     channel_config_set_read_increment(&c, false);
@@ -73,7 +76,7 @@ void logic_analyser_arm(PIO pio, uint sm, uint dma_chan, uint32_t *capture_buf, 
     channel_config_set_dreq(&c, pio_get_dreq(pio, sm, false));
 
     dma_channel_configure(dma_chan, &c,
-        capture_buf,        // Destinatinon pointer
+        capture_buf,        // Destination pointer
         &pio->rxf[sm],      // Source pointer
         capture_size_words, // Number of transfers
         true                // Start immediately
