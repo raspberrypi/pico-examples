@@ -66,7 +66,7 @@ void logic_analyser_arm(PIO pio, uint sm, uint dma_chan, uint32_t *capture_buf, 
                         uint trigger_pin, bool trigger_level) {
     pio_sm_set_enabled(pio, sm, false);
     // Need to clear _input shift counter_, as well as FIFO, because there may be
-    // partial ISR contents left over from a prevoius run. sm_restart does this.
+    // partial ISR contents left over from a previous run. sm_restart does this.
     pio_sm_clear_fifos(pio, sm);
     pio_sm_restart(pio, sm);
 
