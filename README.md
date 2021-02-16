@@ -156,7 +156,7 @@ App|Description
 
 App|Description
 ---|---
-[hello_double_tap](system/hello_double_tap) | On dev boards with a reset button (but no BOOTSEL), a magic number in RAM can be used to enter the USB bootloader, when the reset button is pressed twice quickly.
+[hello_double_tap](system/hello_double_tap) | An LED blink with the `pico_bootsel_via_double_reset` library linked. This enters the USB bootloader when it detects the system being reset twice in quick succession, which is useful for boards with a reset button but no BOOTSEL button.
 [narrow_io_write](system/narrow_io_write) | Demonstrate the effects of 8-bit and 16-bit writes on a 32-bit IO register.
 [unique_board_id](system/unique_board_id) | Read the 64 bit unique ID from external flash, which serves as a unique identifier for the board.
 ### Timer
