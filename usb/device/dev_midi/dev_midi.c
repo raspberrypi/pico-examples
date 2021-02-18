@@ -25,7 +25,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "bsp/board.h"
 #include "tusb.h"
@@ -46,7 +45,7 @@
  * - 1000 ms : device mounted
  * - 2500 ms : device is suspended
  */
-enum  {
+enum {
   BLINK_NOT_MOUNTED = 250,
   BLINK_MOUNTED = 1000,
   BLINK_SUSPENDED = 2500,
@@ -58,14 +57,12 @@ void led_blinking_task(void);
 void midi_task(void);
 
 /*------------- MAIN -------------*/
-int main(void)
-{
+int main(void) {
   board_init();
 
   tusb_init();
 
-  while (1)
-  {
+  while (1) {
     tud_task(); // tinyusb device task
     led_blinking_task();
     midi_task();
@@ -80,29 +77,25 @@ int main(void)
 //--------------------------------------------------------------------+
 
 // Invoked when device is mounted
-void tud_mount_cb(void)
-{
+void tud_mount_cb(void) {
   blink_interval_ms = BLINK_MOUNTED;
 }
 
 // Invoked when device is unmounted
-void tud_umount_cb(void)
-{
+void tud_umount_cb(void) {
   blink_interval_ms = BLINK_NOT_MOUNTED;
 }
 
 // Invoked when usb bus is suspended
 // remote_wakeup_en : if host allow us  to perform remote wakeup
 // Within 7ms, device must draw an average of current less than 2.5 mA from bus
-void tud_suspend_cb(bool remote_wakeup_en)
-{
+void tud_suspend_cb(bool remote_wakeup_en) {
   (void) remote_wakeup_en;
   blink_interval_ms = BLINK_SUSPENDED;
 }
 
 // Invoked when usb bus is resumed
-void tud_resume_cb(void)
-{
+void tud_resume_cb(void) {
   blink_interval_ms = BLINK_MOUNTED;
 }
 
@@ -114,15 +107,13 @@ void tud_resume_cb(void)
 uint32_t note_pos = 0;
 
 // Store example melody as an array of note values
-uint8_t note_sequence[] =
-{
+uint8_t note_sequence[] = {
   74,78,81,86,90,93,98,102,57,61,66,69,73,78,81,85,88,92,97,100,97,92,88,85,81,78,
   74,69,66,62,57,62,66,69,74,78,81,86,90,93,97,102,97,93,90,85,81,78,73,68,64,61,
   56,61,64,68,74,78,81,86,90,93,98,102
 };
 
-void midi_task(void)
-{
+void midi_task(void) {
   static uint32_t start_ms = 0;
 
   // The MIDI interface always creates input and output port/jack descriptors
@@ -158,8 +149,7 @@ void midi_task(void)
 //--------------------------------------------------------------------+
 // BLINKING TASK
 //--------------------------------------------------------------------+
-void led_blinking_task(void)
-{
+void led_blinking_task(void) {
   static uint32_t start_ms = 0;
   static bool led_state = false;
 
