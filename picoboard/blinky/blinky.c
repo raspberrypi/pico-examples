@@ -8,7 +8,7 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 
-const uint LED_PIN = 25;
+const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 const uint DOT_PERIOD_MS = 100;
 
 const char *morse_letters[] = {
