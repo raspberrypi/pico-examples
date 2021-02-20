@@ -13,6 +13,7 @@
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq);
 
 int main() {
+    set_sys_clock_48mhz();
     setup_default_uart();
 
     // todo get free sm
