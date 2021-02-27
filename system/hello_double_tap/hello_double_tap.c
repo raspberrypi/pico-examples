@@ -9,7 +9,7 @@
 // This is a regular old LED blinking example, however it is linked with double_tap_usb_boot
 // so pressing reset quickly twice, will reset into USB bootloader
 int main() {
-    const uint LED_PIN = 21;
+    const uint LED_PIN = 25;
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
     while (true) {
