@@ -12,8 +12,8 @@ int main() {
     gpio_set_dir(LED_PIN, GPIO_OUT);
     while (true) {
         gpio_put(LED_PIN, 1);
-        sleep_ms(250);
+        sleep_ms(50);
         gpio_put(LED_PIN, 0);
-        sleep_ms(250);
+        sleep_ms(50);
     }
 }
