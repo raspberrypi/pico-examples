@@ -11,7 +11,7 @@
 #include "hardware/structs/ioqspi.h"
 #include "hardware/structs/sio.h"
 
-// This example blinks the Picoboard LED when the BOOTSEL button is pressed.
+// This example blinks the Pico LED when the BOOTSEL button is pressed.
 //
 // Picoboard has a button attached to the flash CS pin, which the bootrom
 // checks, and jumps straight to the USB bootcode if the button is pressed
@@ -53,10 +53,14 @@ bool __no_inline_not_in_flash_func(get_bootsel_button)() {
 }
 
 int main() {
+#ifndef PICO_DEFAULT_LED_PIN
+#warning picobooard/button example requires a board with a regular LED
+#else
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
     while (true) {
-        gpio_put(PICO_DEFAULT_LED_PIN, get_bootsel_button());
+        gpio_put(PICO_DEFAULT_LED_PIN, get_bootsel_button() ^ PICO_DEFAULT_LED_PIN_INVERTED);
         sleep_ms(10);
     }
+#endif
 }
