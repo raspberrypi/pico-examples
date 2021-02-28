@@ -20,7 +20,7 @@ App|Description
 [hello_adc](adc/hello_adc)|Display the voltage from an ADC input.
 [joystick_display](adc/joystick_display)|Display a Joystick X/Y input based on two ADC inputs.
 [adc_console](adc/adc_console)|An interactive shell for playing with the ADC. Includes example of free-running capture mode.
-[onboard_temperature](adc/onboard_temperature)|Print out to the USB serial port the value of the onboard temperature sensor.
+[onboard_temperature](adc/onboard_temperature)|Display the value of the onboard temperature sensor.
 
 ### Clocks
 

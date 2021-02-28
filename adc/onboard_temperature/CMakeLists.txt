@@ -2,9 +2,9 @@ add_executable(onboard_temperature onboard_temperature.c)
 
 target_link_libraries(onboard_temperature pico_stdlib hardware_adc)
 
-# enable usb output, disable uart output
-pico_enable_stdio_usb(onboard_temperature 1)
-pico_enable_stdio_uart(onboard_temperature 0)
+# enable uart output, disable usb output
+pico_enable_stdio_usb(onboard_temperature 0)
+pico_enable_stdio_uart(onboard_temperature 1)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(onboard_temperature)
