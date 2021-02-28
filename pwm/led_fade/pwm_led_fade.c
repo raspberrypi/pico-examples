@@ -13,6 +13,7 @@
 #include "hardware/irq.h"
 #include "hardware/pwm.h"
 
+#ifdef PICO_DEFAULT_LED_PIN
 void on_pwm_wrap() {
     static int fade = 0;
     static bool going_up = true;
@@ -36,8 +37,12 @@ void on_pwm_wrap() {
     // Note this range matches with the wrap value
     pwm_set_gpio_level(PICO_DEFAULT_LED_PIN, fade * fade);
 }
+#endif
 
 int main() {
+#ifndef PICO_DEFAULT_LED_PIN
+#warning pwm/led_fade example requires a board with a regular LED
+#else
     // Tell the LED pin that the PWM is in charge of its value.
     gpio_set_function(PICO_DEFAULT_LED_PIN, GPIO_FUNC_PWM);
     // Figure out which slice we just connected to the LED pin
@@ -62,4 +67,5 @@ int main() {
     // can twiddle our thumbs
     while (1)
         tight_loop_contents();
+#endif
 }
