@@ -81,7 +81,7 @@ int main() {
     stdio_init_all();
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
     #warning i2c/bus_scan example requires a board with I2C pins
-    puts("Default I2C pins were not defined');
+    puts("Default I2C pins were not defined");
 #else
     printf("Hello, MPU6050! Reading raw data from registers...\n");
 
