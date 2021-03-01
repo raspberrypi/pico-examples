@@ -37,7 +37,7 @@ ws2812_parallel_T3 = 3
 def ws2812_parallel():
     wrap_target()
     out(x, 32)                            # 0
-    mov(pins, not null)              [1]  # 1
+    mov(pins, invert(null))          [1]  # 1
     mov(pins, x)                     [4]  # 2
     mov(pins, null)                  [1]  # 3
     wrap()
