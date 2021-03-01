@@ -80,7 +80,7 @@ static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
 int main() {
     stdio_init_all();
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
-    #warning i2c/bus_scan example requires a board with I2C pins
+    #warning i2c/mpu6050_i2c example requires a board with I2C pins
     puts("Default I2C pins were not defined");
 #else
     printf("Hello, MPU6050! Reading raw data from registers...\n");
