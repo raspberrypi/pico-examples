@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "pico/binary_info.h"
 #include "hardware/spi.h"
 
 #define FLASH_PAGE_SIZE        256
@@ -20,11 +21,6 @@
 #define FLASH_CMD_SECTOR_ERASE 0x20
 
 #define FLASH_STATUS_BUSY_MASK 0x01
-
-#define PIN_MISO 4
-#define PIN_CS   5
-#define PIN_SCK  6
-#define PIN_MOSI 7
 
 static inline void cs_select(uint cs_pin) {
     asm volatile("nop \n nop \n nop"); // FIXME
@@ -110,19 +106,27 @@ void printbuf(uint8_t buf[FLASH_PAGE_SIZE]) {
 int main() {
     // Enable UART so we can print status output
     stdio_init_all();
+#if !defined(spi_default) || !defined(PICO_DEFAULT_SPI_SCK_PIN) || !defined(PICO_DEFAULT_SPI_TX_PIN) || !defined(PICO_DEFAULT_SPI_RX_PIN) || !defined(PICO_DEFAULT_SPI_CSN_PIN)
+#warning spi/spi_flash example requires a board with SPI pins
+    puts("Default SPI pins were not defined");
+#else
 
     printf("SPI flash example\n");
 
     // Enable SPI 0 at 1 MHz and connect to GPIOs
-    spi_init(spi0, 1000 * 1000);
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
+    spi_init(spi_default, 1000 * 1000);
+    gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
+    gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
+    gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
+    // Make the SPI pins available to picotool
+    bi_decl(bi_3pins_with_func(PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN, PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI));
 
     // Chip select is active-low, so we'll initialise it to a driven-high state
-    gpio_init(PIN_CS);
-    gpio_put(PIN_CS, 1);
-    gpio_set_dir(PIN_CS, GPIO_OUT);
+    gpio_init(PICO_DEFAULT_SPI_CSN_PIN);
+    gpio_put(PICO_DEFAULT_SPI_CSN_PIN, 1);
+    gpio_set_dir(PICO_DEFAULT_SPI_CSN_PIN, GPIO_OUT);
+    // Make the CS pin available to picotool
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "CS"));
 
     printf("SPI initialised, let's goooooo\n");
 
@@ -130,25 +134,26 @@ int main() {
 
     const uint32_t target_addr = 0;
 
-    flash_sector_erase(spi0, PIN_CS, target_addr);
-    flash_read(spi0, PIN_CS, target_addr, page_buf, FLASH_PAGE_SIZE);
+    flash_sector_erase(spi_default, PICO_DEFAULT_SPI_CSN_PIN, target_addr);
+    flash_read(spi_default, PICO_DEFAULT_SPI_CSN_PIN, target_addr, page_buf, FLASH_PAGE_SIZE);
 
     printf("After erase:\n");
     printbuf(page_buf);
 
     for (int i = 0; i < FLASH_PAGE_SIZE; ++i)
         page_buf[i] = i;
-    flash_page_program(spi0, PIN_CS, target_addr, page_buf);
-    flash_read(spi0, PIN_CS, target_addr, page_buf, FLASH_PAGE_SIZE);
+    flash_page_program(spi_default, PICO_DEFAULT_SPI_CSN_PIN, target_addr, page_buf);
+    flash_read(spi_default, PICO_DEFAULT_SPI_CSN_PIN, target_addr, page_buf, FLASH_PAGE_SIZE);
 
     printf("After program:\n");
     printbuf(page_buf);
 
-    flash_sector_erase(spi0, PIN_CS, target_addr);
-    flash_read(spi0, PIN_CS, target_addr, page_buf, FLASH_PAGE_SIZE);
+    flash_sector_erase(spi_default, PICO_DEFAULT_SPI_CSN_PIN, target_addr);
+    flash_read(spi_default, PICO_DEFAULT_SPI_CSN_PIN, target_addr, page_buf, FLASH_PAGE_SIZE);
 
     printf("Erase again:\n");
     printbuf(page_buf);
 
     return 0;
+#endif
 }
