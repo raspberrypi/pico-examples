@@ -34,7 +34,7 @@ int main() {
     // Make the SPI pins available to picotool
     bi_decl(bi_3pins_with_func(PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN, PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI));
     // Make the CS pin available to picotool
-    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "CS"));
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "SPI CS"));
 
     // Grab some unused dma channels
     const uint dma_tx = dma_claim_unused_channel(true);

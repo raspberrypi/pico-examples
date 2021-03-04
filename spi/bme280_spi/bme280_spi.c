@@ -206,7 +206,7 @@ int main() {
     gpio_set_dir(PICO_DEFAULT_SPI_CSN_PIN, GPIO_OUT);
     gpio_put(PICO_DEFAULT_SPI_CSN_PIN, 1);
     // Make the CS pin available to picotool
-    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "CS"));
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "SPI CS"));
 
     // See if SPI is working - interrograte the device for its I2C ID number, should be 0x60
     uint8_t id;

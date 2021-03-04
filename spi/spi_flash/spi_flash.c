@@ -126,7 +126,7 @@ int main() {
     gpio_put(PICO_DEFAULT_SPI_CSN_PIN, 1);
     gpio_set_dir(PICO_DEFAULT_SPI_CSN_PIN, GPIO_OUT);
     // Make the CS pin available to picotool
-    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "CS"));
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "SPI CS"));
 
     printf("SPI initialised, let's goooooo\n");
 
