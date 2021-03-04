@@ -26,6 +26,10 @@ void pio_pwm_set_level(PIO pio, uint sm, uint32_t level) {
 
 int main() {
     stdio_init_all();
+#ifndef PICO_DEFAULT_LED_PIN
+#warning pio/pwm example requires a board with a regular LED
+    puts("Default LED pin was not defined");
+#else
 
     // todo get free sm
     PIO pio = pio0;
@@ -43,4 +47,5 @@ int main() {
         level = (level + 1) % 256;
         sleep_ms(10);
     }
+#endif
 }
