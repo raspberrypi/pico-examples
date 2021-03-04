@@ -7,15 +7,11 @@
 #include <stdio.h>
 
 #include "pico/stdlib.h"
+#include "pico/binary_info.h"
 #include "pio_spi.h"
 
 // This example uses PIO to erase, program and read back a SPI serial flash
 // memory.
-
-#define PIN_MISO 16
-#define PIN_MOSI 17
-#define PIN_SCK 18
-#define PIN_CS 19
 
 // ----------------------------------------------------------------------------
 // Generic serial flash code
@@ -102,17 +98,24 @@ void printbuf(const uint8_t buf[FLASH_PAGE_SIZE]) {
 
 int main() {
     stdio_init_all();
+#if !defined(PICO_DEFAULT_SPI_SCK_PIN) || !defined(PICO_DEFAULT_SPI_TX_PIN) || !defined(PICO_DEFAULT_SPI_RX_PIN) || !defined(PICO_DEFAULT_SPI_CSN_PIN)
+#warning pio/spi/spi_flash example requires a board with SPI pins
+    puts("Default SPI pins were not defined");
+#else
+
     puts("PIO SPI Example");
 
     pio_spi_inst_t spi = {
             .pio = pio0,
             .sm = 0,
-            .cs_pin = PIN_CS
+            .cs_pin = PICO_DEFAULT_SPI_CSN_PIN
     };
 
-    gpio_init(PIN_CS);
-    gpio_put(PIN_CS, 1);
-    gpio_set_dir(PIN_CS, GPIO_OUT);
+    gpio_init(PICO_DEFAULT_SPI_CSN_PIN);
+    gpio_put(PICO_DEFAULT_SPI_CSN_PIN, 1);
+    gpio_set_dir(PICO_DEFAULT_SPI_CSN_PIN, GPIO_OUT);
+    // Make the CS pin available to picotool
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "CS"));
 
     uint offset = pio_add_program(spi.pio, &spi_cpha0_program);
     printf("Loaded program at %d\n", offset);
@@ -122,10 +125,12 @@ int main() {
                  31.25f,  // 1 MHz @ 125 clk_sys
                  false,   // CPHA = 0
                  false,   // CPOL = 0
-                 PIN_SCK,
-                 PIN_MOSI,
-                 PIN_MISO
+                 PICO_DEFAULT_SPI_SCK_PIN,
+                 PICO_DEFAULT_SPI_TX_PIN,
+                 PICO_DEFAULT_SPI_RX_PIN
     );
+    // Make the SPI pins available to picotool
+    bi_decl(bi_3pins_with_func(PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN, PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_PIO0));
 
     uint8_t page_buf[FLASH_PAGE_SIZE];
 
@@ -152,4 +157,5 @@ int main() {
     printbuf(page_buf);
 
     return 0;
+#endif
 }
