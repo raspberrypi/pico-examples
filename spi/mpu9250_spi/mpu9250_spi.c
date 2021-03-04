@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "pico/stdlib.h"
+#include "pico/binary_info.h"
 #include "hardware/spi.h"
 
 /* Example code to talk to a MPU9250 MEMS accelerometer and gyroscope.
@@ -117,11 +118,15 @@ int main() {
     gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
     gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
     gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
+    // Make the SPI pins available to picotool
+    bi_decl(bi_3pins_with_func(PIN_MISO, PIN_MOSI, PIN_SCK, GPIO_FUNC_SPI));
 
     // Chip select is active-low, so we'll initialise it to a driven-high state
     gpio_init(PIN_CS);
     gpio_set_dir(PIN_CS, GPIO_OUT);
     gpio_put(PIN_CS, 1);
+    // Make the CS pin available to picotool
+    bi_decl(bi_1pin_with_name(PIN_CS, "CS"));
 
     mpu9250_reset();
 

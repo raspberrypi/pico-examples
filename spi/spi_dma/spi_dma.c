@@ -9,37 +9,39 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "pico/stdlib.h"
+#include "pico/binary_info.h"
 #include "hardware/spi.h"
 #include "hardware/dma.h"
-
-#define PIN_MISO 16
-#define PIN_CS   17
-#define PIN_SCK  18
-#define PIN_MOSI 19
-
-#define SPI_INST spi0
 
 #define TEST_SIZE 1024
 
 int main() {
     // Enable UART so we can print status output
     stdio_init_all();
+#if !defined(spi_default) || !defined(PICO_DEFAULT_SPI_SCK_PIN) || !defined(PICO_DEFAULT_SPI_TX_PIN) || !defined(PICO_DEFAULT_SPI_RX_PIN) || !defined(PICO_DEFAULT_SPI_CSN_PIN)
+#warning spi/spi_dma example requires a board with SPI pins
+    puts("Default SPI pins were not defined");
+#else
 
     printf("SPI DMA example\n");
 
     // Enable SPI at 1 MHz and connect to GPIOs
-    spi_init(SPI_INST, 1000 * 1000);
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
-    gpio_init(PIN_CS);
-    gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
+    spi_init(spi_default, 1000 * 1000);
+    gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
+    gpio_init(PICO_DEFAULT_SPI_CSN_PIN);
+    gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
+    gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
+    // Make the SPI pins available to picotool
+    bi_decl(bi_3pins_with_func(PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN, PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI));
+    // Make the CS pin available to picotool
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "CS"));
 
     // Grab some unused dma channels
     const uint dma_tx = dma_claim_unused_channel(true);
     const uint dma_rx = dma_claim_unused_channel(true);
 
     // Force loopback for testing (I don't have an SPI device handy)
-    hw_set_bits(&spi_get_hw(SPI_INST)->cr1, SPI_SSPCR1_LBM_BITS);
+    hw_set_bits(&spi_get_hw(spi_default)->cr1, SPI_SSPCR1_LBM_BITS);
 
     static uint8_t txbuf[TEST_SIZE];
     static uint8_t rxbuf[TEST_SIZE];
@@ -54,9 +56,9 @@ int main() {
     printf("Configure TX DMA\n");
     dma_channel_config c = dma_channel_get_default_config(dma_tx);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-    channel_config_set_dreq(&c, spi_get_index(SPI_INST) ? DREQ_SPI1_TX : DREQ_SPI0_TX);
+    channel_config_set_dreq(&c, spi_get_index(spi_default) ? DREQ_SPI1_TX : DREQ_SPI0_TX);
     dma_channel_configure(dma_tx, &c,
-                          &spi_get_hw(SPI_INST)->dr, // write address
+                          &spi_get_hw(spi_default)->dr, // write address
                           txbuf, // read address
                           TEST_SIZE, // element count (each element is of size transfer_data_size)
                           false); // don't start yet
@@ -68,12 +70,12 @@ int main() {
     // address to increment (so data is written throughout the buffer)
     c = dma_channel_get_default_config(dma_rx);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-    channel_config_set_dreq(&c, spi_get_index(SPI_INST) ? DREQ_SPI1_RX : DREQ_SPI0_RX);
+    channel_config_set_dreq(&c, spi_get_index(spi_default) ? DREQ_SPI1_RX : DREQ_SPI0_RX);
     channel_config_set_read_increment(&c, false);
     channel_config_set_write_increment(&c, true);
     dma_channel_configure(dma_rx, &c,
                           rxbuf, // write address
-                          &spi_get_hw(SPI_INST)->dr, // read address
+                          &spi_get_hw(spi_default)->dr, // read address
                           TEST_SIZE, // element count (each element is of size transfer_data_size)
                           false); // don't start yet
 
@@ -100,4 +102,5 @@ int main() {
     dma_channel_unclaim(dma_tx);
     dma_channel_unclaim(dma_rx);
     return 0;
+#endif
 }
