@@ -126,7 +126,7 @@ int main() {
     gpio_set_dir(PIN_CS, GPIO_OUT);
     gpio_put(PIN_CS, 1);
     // Make the CS pin available to picotool
-    bi_decl(bi_1pin_with_name(PIN_CS, "CS"));
+    bi_decl(bi_1pin_with_name(PIN_CS, "SPI CS"));
 
     mpu9250_reset();
 

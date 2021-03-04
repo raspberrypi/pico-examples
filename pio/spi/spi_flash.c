@@ -114,8 +114,6 @@ int main() {
     gpio_init(PICO_DEFAULT_SPI_CSN_PIN);
     gpio_put(PICO_DEFAULT_SPI_CSN_PIN, 1);
     gpio_set_dir(PICO_DEFAULT_SPI_CSN_PIN, GPIO_OUT);
-    // Make the CS pin available to picotool
-    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "CS"));
 
     uint offset = pio_add_program(spi.pio, &spi_cpha0_program);
     printf("Loaded program at %d\n", offset);
@@ -129,8 +127,8 @@ int main() {
                  PICO_DEFAULT_SPI_TX_PIN,
                  PICO_DEFAULT_SPI_RX_PIN
     );
-    // Make the SPI pins available to picotool
-    bi_decl(bi_3pins_with_func(PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN, PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_PIO0));
+    // Make the 'SPI' pins available to picotool
+    bi_decl(bi_4pins_with_names(PICO_DEFAULT_SPI_RX_PIN, "SPI RX", PICO_DEFAULT_SPI_TX_PIN, "SPI TX", PICO_DEFAULT_SPI_SCK_PIN, "SPI SCK", PICO_DEFAULT_SPI_CSN_PIN, "SPI CS"));
 
     uint8_t page_buf[FLASH_PAGE_SIZE];
 
