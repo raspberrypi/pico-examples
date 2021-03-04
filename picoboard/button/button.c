@@ -54,7 +54,7 @@ bool __no_inline_not_in_flash_func(get_bootsel_button)() {
 
 int main() {
 #ifndef PICO_DEFAULT_LED_PIN
-#warning picobooard/button example requires a board with a regular LED
+#warning picoboard/button example requires a board with a regular LED
 #else
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
