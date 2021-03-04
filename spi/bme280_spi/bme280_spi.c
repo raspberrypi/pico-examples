@@ -25,7 +25,7 @@
    GPIO 17 (pin 22) Chip select -> CSB/!CS on bme280 board
    GPIO 18 (pin 24) SCK/spi0_sclk -> SCL/SCK on bme280 board
    GPIO 19 (pin 25) MOSI/spi0_tx -> SDA/SDI on bme280 board
-   3.3v (pin 3;6) -> VCC on bme280 board
+   3.3v (pin 36) -> VCC on bme280 board
    GND (pin 38)  -> GND on bme280 board
 
    Note: SPI devices can have a number of different naming schemes for pins. See
