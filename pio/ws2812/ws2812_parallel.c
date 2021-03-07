@@ -16,7 +16,9 @@
 #include "ws2812.pio.h"
 
 #define FRAC_BITS 4
-#define PIN_TX 0
+#define PIN_TX 2
+// make sure that this number is less or equal to the MAX_LENGTH defined below
+#define NUM_PIXELS 64
 
 // horrible temporary hack to avoid changing pattern code
 static uint8_t *current_string_out;
@@ -300,7 +302,7 @@ int main() {
         int brightness = 0;
         uint current = 0;
         for (int i = 0; i < 1000; ++i) {
-            int n = 64;
+            int n = NUM_PIXELS;
 
             current_string_out = string0.data;
             current_string_4color = false;
@@ -313,6 +315,7 @@ int main() {
             dither_values(colors, states[current], states[current ^ 1], n * 4);
             sem_acquire_blocking(&reset_delay_complete_sem);
             output_strings_dma(states[current], n * 4);
+            sleep_ms(10);
 
             current ^= 1;
             t += dir;
