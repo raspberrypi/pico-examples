@@ -14,7 +14,7 @@
 
 #define PIN_TX 2
 #define NUM_PIXELS 150
-#define IS_WRGB true
+#define IS_RGBW true
 
 static inline void put_pixel(uint32_t pixel_grb) {
     pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
@@ -85,7 +85,7 @@ int main() {
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_program);
 
-    ws2812_program_init(pio, sm, offset, PIN_TX, 800000, IS_WRGB);
+    ws2812_program_init(pio, sm, offset, PIN_TX, 800000, IS_RGBW);
 
     int t = 0;
     while (1) {
