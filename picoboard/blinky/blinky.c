@@ -54,9 +54,9 @@ void put_morse_letter(uint led_pin, const char *pattern) {
 
 void put_morse_str(uint led_pin, const char *str) {
     for (; *str; ++str) {
-        if (*str >= 'A' && *str < 'Z') {
+        if (*str >= 'A' && *str <= 'Z') {
             put_morse_letter(led_pin, morse_letters[*str - 'A']);
-        } else if (*str >= 'a' && *str < 'z') {
+        } else if (*str >= 'a' && *str <= 'z') {
             put_morse_letter(led_pin, morse_letters[*str - 'a']);
         } else if (*str == ' ') {
             sleep_ms(DOT_PERIOD_MS * 4);
