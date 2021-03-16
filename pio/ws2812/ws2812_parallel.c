@@ -17,10 +17,7 @@
 
 #define FRAC_BITS 4
 #define NUM_PIXELS 64
-#ifndef PICO_DEFAULT_WS2812_PIN
-#warning "no WS2812 default PIN defined for board, please check if pin 2 is okay"
-#define PICO_DEFAULT_WS2812_PIN 2
-#endif
+#define WS2812_PIN_BASE 2
 
 // horrible temporary hack to avoid changing pattern code
 static uint8_t *current_string_out;
@@ -288,7 +285,7 @@ int main() {
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_parallel_program);
 
-    ws2812_parallel_program_init(pio, sm, offset, PICO_DEFAULT_WS2812_PIN, count_of(strings), 800000);
+    ws2812_parallel_program_init(pio, sm, offset, WS2812_PIN_BASE, count_of(strings), 800000);
 
     sem_init(&reset_delay_complete_sem, 1, 1); // initially posted so we don't block first time
     dma_init(pio, sm);
