@@ -12,9 +12,12 @@
 #include "hardware/clocks.h"
 #include "ws2812.pio.h"
 
-#define PIN_TX 2
-#define NUM_PIXELS 150
 #define IS_RGBW true
+#define NUM_PIXELS 150
+#ifndef PICO_DEFAULT_WS2812_PIN
+#warning "no WS2812 default PIN defined for board, please check if pin 2 is okay"
+#define PICO_DEFAULT_WS2812_PIN 2
+#endif
 
 static inline void put_pixel(uint32_t pixel_grb) {
     pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
@@ -85,7 +88,7 @@ int main() {
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_program);
 
-    ws2812_program_init(pio, sm, offset, PIN_TX, 800000, IS_RGBW);
+    ws2812_program_init(pio, sm, offset, PICO_DEFAULT_WS2812_PIN, 800000, IS_RGBW);
 
     int t = 0;
     while (1) {

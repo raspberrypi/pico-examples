@@ -16,9 +16,11 @@
 #include "ws2812.pio.h"
 
 #define FRAC_BITS 4
-#define PIN_TX 2
-// make sure that this number is less or equal to the MAX_LENGTH defined below
 #define NUM_PIXELS 64
+#ifndef PICO_DEFAULT_WS2812_PIN
+#warning "no WS2812 default PIN defined for board, please check if pin 2 is okay"
+#define PICO_DEFAULT_WS2812_PIN 2
+#endif
 
 // horrible temporary hack to avoid changing pattern code
 static uint8_t *current_string_out;
@@ -176,17 +178,15 @@ void dither_values(const value_bits_t *colours, value_bits_t *state, const value
     }
 }
 
-#define MAX_LENGTH 100
-
 // requested colours * 4 to allow for RGBW
-static value_bits_t colours[MAX_LENGTH * 4];
+static value_bits_t colours[NUM_PIXELS * 4];
 // double buffer the state of the string, since we update next version in parallel with DMAing out old version
-static value_bits_t states[2][MAX_LENGTH * 4];
+static value_bits_t states[2][NUM_PIXELS * 4];
 
 // example - string 0 is RGB only
-static uint8_t string0_data[MAX_LENGTH * 3];
+static uint8_t string0_data[NUM_PIXELS * 3];
 // example - string 1 is RGBW
-static uint8_t string1_data[MAX_LENGTH * 4];
+static uint8_t string1_data[NUM_PIXELS * 4];
 
 string_t string0 = {
         .data = string0_data,
@@ -215,7 +215,7 @@ string_t *strings[] = {
 #define DMA_CHANNELS_MASK (DMA_CHANNEL_MASK | DMA_CB_CHANNEL_MASK)
 
 // start of each value fragment (+1 for NULL terminator)
-static uintptr_t fragment_start[MAX_LENGTH * 4 + 1];
+static uintptr_t fragment_start[NUM_PIXELS * 4 + 1];
 
 // posted when it is safe to output a new set of values
 static struct semaphore reset_delay_complete_sem;
@@ -288,7 +288,7 @@ int main() {
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_parallel_program);
 
-    ws2812_parallel_program_init(pio, sm, offset, PIN_TX, count_of(strings), 800000);
+    ws2812_parallel_program_init(pio, sm, offset, PICO_DEFAULT_WS2812_PIN, count_of(strings), 800000);
 
     sem_init(&reset_delay_complete_sem, 1, 1); // initially posted so we don't block first time
     dma_init(pio, sm);
@@ -302,19 +302,17 @@ int main() {
         int brightness = 0;
         uint current = 0;
         for (int i = 0; i < 1000; ++i) {
-            int n = NUM_PIXELS;
-
             current_string_out = string0.data;
             current_string_4colour = false;
-            pattern_table[pat].pat(n, t);
+            pattern_table[pat].pat(NUM_PIXELS, t);
             current_string_out = string1.data;
             current_string_4colour = true;
-            pattern_table[pat].pat(n, t);
+            pattern_table[pat].pat(NUM_PIXELS, t);
 
-            transform_strings(strings, count_of(strings), colours, n * 4, brightness);
-            dither_values(colours, states[current], states[current ^ 1], n * 4);
+            transform_strings(strings, count_of(strings), colours, NUM_PIXELS * 4, brightness);
+            dither_values(colours, states[current], states[current ^ 1], NUM_PIXELS * 4);
             sem_acquire_blocking(&reset_delay_complete_sem);
-            output_strings_dma(states[current], n * 4);
+            output_strings_dma(states[current], NUM_PIXELS * 4);
             sleep_ms(10);
 
             current ^= 1;
