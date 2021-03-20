@@ -9,7 +9,10 @@
 #include "pico/stdlib.h"
 #include "hardware/gpio.h"
 
-const uint LED_PIN = PICO_DEFAULT_LED_PIN;
+#ifdef PICO_DEFAULT_LED_PIN
+#define LED_PIN PICO_DEFAULT_LED_PIN
+#endif
+
 const uint DHT_PIN = 15;
 const uint MAX_TIMINGS = 85;
 
@@ -22,9 +25,11 @@ void read_from_dht(dht_reading *result);
 
 int main() {
     stdio_init_all();
-    gpio_init(LED_PIN);
     gpio_init(DHT_PIN);
+#ifdef LED_PIN
+    gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
+#endif
     while (1) {
         dht_reading reading;
         read_from_dht(&reading);
@@ -46,7 +51,9 @@ void read_from_dht(dht_reading *result) {
     sleep_ms(20);
     gpio_set_dir(DHT_PIN, GPIO_IN);
 
+#ifdef LED_PIN
     gpio_put(LED_PIN, 1);
+#endif
     for (uint i = 0; i < MAX_TIMINGS; i++) {
         uint count = 0;
         while (gpio_get(DHT_PIN) == last) {
@@ -63,7 +70,9 @@ void read_from_dht(dht_reading *result) {
             j++;
         }
     }
+#ifdef LED_PIN
     gpio_put(LED_PIN, 0);
+#endif
 
     if ((j >= 40) && (data[4] == ((data[0] + data[1] + data[2] + data[3]) & 0xFF))) {
         result->humidity = (float) ((data[0] << 8) + data[1]) / 10;

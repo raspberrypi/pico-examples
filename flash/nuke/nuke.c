@@ -26,12 +26,20 @@
 #include "pico/bootrom.h"
 
 int main() {
-    flash_range_erase(0, PICO_FLASH_SIZE_BYTES);
+    uint flash_size_bytes;
+#ifndef PICO_FLASH_SIZE_BYTES
+#warning PICO_FLASH_SIZE_BYTES not set, assuming 16M
+    flash_size_bytes = 16 * 1024 * 1024;
+#else
+    flash_size_bytes = PICO_FLASH_SIZE_BYTES;
+#endif
+    flash_range_erase(0, flash_size_bytes);
     // Leave an eyecatcher pattern in the first page of flash so picotool can
     // more easily check the size:
     static const uint8_t eyecatcher[FLASH_PAGE_SIZE] = "NUKE";
     flash_range_program(0, eyecatcher, FLASH_PAGE_SIZE);
 
+#ifdef PICO_DEFAULT_LED_PIN
     // Flash LED for success
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
@@ -41,6 +49,7 @@ int main() {
         gpio_put(PICO_DEFAULT_LED_PIN, 0);
         sleep_ms(100);
     }
+#endif
 
     // Pop back up as an MSD drive
     reset_usb_boot(0, 0);

@@ -8,6 +8,7 @@
 
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
+#include "hardware/clocks.h"
 #include "blink.pio.h"
 
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq);
@@ -29,6 +30,6 @@ void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
     blink_program_init(pio, sm, offset, pin);
     pio_sm_set_enabled(pio, sm, true);
 
-    printf("Blinking pin %d at freq %d\n", pin, freq);
-    pio->txf[sm] = 24000000 / freq;
+    printf("Blinking pin %d at %d Hz\n", pin, freq);
+    pio->txf[sm] = clock_get_hz(clk_sys) / 2 * freq;
 }

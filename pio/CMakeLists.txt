@@ -1,6 +1,7 @@
 if (NOT PICO_NO_HARDWARE)
     add_subdirectory(addition)
     add_subdirectory(apa102)
+    add_subdirectory(clocked_input)
     add_subdirectory(differential_manchester)
     add_subdirectory(hello_pio)
     add_subdirectory(hub75)

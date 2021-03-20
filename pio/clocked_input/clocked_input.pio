@@ -1,0 +1,51 @@
+;
+; Copyright (c) 2021 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+.program clocked_input
+
+; Sample bits using an external clock, and push groups of bits into the RX FIFO.
+; - IN pin 0 is the data pin
+; - IN pin 1 is the clock pin
+; - Autopush is enabled, threshold 8
+;
+; This program samples data with each rising clock edge (like mode 0 or mode 3
+; SPI). The data is actually sampled one system clock cycle after the rising
+; edge is observed, so a clock ratio of at least input_clk < clk_sys / 6 is
+; recommended for good sampling alignment.
+
+    wait 0 pin 1
+    wait 1 pin 1
+    in pins, 1
+
+% c-sdk {
+static inline void clocked_input_program_init(PIO pio, uint sm, uint offset, uint pin) {
+    pio_sm_config c = clocked_input_program_get_default_config(offset);
+
+    // Set the IN base pin to the provided `pin` parameter. This is the data
+    // pin, and the next-numbered GPIO is used as the clock pin.
+    sm_config_set_in_pins(&c, pin);
+    // Set the pin directions to input at the PIO
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 2, false);
+    // Connect these GPIOs to this PIO block
+    pio_gpio_init(pio, pin);
+    pio_gpio_init(pio, pin + 1);
+
+    // Shifting to left matches the customary MSB-first ordering of SPI.
+    sm_config_set_in_shift(
+        &c,
+        false, // Shift-to-right = false (i.e. shift to left)
+        true,  // Autopush enabled
+        8      // Autopush threshold = 8
+    );
+
+    // We only receive, so disable the TX FIFO to make the RX FIFO deeper.
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
+
+    // Load our configuration, and start the program from the beginning
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

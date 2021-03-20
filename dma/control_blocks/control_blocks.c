@@ -47,6 +47,9 @@ const struct {uint32_t len; const char *data;} control_blocks[] = {
 };
 
 int main() {
+#ifndef uart_default
+#warning dma/control_blocks example requires a UART
+#else
     stdio_init_all();
     puts("DMA control block example:");
 
@@ -81,7 +84,7 @@ int main() {
 
     c = dma_channel_get_default_config(data_chan);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-    channel_config_set_dreq(&c, DREQ_UART0_TX + 2 * PICO_DEFAULT_UART);
+    channel_config_set_dreq(&c, DREQ_UART0_TX + 2 * uart_get_index(uart_default));
     // Trigger ctrl_chan when data_chan completes
     channel_config_set_chain_to(&c, ctrl_chan);
     // Raise the IRQ flag when 0 is written to a trigger register (end of chain):
@@ -90,7 +93,7 @@ int main() {
     dma_channel_configure(
         data_chan,
         &c,
-        &(PICO_DEFAULT_UART ? uart1_hw : uart0_hw)->dr,
+        &uart_get_hw(uart_default)->dr,
         NULL,           // Initial read address and transfer count are unimportant;
         0,              // the control channel will reprogram them each time.
         false           // Don't start yet.
@@ -108,4 +111,5 @@ int main() {
     dma_hw->ints0 = 1u << data_chan;
 
     puts("DMA finished.");
+#endif
 }
