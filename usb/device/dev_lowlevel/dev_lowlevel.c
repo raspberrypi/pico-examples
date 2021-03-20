@@ -341,6 +341,13 @@ void usb_handle_string_descriptor(volatile struct usb_setup_packet *pkt) {
 }
 
 /**
+ * @brief Sends a zero length status packet back to the host.
+ */
+void usb_acknowledge_out_request() {
+    usb_start_transfer(usb_get_endpoint_configuration(EP0_IN_ADDR), NULL, 0);
+}
+
+/**
  * @brief Handles a SET_ADDR request from the host. The actual setting of the device address in
  * hardware is done in ep0_in_handler. This is because we have to acknowledge the request first
  * as a device with address zero.
@@ -354,7 +361,7 @@ void usb_set_device_address(volatile struct usb_setup_packet *pkt) {
     printf("Set address %d\r\n", dev_addr);
     // Will set address in the callback phase
     should_set_address = true;
-    usb_start_transfer(usb_get_endpoint_configuration(EP0_IN_ADDR), NULL, 0);
+    usb_acknowledge_out_request();
 }
 
 /**
@@ -366,7 +373,7 @@ void usb_set_device_address(volatile struct usb_setup_packet *pkt) {
 void usb_set_device_configuration(volatile struct usb_setup_packet *pkt) {
     // Only one configuration so just acknowledge the request
     printf("Device Enumerated\r\n");
-    usb_start_transfer(usb_get_endpoint_configuration(EP0_IN_ADDR), NULL, 0);
+    usb_acknowledge_out_request();
     configured = true;
 }
 
@@ -388,6 +395,7 @@ void usb_handle_setup_packet(void) {
         } else if (req == USB_REQUEST_SET_CONFIGURATION) {
             usb_set_device_configuration(pkt);
         } else {
+            usb_acknowledge_out_request();
             printf("Other OUT request (0x%x)\r\n", pkt->bRequest);
         }
     } else if (req_direction == USB_DIR_IN) {
