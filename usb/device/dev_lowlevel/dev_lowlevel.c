@@ -343,7 +343,7 @@ void usb_handle_string_descriptor(volatile struct usb_setup_packet *pkt) {
 /**
  * @brief Sends a zero length status packet back to the host.
  */
-void usb_acknowledge_out_request() {
+void usb_acknowledge_out_request(void) {
     usb_start_transfer(usb_get_endpoint_configuration(EP0_IN_ADDR), NULL, 0);
 }
 
