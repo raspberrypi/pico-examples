@@ -182,7 +182,7 @@ App|Description
 [dev_hid_composite](usb/device/dev_hid_composite) | Composite HID (mouse + keyboard) example from TinyUSB
 [dev_hid_generic_inout](usb/device/dev_hid_generic_inout) | Generic HID device example from TinyUSB
 [dev_lowlevel](usb/device/dev_lowlevel) | A USB Bulk loopback implemented with direct access to the USB hardware (no TinyUSB)
-[dev_midi](usb/device/dev_midi) | USB midi device example from TinyUSB
+[dev_midi](usb/device/dev_midi) | USB midi device example from TinyUSB - sends midi `note-on` and `note-off` events.
 
 ### USB Host
 
