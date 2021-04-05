@@ -5,3 +5,5 @@ cmake-*
 build
 .DS_Store
 *.pdf
+spi/w5500_spi/mpu9250_spi.fzz
+spi/w5500_spi/mpu9250_spi_bb.png
