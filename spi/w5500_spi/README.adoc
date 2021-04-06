@@ -1,4 +1,4 @@
-= Attaching a MPU9250 accelerometer/gyroscope via SPI
+= Attaching a W5500 via SPI
 
 This example code shows how to interface the Raspberry Pi Pico to the MPU9250 accelerometer/gyroscope board. The particular device used can be interfaced via I2C or SPI, we are using SPI, and interfacing at 3.3v.
 
