@@ -11,25 +11,25 @@ This is a very basic example, and only recovers raw data from the sensor. There 
 
 Wiring up the device requires 6 jumpers as follows:
 
-   * GPIO 4 (pin 6) MISO/spi0_rx-> ADO on MPU9250 board
-   * GPIO 5 (pin 7) Chip select -> NCS on MPU9250 board
-   * GPIO 6 (pin 9) SCK/spi0_sclk -> SCL on MPU9250 board
-   * GPIO 7 (pin 10) MOSI/spi0_tx -> SDA on MPU9250 board
-   * 3.3v (pin 36) -> VCC on MPU9250 board
-   * GND (pin 38)  -> GND on MPU9250 board
+   * GPIO 4 (pin 6) MISO/spi0_rx-> ADO on WIZ850io(W5500) board
+   * GPIO 5 (pin 7) Chip select -> NCS on WIZ850io(W5500) board
+   * GPIO 6 (pin 9) SCK/spi0_sclk -> SCL on WIZ850io(W5500) board
+   * GPIO 7 (pin 10) MOSI/spi0_tx -> SDA on WIZ850io(W5500) board
+   * 3.3v (pin 36) -> VCC on WIZ850io(W5500) board
+   * GND (pin 38)  -> GND on WIZ850io(W5500) board
 
 The example here uses SPI port 0. Power is supplied from the 3.3V pin.
 
 [NOTE]
 ======
-There are many different manufacturers who sell boards with the MPU9250. Whilst they all appear slightly different, they all have, at least, the same 6 pins required to power and communicate. When wiring up a board that is different to the one in the diagram, ensure you connect up as described in the previous paragraph.
+There are many different manufacturers who sell boards with the WIZ850io(W5500). Whilst they all appear slightly different, they all have, at least, the same 6 pins required to power and communicate. When wiring up a board that is different to the one in the diagram, ensure you connect up as described in the previous paragraph.
 ======
 
 
 [[mpu9250_spi_wiring]]
 [pdfwidth=75%]
-.Wiring Diagram for MPU9250.
-image::mpu9250_spi_bb.png[]
+.Wiring Diagram for WIZ850io(W5500).
+image::w5500_spi.png[]
 
 == List of Files
 
@@ -39,13 +39,13 @@ mpu9250_spi.c:: The example code.
 == Bill of Materials
 
 .A list of materials required for the example
-[[MPU9250-bom-table]]
+[[WIZ850io(W5500)-bom-table]]
 [cols=3]
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | http://raspberrypi.org/
-| MPU9250 board| 1 | generic part
+| WIZ850io(W5500) board| 1 | generic part
 | M/M Jumper wires | 6 | generic part
 |===
 
