@@ -29,7 +29,7 @@ There are many different manufacturers who sell boards with the WIZ850io(W5500).
 [[mpu9250_spi_wiring]]
 [pdfwidth=75%]
 .Wiring Diagram for WIZ850io(W5500).
-image::mpu9250_spi_bb.png[]
+image::w5500_spi.png[]
 
 == List of Files
 
