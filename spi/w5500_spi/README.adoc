@@ -1,6 +1,6 @@
 = Attaching a W5500 via SPI
 
-This example code shows how to interface the Raspberry Pi Pico to the MPU9250 accelerometer/gyroscope board. The particular device used can be interfaced via I2C or SPI, we are using SPI, and interfacing at 3.3v.
+This example code shows how to interface the Raspberry Pi Pico to the WIZ850io(W5500) board. The particular device used can be interfaced via SPI, we are using SPI, and interfacing at 3.3v.
 
 [NOTE]
 ======
@@ -45,7 +45,7 @@ mpu9250_spi.c:: The example code.
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | http://raspberrypi.org/
-| WIZ850io(W5500) board| 1 | generic part
+| WIZ850io(W5500) board| 1 | https://eshop.wiznet.io/shop/module/wiz850io/
 | M/M Jumper wires | 6 | generic part
 |===
 
