@@ -34,7 +34,12 @@ image::w5500_spi.png[]
 == List of Files
 
 CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
-w5500_spi.c:: The example code.
+w5500_spi.c:: The example main code.
+loopback.c :: The code provides the loopback code tcp server/ tcp client/ UDP.
+socket.c :: socket program like BSP socket.
+w5500.c :: The code has register address and register value for w5500
+wizchip_conf.c :: The code provides an interface(FSMC / spi) to connect to the MCU.  
+
 
 == Bill of Materials
 
