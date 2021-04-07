@@ -29,11 +29,11 @@
 
    Connections on Raspberry Pi Pico board and a generic wiznet board, other
    boards may vary.
-   GPIO 2 (pin 4) SCK/spi0_sclk -> SCL on wiznet board
-   GPIO 3 (pin 5) MOSI/spi0_tx -> SDA on wiznet board
-   GPIO 4 (pin 6) MISO/spi0_rx-> ADO on wiznet board
+   GPIO 2 (pin 4) SCK/spi0_sclk -> CLK on wiznet board
+   GPIO 3 (pin 5) MOSI/spi0_tx -> MOSIon wiznet board
+   GPIO 4 (pin 6) MISO/spi0_rx-> MISO on wiznet board
    GPIO 5 (pin 7) Chip select -> NCS on wiznet board
-   GPIO 6 (pin 9) SCK/spi0_sclk -> SCL on wiznet board
+   GPIO 6 (pin 9) Reset/GPIO -> Reset on wiznet board
    3.3v (pin 36) -> VCC on wiznet board
    GND (pin 38)  -> GND on wiznet board
 
@@ -44,14 +44,14 @@
    using of I2C names
 */
 
-#define PIN_MISO 4
-#define PIN_CS   5
 #define PIN_SCK  2
 #define PIN_MOSI 3
+#define PIN_MISO 4
+#define PIN_CS   5
 #define PIN_RST  6
 
 #define SPI_PORT spi0
-#define READ_BIT 0x00//0x80
+#define READ_BIT 0x00
 #define TCP_SOCKET 0
 
 wiz_NetInfo gWIZNETINFO = { .mac = {0x00,0x08,0xdc,0x78,0x91,0x71},
@@ -88,12 +88,9 @@ static void wiznet_reset() {
     gpio_put(PIN_RST, 1);
     sleep_ms(100);
     bi_decl(bi_1pin_with_name(PIN_RST, "W5500 RST"));
-
-    
-    
-
 }
-  uint8_t  wiznet_read(void) {
+
+uint8_t  wiznet_read(void) {
     // For this particular device, we send the device the register we want to read
     // first, then subsequently read from the device. The register is auto incrementing
     // so we don't need to keep sending the register we want, just the first.
@@ -101,11 +98,12 @@ static void wiznet_reset() {
         spi_read_blocking(SPI_PORT, &tx,  &rx, 1);
         return rx;
         
-    }
-    static void wiznet_write(uint8_t reg){
+}
+
+static void wiznet_write(uint8_t reg) {
  
-        spi_write_blocking(SPI_PORT, &reg, 1);
-    }
+    spi_write_blocking(SPI_PORT, &reg, 1);
+}
     
 
 int main() {
@@ -153,8 +151,7 @@ int main() {
     return 0;
 }
 
-void print_network_information(void)
-{
+void print_network_information(void) {
 	wizchip_getnetinfo(&gWIZNETINFO);
 	printf("Mac address: %02x:%02x:%02x:%02x:%02x:%02x\n\r",gWIZNETINFO.mac[0],gWIZNETINFO.mac[1],gWIZNETINFO.mac[2],gWIZNETINFO.mac[3],gWIZNETINFO.mac[4],gWIZNETINFO.mac[5]);
 	printf("IP address : %d.%d.%d.%d\n\r",gWIZNETINFO.ip[0],gWIZNETINFO.ip[1],gWIZNETINFO.ip[2],gWIZNETINFO.ip[3]);

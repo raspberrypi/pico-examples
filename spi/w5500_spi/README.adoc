@@ -11,12 +11,13 @@ This is a very basic example, and only recovers raw data from the sensor. There 
 
 Wiring up the device requires 6 jumpers as follows:
 
-   * GPIO 4 (pin 6) MISO/spi0_rx-> ADO on WIZ850io(W5500) board
-   * GPIO 5 (pin 7) Chip select -> NCS on WIZ850io(W5500) board
-   * GPIO 6 (pin 9) SCK/spi0_sclk -> SCL on WIZ850io(W5500) board
-   * GPIO 7 (pin 10) MOSI/spi0_tx -> SDA on WIZ850io(W5500) board
-   * 3.3v (pin 36) -> VCC on WIZ850io(W5500) board
-   * GND (pin 38)  -> GND on WIZ850io(W5500) board
+   * GPIO 2 (pin 4) SCK/spi0_sclk -> CLK on IZ850io(W5500) board
+   * GPIO 3 (pin 5) MOSI/spi0_tx -> MOSIon IZ850io(W5500) board
+   * GPIO 4 (pin 6) MISO/spi0_rx-> MISO on IZ850io(W5500) board
+   * GPIO 5 (pin 7) Chip select -> NCS on IZ850io(W5500) board
+   * GPIO 6 (pin 9) Reset/GPIO -> Reset on IZ850io(W5500) board
+   * 3.3v (pin 36) -> VCC on IZ850io(W5500) board
+   * GND (pin 38)  -> GND on IZ850io(W5500) board
 
 The example here uses SPI port 0. Power is supplied from the 3.3V pin.
 
