@@ -1,4 +1,23 @@
-add_subdirectory(dev_audio_headset)
-add_subdirectory(dev_hid_composite)
-add_subdirectory(dev_hid_generic_inout)
+# not 100% sure what this does
+add_tinyusb_device_example(audio_test)
+add_tinyusb_device_example(board_test)
+add_tinyusb_device_example(cdc_dual_ports)
+add_tinyusb_device_example(cdc_msc)
+# todo gate with freertos lib
+#add_tinyusb_device_example(cdc_msc_freertos)
+add_tinyusb_device_example(dfu_runtime)
+add_tinyusb_device_example(dynamic_configuration)
+add_tinyusb_device_example(hid_composite)
+# todo gate with freertos lib
+#add_tinyusb_device_example(hid_composite_freertos)
+add_tinyusb_device_example(hid_generic_inout)
+add_tinyusb_device_example(hid_multiple_interface)
+add_tinyusb_device_example(midi_test)
+add_tinyusb_device_example(msc_dual_lun)
+# todo add to pico_playground
+#add_tinyusb_device_example(net_lwip_webserver)
+add_tinyusb_device_example(uac2_headset)
+add_tinyusb_device_example(usbtmc)
+add_tinyusb_device_example(webusb_serial)
+
 add_subdirectory(dev_lowlevel)

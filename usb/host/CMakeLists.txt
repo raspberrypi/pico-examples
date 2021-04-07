@@ -1,1 +1,1 @@
-add_subdirectory(host_hid)
+add_tinyusb_host_example(cdc_msc_hid)
