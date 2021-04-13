@@ -21,13 +21,13 @@
 
 // horrible temporary hack to avoid changing pattern code
 static uint8_t *current_string_out;
-static bool current_string_4colour;
+static bool current_string_4color;
 
 static inline void put_pixel(uint32_t pixel_grb) {
     *current_string_out++ = pixel_grb & 0xffu;
     *current_string_out++ = (pixel_grb >> 8u) & 0xffu;
     *current_string_out++ = (pixel_grb >> 16u) & 0xffu;
-    if (current_string_4colour) {
+    if (current_string_4color) {
         *current_string_out++ = 0; // todo adjust?
     }
 }
@@ -120,7 +120,7 @@ const struct {
 };
 
 #define VALUE_PLANE_COUNT (8 + FRAC_BITS)
-// we store value (8 bits + fractional bits of a single colour (R/G/B/W) value) for multiple
+// we store value (8 bits + fractional bits of a single color (R/G/B/W) value) for multiple
 // strings, in bit planes. bit plane N has the Nth bit of each string.
 typedef struct {
     // stored MSB first
@@ -151,7 +151,7 @@ typedef struct {
     uint frac_brightness; // 256 = *1.0;
 } string_t;
 
-// takes 8 bit colour values, multiply by brightness and store in bit planes
+// takes 8 bit color values, multiply by brightness and store in bit planes
 void transform_strings(string_t **strings, uint num_strings, value_bits_t *values, uint value_length,
                        uint frac_brightness) {
     for (uint v = 0; v < value_length; v++) {
@@ -169,14 +169,14 @@ void transform_strings(string_t **strings, uint num_strings, value_bits_t *value
     }
 }
 
-void dither_values(const value_bits_t *colours, value_bits_t *state, const value_bits_t *old_state, uint value_length) {
+void dither_values(const value_bits_t *colors, value_bits_t *state, const value_bits_t *old_state, uint value_length) {
     for (uint i = 0; i < value_length; i++) {
-        add_error(state + i, colours + i, old_state + i);
+        add_error(state + i, colors + i, old_state + i);
     }
 }
 
-// requested colours * 4 to allow for RGBW
-static value_bits_t colours[NUM_PIXELS * 4];
+// requested colors * 4 to allow for RGBW
+static value_bits_t colors[NUM_PIXELS * 4];
 // double buffer the state of the string, since we update next version in parallel with DMAing out old version
 static value_bits_t states[2][NUM_PIXELS * 4];
 
@@ -300,14 +300,14 @@ int main() {
         uint current = 0;
         for (int i = 0; i < 1000; ++i) {
             current_string_out = string0.data;
-            current_string_4colour = false;
+            current_string_4color = false;
             pattern_table[pat].pat(NUM_PIXELS, t);
             current_string_out = string1.data;
-            current_string_4colour = true;
+            current_string_4color = true;
             pattern_table[pat].pat(NUM_PIXELS, t);
 
-            transform_strings(strings, count_of(strings), colours, NUM_PIXELS * 4, brightness);
-            dither_values(colours, states[current], states[current ^ 1], NUM_PIXELS * 4);
+            transform_strings(strings, count_of(strings), colors, NUM_PIXELS * 4, brightness);
+            dither_values(colors, states[current], states[current ^ 1], NUM_PIXELS * 4);
             sem_acquire_blocking(&reset_delay_complete_sem);
             output_strings_dma(states[current], NUM_PIXELS * 4);
             sleep_ms(10);
