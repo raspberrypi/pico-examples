@@ -27,7 +27,7 @@ If the slave is not connected properly to a master, it will initialize but never
 
 == Outputs
 
-Both master and slave boards will give output to their UART or USB CDC serial port.
+Both master and slave boards will give output to stdio.
 
 With master and slave properly connected, the master should output something like this:
 
@@ -121,8 +121,8 @@ image::spi_master_slave_logic.png[]
 CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
 spi_master/spi_master.c:: The example code for SPI master.
 spi_slave/spi_slave.c:: The example code for SPI slave.
-spi_master_slave_logic.png:: Communication as seen by logic analyzer (screenshot).
-spi_master_slave.logicdata:: Communication as seen by logic analyzer (original file, free viewer at https://www.saleae.com/downloads/).
+spi_master_slave_logic.png:: Communication as seen by logic analyzer.
+spi_master_slave.csv:: Communication as seen by logic analyzer, exported to CSV format.
 spi_master_slave.fzz:: Fritzing file.
 spi_master_slave_bb.png:: Breadboard wiring diagram.
 
