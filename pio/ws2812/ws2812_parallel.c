@@ -310,7 +310,6 @@ int main() {
             dither_values(colors, states[current], states[current ^ 1], NUM_PIXELS * 4);
             sem_acquire_blocking(&reset_delay_complete_sem);
             output_strings_dma(states[current], NUM_PIXELS * 4);
-            sleep_ms(10);
 
             current ^= 1;
             t += dir;
