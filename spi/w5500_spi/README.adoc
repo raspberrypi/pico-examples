@@ -4,7 +4,7 @@ This example code shows how to interface the Raspberry Pi Pico to the WIZ850io(W
 
 [NOTE]
 ======
-This is a very basic example, and it send and receive data from the WIZ850io(W5500).After you get off the communication command(S"n"_CR) on the WIZ850io, make sure the communicationcommand is clear."n" is socket number.
+This is a very basic example, and it send and receive data from the WIZ850io(W5500).After you get off the communication command(S"n"_CR) on the WIZ850io, make sure the communication command is clear."n" is socket number.
 It is also use the polling approach in the example.
 ======
 
