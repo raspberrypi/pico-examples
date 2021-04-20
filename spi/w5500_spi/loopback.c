@@ -21,32 +21,32 @@ int32_t loopback_tcps(uint8_t sn, uint8_t* buf, uint16_t port)
          if(getSn_IR(sn) & Sn_IR_CON)
          {
 #ifdef _LOOPBACK_DEBUG_
-			getSn_DIPR(sn, destip);
-			destport = getSn_DPORT(sn);
+			   getSn_DIPR(sn, destip);
+			   destport = getSn_DPORT(sn);
 
-			printf("%d:Connected - %d.%d.%d.%d : %d\r\n",sn, destip[0], destip[1], destip[2], destip[3], destport);
+			   printf("%d:Connected - %d.%d.%d.%d : %d\r\n",sn, destip[0], destip[1], destip[2], destip[3], destport);
 #endif
-			setSn_IR(sn,Sn_IR_CON);
+            setSn_IR(sn,Sn_IR_CON);
          }
-		 if((size = getSn_RX_RSR(sn)) > 0) // Don't need to check SOCKERR_BUSY because it doesn't not occur.
+         if((size = getSn_RX_RSR(sn)) > 0) // Don't need to check SOCKERR_BUSY because it doesn't not occur.
          {
-			if(size > DATA_BUF_SIZE) size = DATA_BUF_SIZE;
-			ret = recv(sn, buf, size);
+			   if(size > DATA_BUF_SIZE) size = DATA_BUF_SIZE;
+			   ret = recv(sn, buf, size);
 
-			if(ret <= 0) return ret;      // check SOCKERR_BUSY & SOCKERR_XXX. For showing the occurrence of SOCKERR_BUSY.
-			size = (uint16_t) ret;
-			sentsize = 0;
+			   if(ret <= 0) return ret;      // check SOCKERR_BUSY & SOCKERR_XXX. For showing the occurrence of SOCKERR_BUSY.
+			   size = (uint16_t) ret;
+			   sentsize = 0;
 
-			while(size != sentsize)
-			{
-				ret = send(sn, buf+sentsize, size-sentsize);
-				if(ret < 0)
-				{
-					close(sn);
-					return ret;
-				}
-				sentsize += ret; // Don't care SOCKERR_BUSY, because it is zero.
-			}
+			   while(size != sentsize)
+			   {
+				   ret = send(sn, buf+sentsize, size-sentsize);
+				   if(ret < 0)
+				   {
+					   close(sn);
+					   return ret;
+				   }
+				   sentsize += ret; // Don't care SOCKERR_BUSY, because it is zero.
+			   }
          }
          break;
       case SOCK_CLOSE_WAIT :
@@ -60,7 +60,7 @@ int32_t loopback_tcps(uint8_t sn, uint8_t* buf, uint16_t port)
          break;
       case SOCK_INIT :
 #ifdef _LOOPBACK_DEBUG_
-    	 printf("%d:Listen, TCP server loopback, port [%d]\r\n", sn, port);
+    	   printf("%d:Listen, TCP server loopback, port [%d]\r\n", sn, port);
 #endif
          if( (ret = listen(sn)) != SOCK_OK) return ret;
          break;
@@ -102,36 +102,35 @@ int32_t loopback_tcpc(uint8_t sn, uint8_t* buf, uint8_t* destip, uint16_t destpo
          if(getSn_IR(sn) & Sn_IR_CON)	// Socket n interrupt register mask; TCP CON interrupt = connection with peer is successful
          {
 #ifdef _LOOPBACK_DEBUG_
-			printf("%d:Connected to - %d.%d.%d.%d : %d\r\n",sn, destip[0], destip[1], destip[2], destip[3], destport);
+			   printf("%d:Connected to - %d.%d.%d.%d : %d\r\n",sn, destip[0], destip[1], destip[2], destip[3], destport);
 #endif
-			setSn_IR(sn, Sn_IR_CON);  // this interrupt should be write the bit cleared to '1'
+			   setSn_IR(sn, Sn_IR_CON);  // this interrupt should be write the bit cleared to '1'
          }
 
-         //////////////////////////////////////////////////////////////////////////////////////////////
-         // Data Transaction Parts; Handle the [data receive and send] process
-         //////////////////////////////////////////////////////////////////////////////////////////////
-		 if((size = getSn_RX_RSR(sn)) > 0) // Sn_RX_RSR: Socket n Received Size Register, Receiving data length
+//////////////////////////////////////////////////////////////////////////////////////////////
+// Data Transaction Parts; Handle the [data receive and send] process
+//////////////////////////////////////////////////////////////////////////////////////////////
+		   if((size = getSn_RX_RSR(sn)) > 0) // Sn_RX_RSR: Socket n Received Size Register, Receiving data length
          {
-			if(size > DATA_BUF_SIZE) size = DATA_BUF_SIZE; // DATA_BUF_SIZE means user defined buffer size (array)
-			ret = recv(sn, buf, size); // Data Receive process (H/W Rx socket buffer -> User's buffer)
+			   if(size > DATA_BUF_SIZE) size = DATA_BUF_SIZE; // DATA_BUF_SIZE means user defined buffer size (array)
+			   ret = recv(sn, buf, size); // Data Receive process (H/W Rx socket buffer -> User's buffer)
 
-			if(ret <= 0) return ret; // If the received data length <= 0, receive failed and process end
-			size = (uint16_t) ret;
-			sentsize = 0;
+			   if(ret <= 0) return ret; // If the received data length <= 0, receive failed and process end
+			   size = (uint16_t) ret;
+			   sentsize = 0;
 
 			// Data sentsize control
-			while(size != sentsize)
-			{
-				ret = send(sn, buf+sentsize, size-sentsize); // Data send process (User's buffer -> Destination through H/W Tx socket buffer)
-				if(ret < 0) // Send Error occurred (sent data length < 0)
-				{
-					close(sn); // socket close
-					return ret;
-				}
-				sentsize += ret; // Don't care SOCKERR_BUSY, because it is zero.
-			}
+			   while(size != sentsize)
+			   {
+				   ret = send(sn, buf+sentsize, size-sentsize); // Data send process (User's buffer -> Destination through H/W Tx socket buffer)
+				   if(ret < 0) // Send Error occurred (sent data length < 0)
+				   {
+					   close(sn); // socket close
+					   return ret;
+				   }
+				   sentsize += ret; // Don't care SOCKERR_BUSY, because it is zero.
+			   }
          }
-		 //////////////////////////////////////////////////////////////////////////////////////////////
          break;
 
       case SOCK_CLOSE_WAIT :
@@ -146,20 +145,21 @@ int32_t loopback_tcpc(uint8_t sn, uint8_t* buf, uint8_t* destip, uint16_t destpo
 
       case SOCK_INIT :
 #ifdef _LOOPBACK_DEBUG_
-    	 printf("%d:Try to connect to the %d.%d.%d.%d : %d\r\n", sn, destip[0], destip[1], destip[2], destip[3], destport);
+    	   printf("%d:Try to connect to the %d.%d.%d.%d : %d\r\n", sn, destip[0], destip[1], destip[2], destip[3], destport);
 #endif
-    	 if( (ret = connect(sn, destip, destport)) != SOCK_OK) return ret;	//	Try to TCP connect to the TCP server (destination)
-         break;
+    	   if( (ret = connect(sn, destip, destport)) != SOCK_OK) return ret;	//	Try to TCP connect to the TCP server (destination)
+            break;
 
       case SOCK_CLOSED:
-    	  close(sn);
-    	  if((ret=socket(sn, Sn_MR_TCP, any_port++, 0x00)) != sn){
-         if(any_port == 0xffff) any_port = 50000;
-         return ret; // TCP socket open with 'any_port' port number
-        } 
+    	   close(sn);
+    	   if((ret=socket(sn, Sn_MR_TCP, any_port++, 0x00)) != sn)
+         {
+            if(any_port == 0xffff) any_port = 50000;
+            return ret; // TCP socket open with 'any_port' port number
+         } 
 #ifdef _LOOPBACK_DEBUG_
-    	 //printf("%d:TCP client loopback start\r\n",sn);
-         //printf("%d:Socket opened\r\n",sn);
+    	   printf("%d:TCP client loopback start\r\n",sn);
+         printf("%d:Socket opened\r\n",sn);
 #endif
          break;
       default:
