@@ -7,7 +7,7 @@
 .program differential_manchester_tx
 .side_set 1 opt
 
-; Transmit one bit every cycles. In each bit period:
+; Transmit one bit every 16 cycles. In each bit period:
 ; - A '0' is encoded as a transition at the start of the bit period
 ; - A '1' is encoded as a transition at the start *and* in the middle
 ;
@@ -16,19 +16,21 @@
 
 public start:
 initial_high:
-    out x, 1          side 1     ; Start of bit period: always assert transition
-    jmp !x high_0            [6] ; Test the data bit we just shifted out of OSR
+    out x, 1                     ; Start of bit period: always assert transition
+    jmp !x high_0     side 1 [6] ; Test the data bit we just shifted out of OSR
 high_1:
-    jmp initial_high  side 0 [7] ; For `1` bits, also transition in the middle
+    nop
+    jmp initial_high  side 0 [6] ; For `1` bits, also transition in the middle
 high_0:
     jmp initial_low          [7] ; Otherwise, the line is stable in the middle
 
 initial_low:
-    out x, 1          side 0     ; Always shift 1 bit from OSR to X so we can
-    jmp !x low_0             [6] ; branch on it. Autopull refills OSR for us.
+    out x, 1                     ; Always shift 1 bit from OSR to X so we can
+    jmp !x low_0      side 0 [6] ; branch on it. Autopull refills OSR for us.
 low_1:
-    jmp initial_low   side 1 [7] ; If there are two transitions, return to
-low_0:                           ; initial_low on the next bit. If just one,
+    nop
+    jmp initial_low   side 1 [6] ; If there are two transitions, return to
+low_0:
     jmp initial_high         [7] ; the initial line state is flipped!
 
 % c-sdk {
