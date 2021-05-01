@@ -32,6 +32,9 @@ int main() {
     rtc_init();
     rtc_set_datetime(&t);
 
+    // clk_sys is >2000x faster than clk_rtc, so datetime is not transferred completely when rtc_get_datetime() is called
+    sleep_us(20);
+
     // Print the time
     while (true) {
         rtc_get_datetime(&t);
