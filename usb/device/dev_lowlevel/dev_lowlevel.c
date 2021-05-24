@@ -113,7 +113,7 @@ struct usb_endpoint_configuration *usb_get_endpoint_configuration(uint8_t addr) 
  */
 uint8_t usb_prepare_string_descriptor(const unsigned char *str) {
     // 2 for bLength + bDescriptorType + strlen * 2 because string is unicode. i.e. other byte will be 0
-    uint8_t bLength = 2 + (strlen(str) * 2);
+    uint8_t bLength = 2 + (strlen((const char *)str) * 2);
     static const uint8_t bDescriptorType = 0x03;
 
     volatile uint8_t *buf = &ep0_buf[0];
