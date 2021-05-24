@@ -134,7 +134,7 @@ void hid_task(void) {
         static bool has_key = false;
 
         static bool toggle = false;
-        if (toggle = !toggle) {
+        if ((toggle = !toggle)) {
             uint8_t keycode[6] = {0};
             keycode[0] = HID_KEY_A;
 

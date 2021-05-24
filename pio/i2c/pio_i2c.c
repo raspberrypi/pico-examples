@@ -32,7 +32,11 @@ void pio_i2c_rx_enable(PIO pio, uint sm, bool en) {
 static inline void pio_i2c_put16(PIO pio, uint sm, uint16_t data) {
     while (pio_sm_is_tx_fifo_full(pio, sm))
         ;
+    // some versions of GCC dislike this
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
     *(io_rw_16 *)&pio->txf[sm] = data;
+#pragma GCC diagnostic pop
 }
 
 
@@ -43,7 +47,11 @@ void pio_i2c_put_or_err(PIO pio, uint sm, uint16_t data) {
             return;
     if (pio_i2c_check_error(pio, sm))
         return;
+    // some versions of GCC dislike this
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
     *(io_rw_16 *)&pio->txf[sm] = data;
+#pragma GCC diagnostic pop
 }
 
 uint8_t pio_i2c_get(PIO pio, uint sm) {
