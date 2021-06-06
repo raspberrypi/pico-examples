@@ -25,12 +25,12 @@ int main() {
     pico_get_unique_board_id(&board_id);
 
     while(1) {
-   		printf("Unique identifier:");
-    	for (int i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; ++i) {
-    	    printf(" %02x", board_id.id[i]);
-    	}
-    	printf("\n");
+        printf("Unique identifier:");
+        for (int i = 0; i < PICO_UNIQUE_BOARD_ID_SIZE_BYTES; ++i) {
+            printf(" %02x", board_id.id[i]);
+        }
+        printf("\n");
 
-    	sleep_ms(2000);
-	}
+        sleep_ms(2000);
+    }
 }
