@@ -52,6 +52,9 @@ void dma_handler() {
 }
 
 int main() {
+#ifndef PICO_DEFAULT_LED_PIN
+#warning dma/channel_irq example requires a board with a regular LED
+#else
     // Set up a PIO state machine to serialise our bits
     uint offset = pio_add_program(pio0, &pio_serialiser_program);
     pio_serialiser_program_init(pio0, 0, offset, PICO_DEFAULT_LED_PIN, PIO_SERIAL_CLKDIV);
@@ -87,5 +90,5 @@ int main() {
     // time to sit and think about its early retirement -- maybe open a bakery?
     while (true)
         tight_loop_contents();
-
+#endif
 }

@@ -10,6 +10,9 @@
 #include "hello.pio.h"
 
 int main() {
+#ifndef PICO_DEFAULT_LED_PIN
+#warning pio/hello_pio example requires a board with a regular LED
+#else
     // Choose which PIO instance to use (there are two instances)
     PIO pio = pio0;
 
@@ -35,4 +38,5 @@ int main() {
         pio_sm_put_blocking(pio, sm, 0);
         sleep_ms(500);
     }
+#endif
 }

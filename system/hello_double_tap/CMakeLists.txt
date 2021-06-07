@@ -2,11 +2,18 @@ add_executable(hello_double_tap
         hello_double_tap.c
         )
 
-# Double tap reset into bootrom is injected by linking with the double_tap_usb_boot library
+# Double tap reset into bootrom is injected by linking with the
+# pico_bootsel_via_double_reset library
 target_link_libraries(hello_double_tap
         pico_stdlib
-        double_tap_usb_boot
+        pico_bootsel_via_double_reset
         )
+
+# Entering the bootloader in this way also lets us specify a GPIO to be used
+# as a bootloader activity LED:
+target_compile_definitions(hello_double_tap PRIVATE
+	PICO_BOOTSEL_VIA_DOUBLE_RESET_ACTIVITY_LED=25
+	)
 
 pico_add_extra_outputs(hello_double_tap)
 

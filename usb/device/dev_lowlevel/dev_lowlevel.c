@@ -113,7 +113,7 @@ struct usb_endpoint_configuration *usb_get_endpoint_configuration(uint8_t addr) 
  */
 uint8_t usb_prepare_string_descriptor(const unsigned char *str) {
     // 2 for bLength + bDescriptorType + strlen * 2 because string is unicode. i.e. other byte will be 0
-    uint8_t bLength = 2 + (strlen(str) * 2);
+    uint8_t bLength = 2 + (strlen((const char *)str) * 2);
     static const uint8_t bDescriptorType = 0x03;
 
     volatile uint8_t *buf = &ep0_buf[0];
@@ -341,6 +341,13 @@ void usb_handle_string_descriptor(volatile struct usb_setup_packet *pkt) {
 }
 
 /**
+ * @brief Sends a zero length status packet back to the host.
+ */
+void usb_acknowledge_out_request(void) {
+    usb_start_transfer(usb_get_endpoint_configuration(EP0_IN_ADDR), NULL, 0);
+}
+
+/**
  * @brief Handles a SET_ADDR request from the host. The actual setting of the device address in
  * hardware is done in ep0_in_handler. This is because we have to acknowledge the request first
  * as a device with address zero.
@@ -354,7 +361,7 @@ void usb_set_device_address(volatile struct usb_setup_packet *pkt) {
     printf("Set address %d\r\n", dev_addr);
     // Will set address in the callback phase
     should_set_address = true;
-    usb_start_transfer(usb_get_endpoint_configuration(EP0_IN_ADDR), NULL, 0);
+    usb_acknowledge_out_request();
 }
 
 /**
@@ -366,7 +373,7 @@ void usb_set_device_address(volatile struct usb_setup_packet *pkt) {
 void usb_set_device_configuration(volatile struct usb_setup_packet *pkt) {
     // Only one configuration so just acknowledge the request
     printf("Device Enumerated\r\n");
-    usb_start_transfer(usb_get_endpoint_configuration(EP0_IN_ADDR), NULL, 0);
+    usb_acknowledge_out_request();
     configured = true;
 }
 
@@ -388,6 +395,7 @@ void usb_handle_setup_packet(void) {
         } else if (req == USB_REQUEST_SET_CONFIGURATION) {
             usb_set_device_configuration(pkt);
         } else {
+            usb_acknowledge_out_request();
             printf("Other OUT request (0x%x)\r\n", pkt->bRequest);
         }
     } else if (req_direction == USB_DIR_IN) {
