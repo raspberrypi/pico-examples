@@ -26,6 +26,9 @@
    BMP280 board
 */
 
+// number of calibration registers to be read
+#define NUM_CALIB_PARAMS 24
+
 // device has default bus address of 0x76
 const uint8_t addr = 0x76;
 
@@ -71,6 +74,27 @@ const uint8_t REG_DIG_P9_MSB = 0x9F;
 const uint8_t BMP280_WRITE_MODE = 0xFE;
 const uint8_t BMP280_READ_MODE = 0xFF;
 
+struct bmp280_calib_param {
+  // temperature params
+  uint16_t dig_t1;
+  int16_t dig_t2;
+  int16_t dig_t3;
+
+  // pressure params
+  uint16_t dig_p1;
+  int16_t dig_p2;
+  int16_t dig_p3;
+  int16_t dig_p4;
+  int16_t dig_p5;
+  int16_t dig_p6;
+  int16_t dig_p7;
+  int16_t dig_p8;
+  int16_t dig_p9;
+
+  // intermediate result for pressure calc
+  int32_t t_fine;
+};
+
 #ifdef i2c_default
 void bmp280_init() {
   // use the "handheld device dynamic" optimal setting (see datasheet)
@@ -103,21 +127,98 @@ void bmp280_read_raw(int32_t *temp, int32_t *pressure) {
   i2c_read_blocking(i2c_default, (addr & BMP280_READ_MODE), buf, 6,
                     false);  // false - finished with bus
 
-  *pressure = (buf[0] << 16) | (buf[1] << 8) | (buf[2] >> 4);
-  *temp = (buf[3] << 16) | (buf[4] << 8) | (buf[5] >> 4);
+  // store the 20 bit read in a 32 bit signed integer for conversion
+  *pressure = (buf[0] << 12) | (buf[1] << 4) | (buf[2] >> 4);
+  *temp = (buf[3] << 12) | (buf[4] << 4) | (buf[5] >> 4);
 }
 
 void bmp280_reset() {
   // reset the device with the power-on-reset procedure
+  uint8_t buf[2] = {REG_RESET, 0xB6};
+  i2c_write_blocking(i2c_default, (addr & BMP280_WRITE_MODE), buf, 2, false);
+}
+
+float bmp280_convert_temp(int32_t *temp, struct bmp280_calib_param *params) {
+  // use the 32-bit floating point compensation implementation given in the
+  // datasheet
+  float var1, var2;
+  var1 = (((float)*temp) / 16384.0 - ((float)params->dig_t1) / 1024.0) *
+         ((float)params->dig_t2);
+  var2 = ((((float)*temp) / 131072.0 - ((float)params->dig_t1) / 8192.0) *
+          (((float)*temp) / 131072.0 - ((float)params->dig_t1) / 8192.0)) *
+         ((float)params->dig_t3);
+  params->t_fine = (int32_t)(var1 + var2);
+  return (var1 + var2) / 5120.0;
+}
+
+float bmp280_convert_pressure(int32_t *pressure,
+                              struct bmp280_calib_param *params) {
+  float var1, var2;
+  float converted = 0.0;
+
+  var1 = ((float)params->t_fine / 2.0) - 64000.0;
+  var2 = var1 * var1 * ((float)params->dig_p6) / 32768.0;
+  var2 = var2 + var1 * ((float)params->dig_p5) * 2.0;
+  var2 = (var2 / 4.0) + (((float)params->dig_p4) * 65536.0);
+  var1 = (((float)params->dig_p3) * var1 * var1 / 524288.0 +
+          ((float)params->dig_p2) * var1) /
+         524288.0;
+  var1 = (1.0 + var1 / 32768.0) * ((float)params->dig_p1);
+
+  // avoid division by 0
+  if (var1 < 0 || var1 > 0) {
+    converted = 1048576.0 - (float)*pressure;
+    converted = (converted - (var2 / 4096.0)) * 6250.0 / var1;
+    var1 = ((float)params->dig_p9) * converted * converted / 2147483648.0;
+    var2 = converted * ((float)params->dig_p8) / 32768.0;
+
+    converted += (var1 + var2 + ((float)params->dig_p7)) / 16.0;
+    // results in kPa
+    return converted / 1000.0;
+  } else {
+    return 0.0;
+  }
+}
+
+void bmp280_get_calib_params(struct bmp280_calib_param *params) {
+  // raw temp and pressure values need to be calibrated according to
+  // parameters generated during the manufacturing of the sensor
+  // there are 3 temperature params, and 9 pressure params, each with a LSB
+  // and MSB register, so we read from 24 registers
+
+  uint8_t buf[NUM_CALIB_PARAMS] = {0};
+  i2c_write_blocking(i2c_default, (addr & BMP280_WRITE_MODE), &REG_DIG_T1_LSB,
+                     1, true);  // true to keep master control of bus
+  // read in one go as register addresses auto-increment
+  i2c_read_blocking(i2c_default, (addr & BMP280_READ_MODE), buf,
+                    NUM_CALIB_PARAMS, false);  // false, we're done reading
+
+  // store these in a struct for later use
+  params->dig_t1 = (uint16_t)(buf[1] << 8) | buf[0];
+  params->dig_t2 = (int16_t)(buf[3] << 8) | buf[2];
+  params->dig_t3 = (int16_t)(buf[5] << 8) | buf[4];
+
+  params->dig_p1 = (uint16_t)(buf[7] << 8) | buf[6];
+  params->dig_p2 = (int16_t)(buf[9] << 8) | buf[8];
+  params->dig_p3 = (int16_t)(buf[11] << 8) | buf[10];
+  params->dig_p4 = (int16_t)(buf[13] << 8) | buf[12];
+  params->dig_p5 = (int16_t)(buf[15] << 8) | buf[14];
+  params->dig_p6 = (int16_t)(buf[17] << 8) | buf[16];
+  params->dig_p7 = (int16_t)(buf[19] << 8) | buf[18];
+  params->dig_p8 = (int16_t)(buf[21] << 8) | buf[20];
+  params->dig_p9 = (int16_t)(buf[23] << 8) | buf[22];
 }
 
 #endif
 
 int main() {
   stdio_init_all();
+
   // useful information for picotool
   bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN,
                              GPIO_FUNC_I2C));
+  bi_decl(
+      bi_program_description("BMP280 I2C example for the Raspberry Pi Pico"));
 
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || \
     !defined(PICO_DEFAULT_I2C_SCL_PIN)
@@ -127,7 +228,7 @@ int main() {
   printf(
       "Hello, BMP280! Reading temperaure and pressure values from sensor...\n");
 
-  // I2C is "open drain", pull ups to keep signal high when no communication
+  // I2C is "open drain", pull ups to keep signal high when no data is being sent
   i2c_init(i2c_default, 100 * 1000);
   gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
   gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
@@ -137,12 +238,20 @@ int main() {
   // configure BMP280
   bmp280_init();
 
+  // retrieve fixed compensation params
+  struct bmp280_calib_param params;
+  bmp280_get_calib_params(&params);
+
   int32_t temp;
   int32_t pressure;
 
   while (1) {
     bmp280_read_raw(&temp, &pressure);
-    printf("temperature: %d, pressure: %d\n", temp, pressure);
+    float converted_temp = bmp280_convert_temp(&temp, &params);
+    float converted_pressure = bmp280_convert_pressure(&pressure, &params);
+    printf("Temperature: %.2f °C  Pressure: %.3f kPa\n", converted_temp,
+           converted_pressure);
+    // poll every 750ms as data refreshes every 500ms
     sleep_ms(750);
   }
 
