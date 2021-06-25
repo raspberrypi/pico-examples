@@ -27,49 +27,49 @@
 */
 
 // device has default bus address of 0x76
-const int addr = 0x76;
+const uint8_t addr = 0x76;
 
 // hardware registers
-const int REG_CONFIG = 0xF5;
-const int REG_CTRL_MEAS = 0xF4;
-const int REG_RESET = 0xE0;
+const uint8_t REG_CONFIG = 0xF5;
+const uint8_t REG_CTRL_MEAS = 0xF4;
+const uint8_t REG_RESET = 0xE0;
 
-const int REG_TEMP_XLSB = 0xFC;
-const int REG_TEMP_LSB = 0xFB;
-const int REG_TEMP_MSB = 0xFA;
+const uint8_t REG_TEMP_XLSB = 0xFC;
+const uint8_t REG_TEMP_LSB = 0xFB;
+const uint8_t REG_TEMP_MSB = 0xFA;
 
-const int REG_PRESSURE_XLSB = 0xF9;
-const int REG_PRESSURE_LSB = 0xF8;
-const int REG_PRESSURE_MSB = 0xF7;
+const uint8_t REG_PRESSURE_XLSB = 0xF9;
+const uint8_t REG_PRESSURE_LSB = 0xF8;
+const uint8_t REG_PRESSURE_MSB = 0xF7;
 
 // calibration registers
-const int REG_DIG_T1_LSB = 0x88;
-const int REG_DIG_T1_MSB = 0x89;
-const int REG_DIG_T2_LSB = 0x8A;
-const int REG_DIG_T2_MSB = 0x8B;
-const int REG_DIG_T3_LSB = 0x8C;
-const int REG_DIG_T3_MSB = 0x8D;
-const int REG_DIG_P1_LSB = 0x8E;
-const int REG_DIG_P1_MSB = 0x8F;
-const int REG_DIG_P2_LSB = 0x90;
-const int REG_DIG_P2_MSB = 0x91;
-const int REG_DIG_P3_LSB = 0x92;
-const int REG_DIG_P3_MSB = 0x93;
-const int REG_DIG_P4_LSB = 0x94;
-const int REG_DIG_P4_MSB = 0x95;
-const int REG_DIG_P5_LSB = 0x96;
-const int REG_DIG_P5_MSB = 0x97;
-const int REG_DIG_P6_LSB = 0x98;
-const int REG_DIG_P6_MSB = 0x99;
-const int REG_DIG_P7_LSB = 0x9A;
-const int REG_DIG_P7_MSB = 0x9B;
-const int REG_DIG_P8_LSB = 0x9C;
-const int REG_DIG_P8_MSB = 0x9D;
-const int REG_DIG_P9_LSB = 0x9E;
-const int REG_DIG_P9_MSB = 0x9F;
+const uint8_t REG_DIG_T1_LSB = 0x88;
+const uint8_t REG_DIG_T1_MSB = 0x89;
+const uint8_t REG_DIG_T2_LSB = 0x8A;
+const uint8_t REG_DIG_T2_MSB = 0x8B;
+const uint8_t REG_DIG_T3_LSB = 0x8C;
+const uint8_t REG_DIG_T3_MSB = 0x8D;
+const uint8_t REG_DIG_P1_LSB = 0x8E;
+const uint8_t REG_DIG_P1_MSB = 0x8F;
+const uint8_t REG_DIG_P2_LSB = 0x90;
+const uint8_t REG_DIG_P2_MSB = 0x91;
+const uint8_t REG_DIG_P3_LSB = 0x92;
+const uint8_t REG_DIG_P3_MSB = 0x93;
+const uint8_t REG_DIG_P4_LSB = 0x94;
+const uint8_t REG_DIG_P4_MSB = 0x95;
+const uint8_t REG_DIG_P5_LSB = 0x96;
+const uint8_t REG_DIG_P5_MSB = 0x97;
+const uint8_t REG_DIG_P6_LSB = 0x98;
+const uint8_t REG_DIG_P6_MSB = 0x99;
+const uint8_t REG_DIG_P7_LSB = 0x9A;
+const uint8_t REG_DIG_P7_MSB = 0x9B;
+const uint8_t REG_DIG_P8_LSB = 0x9C;
+const uint8_t REG_DIG_P8_MSB = 0x9D;
+const uint8_t REG_DIG_P9_LSB = 0x9E;
+const uint8_t REG_DIG_P9_MSB = 0x9F;
 
-const int BMP280_WRITE_MODE = 0xFE;
-const int BMP280_READ_MODE = 0xFF;
+const uint8_t BMP280_WRITE_MODE = 0xFE;
+const uint8_t BMP280_READ_MODE = 0xFF;
 
 #ifdef i2c_default
 void bmp280_init() {
@@ -77,7 +77,7 @@ void bmp280_init() {
   uint8_t buf[2];
 
   // 500ms sampling time, x16 filter, not set
-  uint8_t reg_config_val = (0x04 << 5) | (0x05 << 2) & 0xFC;
+  uint8_t reg_config_val = ((0x04 << 5) | (0x05 << 2)) & 0xFC;
 
   // LSB of slave address sets read or write mode
   // send register number followed by its corresponding value
