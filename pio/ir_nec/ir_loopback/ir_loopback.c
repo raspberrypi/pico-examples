@@ -11,8 +11,11 @@
 #include "nec_receive.h"
 
 // Infrared loopback example ('NEC' format)
+//
 // Need to connect an IR LED to GPIO 14 via a suitable series resistor (e.g. 1.5k)
 // and an ective-low IR detector to GPIO 15 (e.g. VS1838b)
+//
+// Output is sent to stdout
 
 int main() {
     stdio_init_all();
@@ -27,7 +30,8 @@ int main() {
     int rx_sm = nec_rx_init (pio, rx_gpio);         // uses one state machine and 9 instructions
 
     if (tx_sm == -1 || rx_sm == -1) {
-        return -1;                                  // couldn't configure the PIO
+        printf ("could not configure PIO\n");
+        return -1;
     }
 
     // transmit and receive frames
