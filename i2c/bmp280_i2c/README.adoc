@@ -1,12 +1,12 @@
 = Attaching a BMP280 temp/pressure sensor via I2C
 
-This example code shows how to interface the Raspberry Pi Pico with the popular BMP280 temperature and air pressure sensor manufactured by Bosch. A similar variant, the BME280, exists that can also measure humidity. There is another example that uses this device but talks to it via SPI as opposed to I2c.
+This example code shows how to interface the Raspberry Pi Pico with the popular BMP280 temperature and air pressure sensor manufactured by Bosch. A similar variant, the BME280, exists that can also measure humidity. There is another example that uses the BME280 device but talks to it via SPI as opposed to I2C.
 
-The code reads data from the sensor's registers every second and prints it via the onboard UART. This example operates the BMP280 in _normal_ mode, meaning that the device continuously cycles between a measurement period and a standby period at a regular interval we can set. This has the advantage that subsequent reads do not require configuration register writes and is the recommended mode of operation to filter out short-term disturbances.
+The code reads data from the sensor's registers every 750 milliseconds and prints it via the onboard UART. This example operates the BMP280 in _normal_ mode, meaning that the device continuously cycles between a measurement period and a standby period at a regular interval we can set. This has the advantage that subsequent reads do not require configuration register writes and is the recommended mode of operation to filter out short-term disturbances.
 
 [TIP]
 ======
-The BMP280 is highly configurable with 3 modes of operation, various oversampling levels, and 5 filter settings. Find the datasheet online to explore all of its capabilities beyond the simple example given here.
+The BMP280 is highly configurable with 3 modes of operation, various oversampling levels, and 5 filter settings. Find the datasheet online (https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmp280-ds001.pdf) to explore all of its capabilities beyond the simple example given here.
 ======
 
 == Wiring information
@@ -22,7 +22,7 @@ image::bmp280_i2c_bb.png[]
 
 == List of Files
 
-CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
+CMakeLists.txt:: CMake file to incorporate the example into the examples build tree.
 bmp280_i2c.c:: The example code.
 
 == Bill of Materials
