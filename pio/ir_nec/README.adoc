@@ -8,9 +8,9 @@ The tasks of encoding and decoding the data are offloaded to the RP2040 PIO stat
 
 == Wiring information
 
-Connect GPIO 14 to the positive side ('anode') of an IR LED via a suitable series resistor e.g. 1.5k Ohms, and the negative side ('cathode') to ground.
+Connect GPIO 14 to the positive side ('anode') of an IR LED via a suitable series resistor e.g. 1.5k Ohms, and the negative side ('cathode') to ground. The wavelength of the LED is unlikely to be critical so long as it is compatible with your detector.
 
-Connect GPIO 15 to the output of a 3.3v IR detector such as the VS1838b, and wire the power connections of the detector to the 3v3 and ground. The program expects the decoder output to be low (logic '0') when a carrier is detected.
+Connect GPIO 15 to the output of a 3.3v IR detector such as the VS1838b, and wire the power connections of the detector to 3v3 and ground. The program expects the decoder output to be low (logic '0') when a carrier is detected.
 
 [[pio_ir_loopback_wiring]]
 [pdfwidth=75%]
@@ -53,5 +53,5 @@ nec_carrier_control.pio::: The PIO assembler code to transmit a complete frame.
 | Infra-Red LED | 1 | generic part
 | 1500 ohm resistor | 1 | generic part
 | Infra-Red Detector | 1 | generic part e.g. VS1838b
-| M/M Jumper wires | 3 | generic part
+| M/M Jumper wires | 5 | generic part
 |===

@@ -11,11 +11,13 @@
 ;
 ; The input pin should be connected to an IR detector with an 'active low' output.
 ;
-; This program expects there to be 10 state machine clock ticks per 'normal' 562.5us burst period,
-; in order to permit timely detection of start of a burst.
+; This program expects there to be 10 state machine clock ticks per 'normal' 562.5us burst period
+; in order to permit timely detection of start of a burst. The initailisation function below sets
+; the correct divisor to achive this relative to the system clock.
 ;
-; Frames consists of 32 bits sent least-siginificant bit first so the Input Shift Register should be
-; configured to shift right and autopush after 32 bits.
+; Within the 'NEC' protocol frames consists of 32 bits sent least-siginificant bit first; so the
+; Input Shift Register should be configured to shift right and autopush after 32 bits, as in the
+; initialisation function below.
 ;
 .define BURST_LOOP_COUNTER 30                   ; the detection threshold for a 'frame sync' burst
 .define BIT_SAMPLE_DELAY 15                     ; how long to wait after the end of the burst before sampling

@@ -13,7 +13,7 @@
 // Infrared loopback example ('NEC' format)
 //
 // Need to connect an IR LED to GPIO 14 via a suitable series resistor (e.g. 1.5k)
-// and an ective-low IR detector to GPIO 15 (e.g. VS1838b)
+// and an active-low IR detector to GPIO 15 (e.g. VS1838b)
 //
 // Output is sent to stdout
 
