@@ -21,9 +21,11 @@
    Connections on Raspberry Pi Pico board, other boards may vary.
 
    GPIO PICO_DEFAULT_I2C_SDA_PIN (on Pico this is 4 (pin 6)) -> SDA on BMP280
-   board GPIO PICO_DEFAULT_I2C_SCK_PIN (on Pico this is 5 (pin 7)) -> SCL on
-   BMP280 board 3.3v (pin 36) -> VCC on BMP280 board GND (pin 38)  -> GND on
+   board
+   GPIO PICO_DEFAULT_I2C_SCK_PIN (on Pico this is 5 (pin 7)) -> SCL on
    BMP280 board
+   3.3v (pin 36) -> VCC on BMP280 board
+   GND (pin 38)  -> GND on BMP280 board
 */
 
 // number of calibration registers to be read
@@ -90,9 +92,6 @@ struct bmp280_calib_param {
   int16_t dig_p7;
   int16_t dig_p8;
   int16_t dig_p9;
-
-  // intermediate result for pressure calc
-  int32_t t_fine;
 };
 
 #ifdef i2c_default
@@ -101,7 +100,7 @@ void bmp280_init() {
   uint8_t buf[2];
 
   // 500ms sampling time, x16 filter, not set
-  uint8_t reg_config_val = ((0x04 << 5) | (0x05 << 2)) & 0xFC;
+  const uint8_t reg_config_val = ((0x04 << 5) | (0x05 << 2)) & 0xFC;
 
   // LSB of slave address sets read or write mode
   // send register number followed by its corresponding value
@@ -110,15 +109,15 @@ void bmp280_init() {
   i2c_write_blocking(i2c_default, (addr & BMP280_WRITE_MODE), buf, 2, false);
 
   // osrs_t x1, osrs_p x4, normal mode operation
-  uint8_t reg_ctrl_meas_val = (0x01 << 5) | (0x03 << 2) | (0x03);
+  const uint8_t reg_ctrl_meas_val = (0x01 << 5) | (0x03 << 2) | (0x03);
   buf[0] = REG_CTRL_MEAS;
   buf[1] = reg_ctrl_meas_val;
   i2c_write_blocking(i2c_default, (addr & BMP280_WRITE_MODE), buf, 2, false);
 }
 
-void bmp280_read_raw(int32_t *temp, int32_t *pressure) {
+void bmp280_read_raw(int32_t* temp, int32_t* pressure) {
   // BMP280 data registers are auto-incrementing and we have 3 temperature and
-  // pressure registers, each so we start at 0xF7 and read 6 bytes to 0xFC note:
+  // pressure registers each, so we start at 0xF7 and read 6 bytes to 0xFC note:
   // normal mode does not require further ctrl_meas and config register writes
 
   uint8_t buf[6];
@@ -138,49 +137,61 @@ void bmp280_reset() {
   i2c_write_blocking(i2c_default, (addr & BMP280_WRITE_MODE), buf, 2, false);
 }
 
-float bmp280_convert_temp(int32_t *temp, struct bmp280_calib_param *params) {
-  // use the 32-bit floating point compensation implementation given in the
+int32_t bmp280_convert(int32_t* temp, struct bmp280_calib_param* params) {
+  // intermediate function that calculates the fine resolution temperature
+  // used for both pressure and temperature conversions
+  int32_t var1, var2;
+  var1 = ((((*temp >> 3) - ((int32_t)params->dig_t1 << 1))) *
+          ((int32_t)params->dig_t2)) >>
+         11;
+  var2 = (((((*temp >> 4) - ((int32_t)params->dig_t1)) *
+            ((*temp >> 4) - ((int32_t)params->dig_t1))) >>
+           12) *
+          ((int32_t)params->dig_t3)) >>
+         14;
+  return var1 + var2;
+}
+
+int32_t bmp280_convert_temp(int32_t* temp, struct bmp280_calib_param* params) {
+  // use the 32-bit fixed point compensation implementation given in the
   // datasheet
-  float var1, var2;
-  var1 = (((float)*temp) / 16384.0 - ((float)params->dig_t1) / 1024.0) *
-         ((float)params->dig_t2);
-  var2 = ((((float)*temp) / 131072.0 - ((float)params->dig_t1) / 8192.0) *
-          (((float)*temp) / 131072.0 - ((float)params->dig_t1) / 8192.0)) *
-         ((float)params->dig_t3);
-  params->t_fine = (int32_t)(var1 + var2);
-  return (var1 + var2) / 5120.0;
+  int32_t t_fine = bmp280_convert(&temp, &params);
+  return (t_fine * 5 + 128) >> 8;
 }
 
-float bmp280_convert_pressure(int32_t *pressure,
-                              struct bmp280_calib_param *params) {
-  float var1, var2;
-  float converted = 0.0;
+int32_t bmp280_convert_pressure(int32_t* pressure, int32_t* temp, struct bmp280_calib_param* params) {
+  int32_t t_fine = bmp280_convert(&temp, &params);
 
-  var1 = ((float)params->t_fine / 2.0) - 64000.0;
-  var2 = var1 * var1 * ((float)params->dig_p6) / 32768.0;
-  var2 = var2 + var1 * ((float)params->dig_p5) * 2.0;
-  var2 = (var2 / 4.0) + (((float)params->dig_p4) * 65536.0);
-  var1 = (((float)params->dig_p3) * var1 * var1 / 524288.0 +
-          ((float)params->dig_p2) * var1) /
-         524288.0;
-  var1 = (1.0 + var1 / 32768.0) * ((float)params->dig_p1);
-
-  // avoid division by 0
-  if (var1 < 0 || var1 > 0) {
-    converted = 1048576.0 - (float)*pressure;
-    converted = (converted - (var2 / 4096.0)) * 6250.0 / var1;
-    var1 = ((float)params->dig_p9) * converted * converted / 2147483648.0;
-    var2 = converted * ((float)params->dig_p8) / 32768.0;
-
-    converted += (var1 + var2 + ((float)params->dig_p7)) / 16.0;
-    // results in kPa
-    return converted / 1000.0;
-  } else {
-    return 0.0;
+  int32_t var1, var2;
+  uint32_t converted = 0.0;
+  var1 = (((int32_t)t_fine) >> 1) - (int32_t)64000;
+  var2 = (((var1 >> 2) * (var1 >> 2)) >> 11) * ((int32_t)params->dig_p6);
+  var2 += ((var1 * ((int32_t)params->dig_p5)) << 1);
+  var2 = (var2 >> 2) + (((int32_t)params->dig_p4) << 16);
+  var1 = (((params->dig_p3 * (((var1 >> 2) * (var1 >> 2)) >> 13)) >> 3) +
+          ((((int32_t)params->dig_p2) * var1) >> 1)) >>
+         18;
+  var1 = ((((32768 + var1)) * ((int32_t)params->dig_p1)) >> 15);
+  if (var1 == 0) {
+    return 0;  // avoid exception caused by division by zero
   }
+  converted =
+      (((uint32_t)(((int32_t)1048576) - *pressure) - (var2 >> 12))) * 3125;
+  if (converted < 0x80000000) {
+    converted = (converted << 1) / ((uint32_t)var1);
+  } else {
+    converted = (converted / (uint32_t)var1) * 2;
+  }
+  var1 = (((int32_t)params->dig_p9) *
+          ((int32_t)(((converted >> 3) * (converted >> 3)) >> 13))) >>
+         12;
+  var2 = (((int32_t)(converted >> 2)) * ((int32_t)params->dig_p8)) >> 13;
+  converted =
+      (uint32_t)((int32_t)converted + ((var1 + var2 + params->dig_p7) >> 4));
+  return converted;
 }
 
-void bmp280_get_calib_params(struct bmp280_calib_param *params) {
+void bmp280_get_calib_params(struct bmp280_calib_param* params) {
   // raw temp and pressure values need to be calibrated according to
   // parameters generated during the manufacturing of the sensor
   // there are 3 temperature params, and 9 pressure params, each with a LSB
@@ -228,7 +239,8 @@ int main() {
   printf(
       "Hello, BMP280! Reading temperaure and pressure values from sensor...\n");
 
-  // I2C is "open drain", pull ups to keep signal high when no data is being sent
+  // I2C is "open drain", pull ups to keep signal high when no data is being
+  // sent
   i2c_init(i2c_default, 100 * 1000);
   gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
   gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
@@ -248,7 +260,8 @@ int main() {
   while (1) {
     bmp280_read_raw(&temp, &pressure);
     float converted_temp = bmp280_convert_temp(&temp, &params);
-    float converted_pressure = bmp280_convert_pressure(&pressure, &params);
+    float converted_pressure =
+        bmp280_convert_pressure(&pressure, &temp, &params);
     printf("Temperature: %.2f °C  Pressure: %.3f kPa\n", converted_temp,
            converted_pressure);
     // poll every 750ms as data refreshes every 500ms
