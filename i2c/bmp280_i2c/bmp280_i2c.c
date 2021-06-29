@@ -240,11 +240,11 @@ int main() {
   int32_t raw_pressure;
 
   while (1) {
-    bmp280_read_raw(&temp, &pressure);
-    float converted_temp = bmp280_convert_temp(&temp, &params) * 0.01f;
-    float converted_pressure = bmp280_convert_pressure(&pressure, &temp, &params) * 0.001f;
-    printf("Temperature: %.2f °C  Pressure: %.3f kPa\n", converted_temp,
-      converted_pressure);
+    bmp280_read_raw(&raw_temperature, &raw_pressure);
+    float temperature = bmp280_convert_temp(raw_temperature, &params);
+    float pressure = bmp280_convert_pressure(raw_pressure, raw_temperature, &params);
+    printf("Pressure = %.3f kPa\n", pressure / 1000.0);
+    printf("Temp. = %.2f C\n", temperature / 100.0);
     // poll every 750ms as data refreshes every 500ms
     sleep_ms(750);
   }
