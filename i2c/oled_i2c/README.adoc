@@ -1,0 +1,40 @@
+= Attaching an OLED display via I2C
+
+This example code shows how to interface the Raspberry Pi Pico with an 128x32 OLED display board based on the SSD1306 display driver.
+
+WHAT DOES THE CODE DO??
+
+In contrast to the sensors in the examples library, the SSD1306 is not operated via direct reads/writes to registers. Instead, a list of versatile commands is defined (see datasheet) that allows the user to access all the capabilities of the driver. Ultimately, these commands end up writing to internal registers but the key point is that the I2C write process is now different.
+
+[NOTE]
+======
+* The SSD1306 is able to drive 128x64 displays but as our display is 128x32, only half of the COM (common) pins are connected to the display.
+* The specific display model being used is UG-2832HSWEG02
+======
+
+== Wiring information
+
+Wiring up the device requires 4 jumpers, to connect VCC (3.3v), GND, SDA and SCL and optionally a 5th jumper for the driver RESET pin. The example here uses the default I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the 3.3V pin from the Pico.
+
+[[oled_i2c_wiring]]
+[pdfwidth=75%]
+.Wiring Diagram for oled display via I2C.
+image::oled_i2c_bb.png[]
+
+== List of Files
+
+CMakeLists.txt:: CMake file to incorporate the example into the examples build tree.
+oled_i2c.c:: The example code.
+
+== Bill of Materials
+
+.A list of materials required for the example
+[[oled_i2c-bom-table]]
+[cols=3]
+|===
+| *Item* | *Quantity* | Details
+| Breadboard | 1 | generic part
+| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| OLED display board | 1 | generic part
+| M/M Jumper wires | 4 | generic part
+|===
