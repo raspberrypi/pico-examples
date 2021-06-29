@@ -135,24 +135,24 @@ void bmp280_reset() {
   i2c_write_blocking(i2c_default, (addr & BMP280_WRITE_MODE), buf, 2, false);
 }
 
-int32_t bmp280_convert(int32_t* temp, struct bmp280_calib_param* params) {
+int32_t bmp280_convert(int32_t temp, struct bmp280_calib_param* params) {
   // intermediate function that calculates the fine resolution temperature
   // used for both pressure and temperature conversions
   int32_t var1, var2;
-  var1 = ((((*temp >> 3) - ((int32_t)params->dig_t1 << 1))) * ((int32_t)params->dig_t2)) >> 11;
-  var2 = (((((*temp >> 4) - ((int32_t)params->dig_t1)) * ((*temp >> 4) - ((int32_t)params->dig_t1))) >> 12) * ((int32_t)params->dig_t3)) >> 14;
+  var1 = ((((temp >> 3) - ((int32_t)params->dig_t1 << 1))) * ((int32_t)params->dig_t2)) >> 11;
+  var2 = (((((temp >> 4) - ((int32_t)params->dig_t1)) * ((temp >> 4) - ((int32_t)params->dig_t1))) >> 12) * ((int32_t)params->dig_t3)) >> 14;
   return var1 + var2;
 }
 
-int32_t bmp280_convert_temp(int32_t* temp, struct bmp280_calib_param* params) {
+int32_t bmp280_convert_temp(int32_t temp, struct bmp280_calib_param* params) {
   // use the 32-bit fixed point compensation implementation given in the
   // datasheet
-  int32_t t_fine = bmp280_convert(&temp, &params);
+  int32_t t_fine = bmp280_convert(temp, params);
   return (t_fine * 5 + 128) >> 8;
 }
 
-int32_t bmp280_convert_pressure(int32_t* pressure, int32_t* temp, struct bmp280_calib_param* params) {
-  int32_t t_fine = bmp280_convert(&temp, &params);
+int32_t bmp280_convert_pressure(int32_t pressure, int32_t temp, struct bmp280_calib_param* params) {
+  int32_t t_fine = bmp280_convert(temp, params);
 
   int32_t var1, var2;
   uint32_t converted = 0.0;
@@ -166,7 +166,7 @@ int32_t bmp280_convert_pressure(int32_t* pressure, int32_t* temp, struct bmp280_
     return 0;  // avoid exception caused by division by zero
   }
   converted =
-    (((uint32_t)(((int32_t)1048576) - *pressure) - (var2 >> 12))) * 3125;
+    (((uint32_t)(((int32_t)1048576) - pressure) - (var2 >> 12))) * 3125;
   if (converted < 0x80000000) {
     converted = (converted << 1) / ((uint32_t)var1);
   }
@@ -236,8 +236,8 @@ int main() {
   struct bmp280_calib_param params;
   bmp280_get_calib_params(&params);
 
-  int32_t temp;
-  int32_t pressure;
+  int32_t raw_temperature;
+  int32_t raw_pressure;
 
   while (1) {
     bmp280_read_raw(&temp, &pressure);
