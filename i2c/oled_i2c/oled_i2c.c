@@ -8,6 +8,7 @@
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
+#include "raspberry26x32.h"
 
  /* Example code to talk to an SSD1306-based OLED display
 
@@ -29,7 +30,7 @@
 
 #define OLED_RESET_PIN 28
 
-// commands (see datasheet)
+ // commands (see datasheet)
 #define OLED_SET_CONTRAST _u(0x81)
 #define OLED_SET_ENTIRE_ON _u(0xA4)
 #define OLED_SET_NORM_INV _u(0xA6)
@@ -238,7 +239,7 @@ int main() {
     #warning i2c / oled_i2d example requires a board with I2C pins
         puts("Default I2C pins were not defined");
 #else
-    printf("Hello, OLED display! I'm displaying stuff...\n");
+    printf("Hello, OLED display! Look at my raspberries..\n");
 
     // I2C is "open drain", pull ups to keep signal high when no data is being
     // sent
@@ -251,6 +252,49 @@ int main() {
     // keep RS high during normal operation as the board autoresets on startup
     gpio_init(OLED_RESET_PIN);
     gpio_put(OLED_RESET_PIN, 1);
+
+    // run through the complete initialization process
+    oled_init();
+
+    // initialize render area for entire frame (128 pixels by 4 pages)
+    struct render_area frame_area = { start_col: 0, end_col : OLED_WIDTH - 1, start_page : 0, end_page : OLED_PAGES_NUM - 1 };
+    calc_render_area_buflen(&frame_area);
+
+    // zero the entire display
+    uint8_t buf[OLED_BUF_LEN];
+    fill(buf, 0x00);
+    render(buf, &frame_area);
+
+    // intro sequence: flash the screen 3 times
+    for (int i = 0; i < 3; i++) {
+        oled_send_cmd(0xA5); // ignore RAM, all pixels on
+        sleep_ms(500);
+        oled_send_cmd(0xA4); // go back to following RAM
+        sleep_ms(500);
+    }
+
+    // render 3 cute little raspberries
+    struct render_area area = { start_col: 0, end_col : IMG_WIDTH - 1, start_page : 0, end_page : OLED_PAGES_NUM - 1 };
+    calc_render_area_buflen(&area);
+    render(raspberry26x32, &area);
+    for (int i = 1; i < 3; i++) {
+        uint8_t offset = 5 + IMG_WIDTH; // 5px padding
+        area.start_col += offset;
+        area.end_col += offset;
+        render(raspberry26x32, &area);
+    }
+
+    // configure horizontal scrolling
+    oled_send_cmd(OLED_SET_HORIZ_SCROLL | 0x00);
+    oled_send_cmd(0x00); // dummy byte
+    oled_send_cmd(0x00); // start page 0
+    oled_send_cmd(0x00); // time interval
+    oled_send_cmd(0x03); // end page 3
+    oled_send_cmd(0x00); // dummy byte
+    oled_send_cmd(0xFF); // dummy byte
+
+    // let's goooo!
+    oled_send_cmd(OLED_SET_SCROLL | 0x01);
 
 #endif
     return 0;
