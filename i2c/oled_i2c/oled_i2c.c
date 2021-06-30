@@ -60,9 +60,27 @@
 #define OLED_WRITE_MODE _u(0xFE)
 #define OLED_READ_MODE _u(0xFF)
 
-// struct to keep track of frame buffer and other state
-struct oled_ssd1306 {
-    uint8_t buf[(OLED_HEIGHT / 8) * OLED_WIDTH];
+struct render_area {
+    uint8_t start_col;
+    uint8_t end_col;
+    uint8_t start_page;
+    uint8_t end_page;
+
+    int buflen;
+};
+
+void fill(uint8_t buf[], uint8_t fill) {
+    // fill entire buffer with one byte
+    for (int i = 0; i < OLED_BUF_LEN; i++) {
+        buf[i] = fill;
+    }
+};
+
+void fill_page(uint8_t buf[], uint8_t fill, uint8_t page) {
+    // fill entire page with one byte
+    for (int i = page * OLED_WIDTH; i < OLED_WIDTH; i++) {
+        buf[i] = fill;
+    }
 };
 
 // convenience methods for printing out a buffer to be rendered
@@ -100,6 +118,11 @@ void print_buf_area(uint8_t buf[], struct render_area* area) {
     }
 }
 
+void calc_render_area_buflen(struct render_area* area) {
+    // calculate how long the flattened buffer will be for a render area
+    area->buflen = (area->end_col - area->start_col + 1) * (area->end_page - area->start_page + 1);
+}
+
 #ifdef i2c_default
 
 void oled_send_cmd(uint8_t cmd) {
@@ -111,8 +134,23 @@ void oled_send_cmd(uint8_t cmd) {
     i2c_write_blocking(i2c_default, (OLED_ADDR & OLED_WRITE_MODE), buf, 2, false);
 }
 
-void oled_send_buf() {
+void oled_send_buf(uint8_t buf[], int BUF_LEN) {
+    // in horizontal addressing mode, the column address pointer auto-increments
+    // and then wraps around to the next page, so we can send the entire frame
+    // buffer in one gooooooo!
 
+    // copy our frame buffer into a new buffer because we need to add the control byte
+    // to the beginning
+
+    // TODO find a more memory-efficient way to do this..
+    // maybe break the data transfer into pages?
+    uint8_t temp_buf[BUF_LEN + 1];
+    for (int i = 1; i < BUF_LEN + 1; i++) {
+        temp_buf[i] = buf[i - 1];
+    }
+    // Co = 0, D/C = 1 => the driver expects data to be written to RAM
+    temp_buf[0] = 0x40;
+    i2c_write_blocking(i2c_default, (OLED_ADDR & OLED_WRITE_MODE), temp_buf, BUF_LEN + 1, false);
 }
 
 void oled_init() {
@@ -171,6 +209,19 @@ void oled_init() {
     // this is necessary as memory writes will corrupt if scrolling was enabled
 
     oled_send_cmd(OLED_SET_DISP | 0x01); // turn display on
+}
+
+void render(uint8_t buf[], struct render_area* area) {
+    // update a portion of the display with a render area
+    oled_send_cmd(OLED_SET_COL_ADDR);
+    oled_send_cmd(area->start_col);
+    oled_send_cmd(area->end_col);
+
+    oled_send_cmd(OLED_SET_PAGE_ADDR);
+    oled_send_cmd(area->start_page);
+    oled_send_cmd(area->end_page);
+
+    oled_send_buf(buf, area->buflen);
 }
 
 #endif
