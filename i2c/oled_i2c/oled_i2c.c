@@ -47,10 +47,15 @@
 #define OLED_SET_PRECHARGE _u(0xD9)
 #define OLED_SET_VCOM_DESEL _u(0xDB)
 #define OLED_SET_CHARGE_PUMP _u(0x8D)
+#define OLED_SET_HORIZ_SCROLL _u(0x26)
+#define OLED_SET_SCROLL _u(0x2E)
 
 #define OLED_ADDR _u(0x3C)
 #define OLED_HEIGHT _u(32)
 #define OLED_WIDTH _u(128)
+#define OLED_PAGE_HEIGHT _u(8)
+#define OLED_PAGES_NUM OLED_HEIGHT / OLED_PAGE_HEIGHT
+#define OLED_BUF_LEN (OLED_PAGES_NUM * OLED_WIDTH)
 
 #define OLED_WRITE_MODE _u(0xFE)
 #define OLED_READ_MODE _u(0xFF)
@@ -119,44 +124,51 @@ void oled_init() {
 
     oled_send_cmd(OLED_SET_DISP | 0x00); // set display off
 
+    /* memory mapping */
     oled_send_cmd(OLED_SET_MEM_ADDR); // set memory address mode
     oled_send_cmd(0x00); // horizontal addressing mode
 
-    oled_send_cmd(OLED_SET_DISP_CLK_DIV); // set display clock divide ratio
-    oled_send_cmd(0x80); // div ratio of 1, standard freq
-
-    oled_send_cmd(OLED_SET_MUX_RATIO); // set multiplex ratio
-    oled_send_cmd(OLED_HEIGHT - 1); // our display is only 32 pixels high
-
-    oled_send_cmd(OLED_SET_DISP_OFFSET); // set display offset
-    oled_send_cmd(0x00); // no offset
-
+    /* resolution and layout */
     oled_send_cmd(OLED_SET_DISP_START_LINE); // set display start line to 0
-
-    oled_send_cmd(OLED_SET_CHARGE_PUMP); // set charge pump
-    oled_send_cmd(0x14); // Vcc internally generated on our board
 
     oled_send_cmd(OLED_SET_SEG_REMAP | 0x01); // set segment re-map
     // column address 127 is mapped to SEG0
 
+    oled_send_cmd(OLED_SET_MUX_RATIO); // set multiplex ratio
+    oled_send_cmd(OLED_HEIGHT - 1); // our display is only 32 pixels high
+
     oled_send_cmd(OLED_SET_COM_OUT_DIR | 0x08); // set COM (common) output scan direction
     // scan from bottom up, COM[N-1] to COM0
+
+    oled_send_cmd(OLED_SET_DISP_OFFSET); // set display offset
+    oled_send_cmd(0x00); // no offset
 
     oled_send_cmd(OLED_SET_COM_PIN_CFG); // set COM (common) pins hardware configuration
     oled_send_cmd(0x02); // manufacturer magic number
 
-    oled_send_cmd(OLED_SET_CONTRAST); // set contrast control
-    oled_send_cmd(0xFF);
+    /* timing and driving scheme */
+    oled_send_cmd(OLED_SET_DISP_CLK_DIV); // set display clock divide ratio
+    oled_send_cmd(0x80); // div ratio of 1, standard freq
 
     oled_send_cmd(OLED_SET_PRECHARGE); // set pre-charge period
-    oled_send_cmd(0xF1); // VCC internally generated on our board
+    oled_send_cmd(0xF1); // Vcc internally generated on our board
 
     oled_send_cmd(OLED_SET_VCOM_DESEL); // set VCOMH deselect level
     oled_send_cmd(0x30); // 0.83xVcc
 
+    /* display */
+    oled_send_cmd(OLED_SET_CONTRAST); // set contrast control
+    oled_send_cmd(0xFF);
+
     oled_send_cmd(OLED_SET_ENTIRE_ON); // set entire display on to follow RAM content
 
     oled_send_cmd(OLED_SET_NORM_INV); // set normal (not inverted) display
+
+    oled_send_cmd(OLED_SET_CHARGE_PUMP); // set charge pump
+    oled_send_cmd(0x14); // Vcc internally generated on our board
+
+    oled_send_cmd(OLED_SET_SCROLL | 0x00); // deactivate horizontal scrolling if set
+    // this is necessary as memory writes will corrupt if scrolling was enabled
 
     oled_send_cmd(OLED_SET_DISP | 0x01); // turn display on
 }
