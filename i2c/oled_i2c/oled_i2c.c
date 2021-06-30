@@ -60,6 +60,40 @@ struct oled_ssd1306 {
     uint8_t buf[(OLED_HEIGHT / 8) * OLED_WIDTH];
 };
 
+// convenience methods for printing out a buffer to be rendered
+// mostly useful for debugging images, patterns, etc
+
+void print_buf_page(uint8_t buf[], uint8_t page) {
+    // prints one page of a full length (128x4) buffer
+    for (int j = 0; j < OLED_PAGE_HEIGHT; j++) {
+        for (int k = 0; k < OLED_WIDTH; k++) {
+            printf("%u", (buf[page * OLED_WIDTH + k] >> j) & 0x01);
+        }
+        printf("\n");
+    }
+}
+
+void print_buf_pages(uint8_t buf[]) {
+    // prints all pages of a full length buffer
+    for (int i = 0; i < OLED_PAGES_NUM; i++) {
+        printf("--page %d--\n", i);
+        print_buf_page(buf, i);
+    }
+}
+
+void print_buf_area(uint8_t buf[], struct render_area* area) {
+    // print a render area of generic size
+    uint8_t area_width = area->end_col - area->start_page + 1;
+    uint8_t area_height = area->end_page - area->start_page + 1; // in pages, not pixels
+    for (int i = 0; i < area_height; i++) {
+        for (int j = 0; j < OLED_PAGE_HEIGHT; j++) {
+            for (int k = 0; k < area_width; k++) {
+                printf("%u", (buf[i * area_width + k] >> j) & 0x01);
+            }
+            printf("\n");
+        }
+    }
+}
 
 #ifdef i2c_default
 
