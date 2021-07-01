@@ -20,9 +20,9 @@
 
     Connections on Raspberry Pi Pico board, other boards may vary.
 
-    GPIO PICO_DEFAULT_I2C_SDA_PIN (on Pico this is 4 (pin 6)) -> SDA on BMP280
+    GPIO PICO_DEFAULT_I2C_SDA_PIN (on Pico this is GP4 (pin 6)) -> SDA on BMP280
     board
-    GPIO PICO_DEFAULT_I2C_SCK_PIN (on Pico this is 5 (pin 7)) -> SCL on
+    GPIO PICO_DEFAULT_I2C_SCK_PIN (on Pico this is GP5 (pin 7)) -> SCL on
     BMP280 board
     3.3v (pin 36) -> VCC on BMP280 board
     GND (pin 38)  -> GND on BMP280 board
