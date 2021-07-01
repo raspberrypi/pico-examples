@@ -4,9 +4,9 @@ This example code shows how to interface the Raspberry Pi Pico with an 128x32 OL
 
 The code displays a series of tiny raspberries that scroll horizontally, in the process showing you how to initialize the display, write to the entire display, write to only a portion of the display, and configure scrolling.
 
-The SSD1306 is not operated via direct reads/writes to registers. Instead, a list of versatile commands is defined (see datasheet) that allows the user to access all the capabilities of the driver. Ultimately, these commands end up writing to internal registers but the key point is that the I2C write process is now different. After sending a slave address, the data that follows can be either a command, flags to follow up a command or data to be written directly into the display's RAM. A control byte is required for each write after the slave address so that the driver knows what type of data is being sent.
+The SSD1306 is operated via a list of versatile commands (see datasheet) that allows the user to access all the capabilities of the driver. After sending a slave address, the data that follows can be either a command, flags to follow up a command or data to be written directly into the display's RAM. A control byte is required for each write after the slave address so that the driver knows what type of data is being sent.
 
-This display is 32 pixels high by 128 pixels wide. These 32 vertical pixels are partitioned into 4 pages, each 8 pixels in height. In RAM, This looks roughly like:
+This display is 32 pixels high by 128 pixels wide and the SSD1306 can drive displays that are up to 64 pixels high and 128 pixels wide. These 32 vertical pixels are partitioned into 4 pages, each 8 pixels in height. In RAM, This looks roughly like:
 
 ----
            | COL0 | COL1 | COL2 | COL3 |  ...  | COL126 | COL127 |
