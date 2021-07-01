@@ -108,7 +108,7 @@ void print_buf_area(uint8_t buf[], struct render_area* area) {
     // print a render area of generic size
     uint8_t area_width = area->end_col - area->start_col + 1;
     uint8_t area_height = area->end_page - area->start_page + 1; // in pages, not pixels
-    for (int i = area->start_page; i < area_height; i++) {
+    for (int i = 0; i < area_height; i++) {
         for (int j = 0; j < OLED_PAGE_HEIGHT; j++) {
             for (int k = 0; k < area_width; k++) {
                 printf("%u", (buf[i * area_width + k] >> j) & 0x01);
