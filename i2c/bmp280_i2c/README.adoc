@@ -34,7 +34,7 @@ bmp280_i2c.c:: The example code.
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | http://raspberrypi.org/
-| BMP280-based breakout board | 1 | generic part
+| BMP280-based breakout board | 1 | https://shop.pimoroni.com/products/bmp280-breakout-temperature-pressure-altitude-sensor[from Pimoroni]
 | M/M Jumper wires | 4 | generic part
 |===
 
