@@ -20,15 +20,13 @@
 
     Connections on Raspberry Pi Pico board, other boards may vary.
 
-    GPIO PICO_DEFAULT_I2C_SDA_PIN (on Pico this is 4 (pin 6)) -> SDA on display
+    GPIO PICO_DEFAULT_I2C_SDA_PIN (on Pico this is GP4 (pin 6)) -> SDA on display
     board
-    GPIO PICO_DEFAULT_I2C_SCK_PIN (on Pico this is 5 (pin 7)) -> SCL on
+    GPIO PICO_DEFAULT_I2C_SCK_PIN (on Pico this is GP5 (pin 7)) -> SCL on
     display board
     3.3v (pin 36) -> VCC on display board
     GND (pin 38)  -> GND on display board
  */
-
-#define OLED_RESET_PIN 28
 
  // commands (see datasheet)
 #define OLED_SET_CONTRAST _u(0x81)
@@ -55,8 +53,8 @@
 #define OLED_HEIGHT _u(32)
 #define OLED_WIDTH _u(128)
 #define OLED_PAGE_HEIGHT _u(8)
-#define OLED_PAGES_NUM OLED_HEIGHT / OLED_PAGE_HEIGHT
-#define OLED_BUF_LEN (OLED_PAGES_NUM * OLED_WIDTH)
+#define OLED_NUM_PAGES OLED_HEIGHT / OLED_PAGE_HEIGHT
+#define OLED_BUF_LEN (OLED_NUM_PAGES * OLED_WIDTH)
 
 #define OLED_WRITE_MODE _u(0xFE)
 #define OLED_READ_MODE _u(0xFF)
@@ -71,17 +69,18 @@ struct render_area {
 };
 
 void fill(uint8_t buf[], uint8_t fill) {
-    // fill entire buffer with one byte
+    // fill entire buffer with the same byte
     for (int i = 0; i < OLED_BUF_LEN; i++) {
         buf[i] = fill;
     }
 };
 
 void fill_page(uint8_t buf[], uint8_t fill, uint8_t page) {
-    // fill entire page with one byte
-    for (int i = page * OLED_WIDTH; i < OLED_WIDTH; i++) {
-        buf[i] = fill;
+    // fill entire page with the same byte
+    for (int i = 0; i < OLED_WIDTH; i++) {
+        buf[(page * OLED_WIDTH) + i] = fill;
     }
+
 };
 
 // convenience methods for printing out a buffer to be rendered
@@ -99,7 +98,7 @@ void print_buf_page(uint8_t buf[], uint8_t page) {
 
 void print_buf_pages(uint8_t buf[]) {
     // prints all pages of a full length buffer
-    for (int i = 0; i < OLED_PAGES_NUM; i++) {
+    for (int i = 0; i < OLED_NUM_PAGES; i++) {
         printf("--page %d--\n", i);
         print_buf_page(buf, i);
     }
@@ -107,9 +106,9 @@ void print_buf_pages(uint8_t buf[]) {
 
 void print_buf_area(uint8_t buf[], struct render_area* area) {
     // print a render area of generic size
-    uint8_t area_width = area->end_col - area->start_page + 1;
+    uint8_t area_width = area->end_col - area->start_col + 1;
     uint8_t area_height = area->end_page - area->start_page + 1; // in pages, not pixels
-    for (int i = 0; i < area_height; i++) {
+    for (int i = area->start_page; i < area_height; i++) {
         for (int j = 0; j < OLED_PAGE_HEIGHT; j++) {
             for (int k = 0; k < area_width; k++) {
                 printf("%u", (buf[i * area_width + k] >> j) & 0x01);
@@ -135,7 +134,7 @@ void oled_send_cmd(uint8_t cmd) {
     i2c_write_blocking(i2c_default, (OLED_ADDR & OLED_WRITE_MODE), buf, 2, false);
 }
 
-void oled_send_buf(uint8_t buf[], int BUF_LEN) {
+void oled_send_buf(uint8_t buf[], int buflen) {
     // in horizontal addressing mode, the column address pointer auto-increments
     // and then wraps around to the next page, so we can send the entire frame
     // buffer in one gooooooo!
@@ -145,13 +144,13 @@ void oled_send_buf(uint8_t buf[], int BUF_LEN) {
 
     // TODO find a more memory-efficient way to do this..
     // maybe break the data transfer into pages?
-    uint8_t temp_buf[BUF_LEN + 1];
-    for (int i = 1; i < BUF_LEN + 1; i++) {
+    uint8_t temp_buf[buflen + 1];
+    for (int i = 1; i < buflen + 1; i++) {
         temp_buf[i] = buf[i - 1];
     }
     // Co = 0, D/C = 1 => the driver expects data to be written to RAM
     temp_buf[0] = 0x40;
-    i2c_write_blocking(i2c_default, (OLED_ADDR & OLED_WRITE_MODE), temp_buf, BUF_LEN + 1, false);
+    i2c_write_blocking(i2c_default, (OLED_ADDR & OLED_WRITE_MODE), temp_buf, buflen + 1, false);
 }
 
 void oled_init() {
@@ -232,7 +231,6 @@ int main() {
 
     // useful information for picotool
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
-    bi_decl(bi_1pin_with_name(OLED_RESET_PIN, "SSD1306 RESET pin"));
     bi_decl(bi_program_description("OLED I2C example for the Raspberry Pi Pico"));
 
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
@@ -249,15 +247,11 @@ int main() {
     gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
     gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
 
-    // keep RS high during normal operation as the board autoresets on startup
-    gpio_init(OLED_RESET_PIN);
-    gpio_put(OLED_RESET_PIN, 1);
-
     // run through the complete initialization process
     oled_init();
 
     // initialize render area for entire frame (128 pixels by 4 pages)
-    struct render_area frame_area = { start_col: 0, end_col : OLED_WIDTH - 1, start_page : 0, end_page : OLED_PAGES_NUM - 1 };
+    struct render_area frame_area = { start_col: 0, end_col : OLED_WIDTH - 1, start_page : 0, end_page : OLED_NUM_PAGES - 1 };
     calc_render_area_buflen(&frame_area);
 
     // zero the entire display
@@ -274,7 +268,7 @@ int main() {
     }
 
     // render 3 cute little raspberries
-    struct render_area area = { start_col: 0, end_col : IMG_WIDTH - 1, start_page : 0, end_page : OLED_PAGES_NUM - 1 };
+    struct render_area area = { start_col: 0, end_col : IMG_WIDTH - 1, start_page : 0, end_page : OLED_NUM_PAGES - 1 };
     calc_render_area_buflen(&area);
     render(raspberry26x32, &area);
     for (int i = 1; i < 3; i++) {
