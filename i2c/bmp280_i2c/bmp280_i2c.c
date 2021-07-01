@@ -238,14 +238,15 @@ int main() {
     int32_t raw_temperature;
     int32_t raw_pressure;
 
+    sleep_ms(250); // sleep so that data polling and register update don't collide
     while (1) {
         bmp280_read_raw(&raw_temperature, &raw_pressure);
         float temperature = bmp280_convert_temp(raw_temperature, &params);
         float pressure = bmp280_convert_pressure(raw_pressure, raw_temperature, &params);
         printf("Pressure = %.3f kPa\n", pressure / 1000.0);
         printf("Temp. = %.2f C\n", temperature / 100.0);
-        // poll every 750ms as data refreshes every 500ms
-        sleep_ms(750);
+        // poll every 500ms
+        sleep_ms(500);
     }
 
 #endif
