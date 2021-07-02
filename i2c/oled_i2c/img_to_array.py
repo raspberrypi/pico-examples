@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
-# Converts a greyscale image into a format able to be
+# Converts a grayscale image into a format able to be
 # displayed by the SSD1306 driver in horizontal addressing mode
 
-# usage: ./img_to_array.py <logo.bmp> on a Raspberry Pi
-# or python3 img_to_array.py <logo.bmp>
+# usage: python3 img_to_array.py <logo.bmp>
 
 # depends on the Pillow library
 # `python3 -m pip install --upgrade Pillow`
 
 from PIL import Image
 import sys
+from pathlib import Path
 
 OLED_HEIGHT = 32
 OLED_WIDTH = 128
@@ -26,22 +26,20 @@ img_path = sys.argv[1]
 try:
     im = Image.open(img_path)
 except OSError:
-    print("Oops! The image could not be opened.")
-    sys.exit()
+    raise Exception("Oops! The image could not be opened.")
 
 if im.size[0] > OLED_WIDTH or im.size[1] > OLED_HEIGHT:
-    print("OLED display only 128 pixels wide and 32 pixels high!")
-    sys.exit()
+    raise Exception(f"OLED display only {OLED_WIDTH} pixels wide and {OLED_HEIGHT} pixels high!")
 
 if not (im.mode == "1" or im.mode == "L"):
-    print("Images must be grayscale only")
-    sys.exit()
+    raise Exception("Images must be grayscale only")
 
 # black or white
 out = im.convert("1")
 
-IMG_WIDTH = out.size[0]
-IMG_HEIGHT = out.size[1]
+img_width = out.size[0]
+img_height = out.size[1]
+img_name = Path(im.filename).stem
 
 # `pixels` is a flattened array with the top left pixel at index 0
 # and bottom right pixel at the width*height-1
@@ -53,27 +51,30 @@ pixels = [0 if x == 255 else 1 for x in pixels]
 # our goal is to divide the image into 8-pixel high pages
 # and turn a pixel column into one byte, eg for one page:
 # 0 1 0 ....
-# 1 0 0 
-# 1 1 1 
-# 0 0 1 
-# 1 1 0 
-# 0 1 0 
-# 1 1 1 
+# 1 0 0
+# 1 1 1
+# 0 0 1
+# 1 1 0
+# 0 1 0
+# 1 1 1
 # 0 0 1 ....
 
 # we get 0x6A, 0xAE, 0x33 ... and so on
 # as `pixels` is flattened, each bit in a column is IMG_WIDTH apart from the next
 
 buffer = []
-for i in range(IMG_HEIGHT // OLED_PAGE_HEIGHT):
-    start_index = i*IMG_WIDTH*OLED_PAGE_HEIGHT
-    for j in range(IMG_WIDTH):
+for i in range(img_height // OLED_PAGE_HEIGHT):
+    start_index = i*img_width*OLED_PAGE_HEIGHT
+    for j in range(img_width):
         out_byte = 0
-        for k in range(8):
-            out_byte |= pixels[k*IMG_WIDTH + start_index + j] << k
+        for k in range(OLED_PAGE_HEIGHT):
+            out_byte |= pixels[k*img_width + start_index + j] << k
         buffer.append(f'{out_byte:#04x}')
 
 buffer = ", ".join(buffer)
-buffer_hex = f"static uint8_t[] = {{{buffer}}}"
+buffer_hex = f'static uint8_t {img_name}[] = {{{buffer}}}\n'
 
-print(buffer_hex)
+with open(f'{img_name}.h', 'wt') as file:
+    file.write(f'#define IMG_WIDTH {img_width}\n')
+    file.write(f'#define IMG_HEIGHT {img_height}\n')
+    file.write(buffer_hex)
