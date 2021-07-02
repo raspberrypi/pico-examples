@@ -1,5 +1,5 @@
 if (NOT PICO_NO_HARDWARE)
-    add_subdirectory(narrow_io_write)
     add_subdirectory(hello_double_tap)
+    add_subdirectory(narrow_io_write)
     add_subdirectory(unique_board_id)
 endif ()
