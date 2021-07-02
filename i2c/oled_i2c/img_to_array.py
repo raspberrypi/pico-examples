@@ -15,7 +15,6 @@ from pathlib import Path
 OLED_HEIGHT = 32
 OLED_WIDTH = 128
 OLED_PAGE_HEIGHT = 8
-OLED_NUM_PAGES = OLED_HEIGHT / OLED_PAGE_HEIGHT
 
 if len(sys.argv) < 2:
     print("No image path provided.")
@@ -28,17 +27,19 @@ try:
 except OSError:
     raise Exception("Oops! The image could not be opened.")
 
-if im.size[0] > OLED_WIDTH or im.size[1] > OLED_HEIGHT:
+img_width = im.size[0]
+img_height = im.size[1]
+
+if img_width > OLED_WIDTH or img_height > OLED_HEIGHT:
+    print(f'Your image is f{img_width} pixels wide and {img_height} pixels high, but...')
     raise Exception(f"OLED display only {OLED_WIDTH} pixels wide and {OLED_HEIGHT} pixels high!")
 
 if not (im.mode == "1" or im.mode == "L"):
-    raise Exception("Images must be grayscale only")
+    raise Exception("Image must be grayscale only")
 
 # black or white
 out = im.convert("1")
 
-img_width = out.size[0]
-img_height = out.size[1]
 img_name = Path(im.filename).stem
 
 # `pixels` is a flattened array with the top left pixel at index 0
@@ -76,5 +77,5 @@ buffer_hex = f'static uint8_t {img_name}[] = {{{buffer}}}\n'
 
 with open(f'{img_name}.h', 'wt') as file:
     file.write(f'#define IMG_WIDTH {img_width}\n')
-    file.write(f'#define IMG_HEIGHT {img_height}\n')
+    file.write(f'#define IMG_HEIGHT {img_height}\n\n')
     file.write(buffer_hex)
