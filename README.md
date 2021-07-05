@@ -148,6 +148,7 @@ App|Description
 App|Description
 ---|---
 [bme280_spi](spi/bme280_spi) | Attach a BME280 temperature/humidity/pressure sensor via SPI.
+[eink_mono_spi](spi/eink_mono_spi) | Display text and images on a 200x200 monochrome e-ink display driven by the SSD1618 with onboard SRAM.
 [mpu9250_spi](spi/mpu9250_spi) | Attach a MPU9250 accelerometer/gyoscope via SPI.
 [spi_dma](spi/spi_dma) | Use DMA to transfer data both to and from the SPI simultaneously. The SPI is configured for loopback.
 [spi_flash](spi/spi_flash) | Erase, program and read a serial flash device attached to one of the SPI controllers.
