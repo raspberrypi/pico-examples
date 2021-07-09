@@ -1,6 +1,6 @@
 = Attaching a monochrome e-ink display via SPI
 
-This example code shows how to interface the Raspberry Pi Pico to a SSD1618-based monochrome e-ink display.
+This example code shows how to interface the Raspberry Pi Pico to an SSD1681-based monochrome e-ink display.
 
 TODO..
 
@@ -25,7 +25,7 @@ The example here uses the default SPI port 0. Power is supplied from the 3.3V pi
 
 [[eink_mono_spi_wiring]]
 [pdfwidth=75%]
-.Wiring Diagram for monochrome SSD1618-based e-ink display.
+.Wiring Diagram for monochrome SSD1681-based e-ink display.
 image::eink_mono_spi_bb.png[]
 
 == List of Files
@@ -42,7 +42,7 @@ eink_mono_spi.c:: The example code.
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | http://raspberrypi.org/
-| Monochrome e-ink SSD1618-based display | 1 | https://www.adafruit.com/product/4196[From Adafruit or similar]
+| Monochrome e-ink SSD1681-based display | 1 | https://www.adafruit.com/product/4196[From Adafruit or similar]
 | M/M Jumper wires | 12 | generic part
 |===
 
