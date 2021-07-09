@@ -36,18 +36,11 @@ int main() {
     adc_gpio_init(ADC_PIN + 26);
     adc_select_input(ADC_PIN);
 
-    // wait for 255 from plotter.py
-    char c;
-    printf("%u", uart_getc(uart0));
-    while ((c = uart_getc(uart0)) != 0xFF) {
-        
-    }
-
     uint adc_raw;
-    while (0) {
+    while (1) {
         adc_raw = adc_read(); // raw voltage from ADC
         printf("%.2f\n", adc_raw * ADC_CONVERT);
-        sleep_ms(1);
+        sleep_ms(10);
     }
 
     return 0;
