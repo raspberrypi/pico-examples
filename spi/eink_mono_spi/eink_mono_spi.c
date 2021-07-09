@@ -22,7 +22,7 @@
 
 #define DISPLAY_HEIGHT 200
 #define DISPLAY_WIDTH 200
-#define FRAME_BUF_LEN (DISPLAY_HEIGHT * DISPLAY_WIDTH) / 8
+#define FRAME_BUFLEN (DISPLAY_HEIGHT * DISPLAY_WIDTH) / 8
 
 #define RST_PIN 11
 #define BUSY_PIN 12
@@ -98,7 +98,8 @@ static inline void cs_deselect() {
 #endif
 
 #if defined(spi_default) && defined(PICO_DEFAULT_SPI_CSN_PIN)
-void ssd1681_send_cmd(uint8_t cmd, bool has_data) {
+
+void ssd1681_send_cmd(uint8_t cmd, bool nostop) {
     // send a command byte to the display
     // read/write procedure in datasheet
 
@@ -106,8 +107,7 @@ void ssd1681_send_cmd(uint8_t cmd, bool has_data) {
     cs_select();
     gpio_put(DC_PIN, 0);
     spi_write_blocking(spi_default, &cmd, 1);
-    gpio_put(DC_PIN, 1);
-    if (!has_data) {
+    if (!nostop) {
         // pull CS high
         cs_deselect();
     }
@@ -116,6 +116,7 @@ void ssd1681_send_cmd(uint8_t cmd, bool has_data) {
 void ssd1681_send_cmd_with_data(uint8_t cmd, uint8_t data) {
     // send a command byte and extra data
     ssd1681_send_cmd(cmd, true);
+    gpio_put(DC_PIN, 1);
     spi_write_blocking(spi_default, &data, 1);
     cs_deselect();
 }
@@ -124,6 +125,7 @@ void ssd1681_send_cmd_with_data(uint8_t cmd, uint8_t data) {
 void ssd1681_send_cmd_with_databuf(uint8_t cmd, uint8_t buf[], int buflen) {
     // send a command byte and extra data in a buffer
     ssd1681_send_cmd(cmd, true);
+    gpio_put(DC_PIN, 1);
     spi_write_blocking(spi_default, buf, buflen);
     cs_deselect();
 }
@@ -162,14 +164,27 @@ void ssd1681_set_ram_window(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2) {
     // ram y start and end
     buf[0] = y1;
     buf[1] = y1 >> 8;
-    
+
     buf[2] = y2;
     buf[3] = y2 >> 8;
     ssd1681_send_cmd_with_databuf(SSD1681_SET_RAMYPOS, buf, 4);
 }
 
+void ssd1681_set_ram_counters(uint8_t xpos, uint8_t ypos) {
+    uint8_t buf[2];
+
+    buf[0] = xpos;
+    ssd1681_send_cmd_with_databuf(SSD1681_SET_RAMXCOUNT, buf, 1);
+
+    buf[0] = ypos;
+    buf[1] = ypos >> 8;
+    ssd1681_send_cmd_with_databuf(SSD1681_SET_RAMYCOUNT, buf, 2);
+}
+
 void ssd1681_init() {
     // initialize SSD1681 driver
+
+    sleep_ms(10); // sleep after module power on
     ssd1681_hw_reset();
     ssd1681_busy_wait();
     ssd1681_send_cmd(SSD1681_SW_RESET, false);
@@ -178,6 +193,9 @@ void ssd1681_init() {
     // driver output control
     uint8_t driver_control_data[] = { DISPLAY_WIDTH - 1, (DISPLAY_WIDTH - 1) >> 8, 0x00 };
     ssd1681_send_cmd_with_databuf(SSD1681_DRIVER_CONTROL, driver_control_data, 3);
+
+    // set data entry mode
+    ssd1681_send_cmd_with_data(SSD1681_DATA_MODE, 0x03);
 
     // set display RAM size 
     ssd1681_set_ram_window(0, 0, (DISPLAY_HEIGHT / 8 - 1), DISPLAY_WIDTH - 1);
@@ -188,6 +206,12 @@ void ssd1681_init() {
     // set temp control
     ssd1681_send_cmd_with_data(SSD1681_TEMP_CONTROL, 0x80);
 
+    // set ram address counters
+    ssd1681_set_ram_counters(0, 0);
+
+    //ssd1681_send_cmd_with_data(SSD1681_DISP_CTRL2, 0xF7);
+    //ssd1681_send_cmd(SSD1681_MASTER_ACTIVATE, false);
+
     ssd1681_busy_wait();
 }
 
@@ -196,6 +220,23 @@ void ssd1681_sleep() {
     const uint8_t sleep_data = { 0x01 };
     ssd1681_send_cmd_with_data(SSD1681_DEEP_SLEEP, sleep_data);
     sleep_ms(10);
+}
+
+void ssd1681_update() {
+    ssd1681_send_cmd_with_data(SSD1681_DISP_CTRL2, 0xF7);
+    ssd1681_send_cmd(SSD1681_MASTER_ACTIVATE, false);
+    ssd1681_busy_wait();
+}
+
+void ssd1681_render(uint8_t buf1[], uint8_t buf2[]) {
+    ssd1681_init();
+    ssd1681_set_ram_counters(0, 0);
+    ssd1681_send_cmd_with_databuf(SSD1681_WRITE_BWRAM, buf1, FRAME_BUFLEN);
+    ssd1681_set_ram_counters(0, 0);
+    ssd1681_send_cmd_with_databuf(SSD1681_WRITE_REDRAM, buf2, FRAME_BUFLEN);
+    ssd1681_update();
+    printf("HELLO2!!!");
+    ssd1681_sleep();
 }
 #endif
 
@@ -244,20 +285,11 @@ int main() {
     bi_decl(bi_1pin_with_name(BUSY_PIN, "Display ENA"));
     bi_decl(bi_1pin_with_name(ENA_PIN, "Display BUSY"));
 
-    ssd1681_init();
 
-    uint8_t frame_buf[FRAME_BUF_LEN] = { 0 };
+    uint8_t bw_buf[FRAME_BUFLEN] = { 0 };
+    uint8_t red_buf[FRAME_BUFLEN] = { 0 };
 
-    //ssd1681_send_cmd_with_databuf(SSD1681_WRITE_BWRAM, frame_buf, FRAME_BUF_LEN);
-
-    // update display with contents of RAM
-    // ssd1681_send_cmd_with_data(SSD1681_DISP_CTRL2, 0xF7);
-    // ssd1681_send_cmd(SSD1681_MASTER_ACTIVATE, false);
-    // ssd1681_busy_wait();
-
-    uint8_t tempbuf[2] = { 1, 1 };
-    ssd1681_read(SSD1681_READ_STATUS, tempbuf, 2);
-    printf("contents of status buf %#04x %#04x\n", tempbuf[0], tempbuf[1]);
+    ssd1681_render(bw_buf, red_buf);
 
     return 0;
 #endif
