@@ -1,6 +1,6 @@
 = Attaching a microphone using the ADC
 
-This example code shows how to interface the Raspberry Pi Pico with a standard analog microphone via the onboard analog to digital converter (ADC). In this example, we use an ICS-40180 breakout board by SparkFun but any analog microphone should be compatible with this tutorial. SparkFun have https://learn.sparkfun.com/tutorials/mems-microphone-hookup-guide[written a guide] to this board that goes into more detail about the board and how it works.
+This example code shows how to interface the Raspberry Pi Pico with a standard analog microphone via the onboard analog to digital converter (ADC). In this example, we use an ICS-40180 breakout board by SparkFun but any analog microphone should be compatible with this tutorial. SparkFun have https://learn.sparkfun.com/tutorials/mems-microphone-hookup-guide[written a guide] for this board that goes into more detail about the board and how it works.
 
 [TIP]
 ======
