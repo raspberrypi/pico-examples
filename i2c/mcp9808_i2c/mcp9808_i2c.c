@@ -53,36 +53,28 @@ nt main() {
 }
 
 void mcp9808_init(){
-/*
-    i2c_start(); // send START command
-    i2c_write (ADDRESS & 0xFE); //WRITE Command (see Section 4.1.4 “Address Byte”)
-    //also, make sure bit 0 is cleared ‘0’
-    i2c_write(0x05); // Write TA Register Address
-    i2c_start(); //Repeat START
-    i2c_write(ADDRESS | 0x01); // READ Command (see Section 4.1.4 “Address Byte”)
-    //also, make sure bit 0 is Set ‘1’
-    UpperByte = i2c_read(ACK); // READ 8 bits 
-    //and Send ACK bit
-    LowerByte = i2c_read(NAK); // READ 8 bits 
-    //and Send NAK bit
-    i2c_stop(); // send STOP command
-    //Convert the temperature data
-    //First Check flag bits
-    if ((UpperByte & 0x80) == 0x80){ //TA ³ TCRIT
-    }
-    if ((UpperByte & 0x40) == 0x40){ //TA > TUPPER
-    }
-    if ((UpperByte & 0x20) == 0x20){ //TA < TLOWER
-    }
+
+    uint8_t buffer[2];
+    i2c_write_blocking(i2c_default, ADDRESS & WRITE_MODE, ADDRESS, 1, true);
+    
+    i2c_write_blocking (i2c_default, ADDRESS & WRITE_MODE,&REG_TEMP_AMB,1,true);
+
+    i2c_read_blocking(i2c_default, ADDRESS & READ_MODE, buffer, 2, false);
+
+    UpperByte = buffer[0]
+    LowerByte = buffer[1]
+
+
     UpperByte = UpperByte & 0x1F; //Clear flag bits
+    
     if ((UpperByte & 0x10) == 0x10){ //TA < 0°C
-    UpperByte = UpperByte & 0x0F; //Clear SIGN
-    Temperature = 256 - (UpperByte x 16 + LowerByte / 16);
+        UpperByte = UpperByte & 0x0F; //Clear SIGN
+        Temperature = 256 - (UpperByte x 16 + LowerByte / 16);
     }else //TA ³ 0°C
-    Temperature = (UpperByte x 16 + LowerByte / 16);
+        Temperature = (UpperByte x 16 + LowerByte / 16);
     //Temperature = Ambient Temperature (°C)
     
-    */
+
 
     printf("jkfd")
 }
