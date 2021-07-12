@@ -38,7 +38,7 @@
 #define MPL3115A2_OFF_H _u(0x2D)
 
 #define READ_BIT _u(0x01)
-#define WRITE_BIT _(0x00)
+#define WRITE_BIT _u(0x00)
 
 #ifdef i2c_default
 void mpl3115a2_read_fifo(uint8_t buf[]) {
