@@ -1,0 +1,28 @@
+= Attaching an MPL3115A2 altimeter via I2C
+
+== Wiring information
+
+Wiring up the device requires 4 jumpers, to connect VCC (3.3v), GND, SDA and SCL. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and GPIO 5 (SCL) by default. Power is supplied from the 3.3V pin.
+
+[[mpl3115a2_i2c_wiring]]
+[pdfwidth=75%]
+.Wiring Diagram for MPL3115A2 altimeter.
+image::mpl3115a2_i2c_bb.png[]
+
+== List of Files
+
+CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
+mpl3115a2_i2c.c:: The example code.
+
+== Bill of Materials
+
+.A list of materials required for the example
+[[mpl3115a2-i2c-bom-table]]
+[cols=3]
+|===
+| *Item* | *Quantity* | Details
+| Breadboard | 1 | generic part
+| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| MPL3115A2 altimeter | 1 | https://www.adafruit.com/product/1893[Adafruit]
+| M/M Jumper wires | 5 | generic part
+|===
