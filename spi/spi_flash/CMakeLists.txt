@@ -2,7 +2,7 @@ add_executable(spi_flash
         spi_flash.c
         )
 
-# Pull in basic dependencies
+# pull in common dependencies and additional spi hardware support
 target_link_libraries(spi_flash pico_stdlib hardware_spi)
 
 # create map/bin/hex file etc.
