@@ -1,15 +1,19 @@
-#include "pico/bootrom.h"
 #include "pico/stdlib.h"
 #include "servo.h"
 #include <stdbool.h>
 
-#define ANGLE 90
-
-
 int main()
 {
-    servo_init(1, 50);
-    servo_put(1, ANGLE, true);
+    for(;;)
+    {
+        servo_init(1, 50);
+        servo_put(1, 0, true);
 
-    reset_usb_boot(0,0); // reset to BOOTSEL for another flash
+        sleep_ms(1000);
+
+        servo_init(1, 50);
+        servo_put(1, 90, true);
+
+        sleep_ms(1000);
+    }
 }

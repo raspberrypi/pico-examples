@@ -6,6 +6,7 @@
 
 #define DUTY_MIN 2400
 #define DUTY_MAX 8000
+#define TOP_MAX 65534
 
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -33,7 +34,6 @@ void servo_init(int gpio, int base_frequency)
 
 
     uint32_t source_hz = clock_get_hz(clk_sys);
-        #define TOP_MAX 65534
         uint freq = 50;
         uint32_t div16_top = 16 * source_hz / freq;
         uint32_t top = 1;
