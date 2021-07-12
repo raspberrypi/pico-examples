@@ -2,7 +2,7 @@ add_executable(uart_advanced
         uart_advanced.c
         )
 
-# Pull in our pico_stdlib which pulls in commonly used features
+# pull in common dependencies and additional uart hardware support
 target_link_libraries(uart_advanced pico_stdlib hardware_uart)
 
 # create map/bin/hex file etc.

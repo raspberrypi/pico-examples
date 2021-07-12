@@ -2,7 +2,7 @@ add_executable(hello_gpout
         hello_gpout.c
         )
 
-# Pull in our pico_stdlib which pulls in commonly used features
+# pull in common dependencies
 target_link_libraries(hello_gpout pico_stdlib)
 
 # create map/bin/hex file etc.
