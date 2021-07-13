@@ -52,22 +52,31 @@
 
 #define PARAM_ASSERTIONS_ENABLE_I2C 1
 
-volatile uint8_t fifo_data[160];
+volatile uint8_t fifo_data[MPL3115A2_FIFO_SIZE * MPL3115A2_DATA_BATCH_SIZE];
 volatile bool has_new_data = false;
 
 struct mpl3115a2_data_t {
     // Q8.4 fixed point
     int16_t temperature;
     // Q16.4 fixed-point
-    int32_t altitude
+    int32_t altitude;
 };
 
+void copy_to_vbuf(uint8_t buf1[], volatile uint8_t buf2[], int buflen){
+    for (size_t i = 0; i < buflen; i++) {
+        buf2[i] = buf1[i];
+    }
+}
 
 #ifdef i2c_default
-void mpl3115a2_read_fifo(uint8_t buf[]) {
+void mpl3115a2_read_fifo(volatile uint8_t fifo_buf[]) {
     // drains the 160 byte FIFO
-    i2c_write_blocking(i2c_default, ADDR, (uint8_t*)MPL3115A2_F_DATA, 1, true);
-    i2c_read_blocking(i2c_default, ADDR, buf, 160, false);
+    uint8_t reg = MPL3115A2_F_DATA;
+    uint8_t buf[MPL3115A2_FIFO_SIZE * MPL3115A2_DATA_BATCH_SIZE];
+    i2c_write_blocking(i2c_default, ADDR, &reg, 1, true);
+    // burst read 160 bytes from fifo
+    i2c_read_blocking(i2c_default, ADDR, buf, MPL3115A2_FIFO_SIZE * MPL3115A2_DATA_BATCH_SIZE, false);
+    copy_to_vbuf(buf, fifo_buf, MPL3115A2_FIFO_SIZE * MPL3115A2_DATA_BATCH_SIZE);
 }
 
 uint8_t mpl3115a2_read_reg(uint8_t reg) {
@@ -123,23 +132,24 @@ void gpio_callback(uint gpio, uint32_t events) {
 
         // drain the fifo
         mpl3115a2_read_fifo(fifo_data);
+        printf("%d %d %d", fifo_data[0], fifo_data[1], fifo_data[2] >> 4);
         // read status register to clear interrupt bit
         mpl3115a2_read_reg(MPL3115A2_F_STATUS);
         has_new_data = true;
     } else if (gpio == INT2_PIN) {
         // temp change interrupt
-        printf("the temperature changed!");
+        //printf("the temperature changed!\n");
     }
 }
 #endif
 
-void mpl3115a2_convert_fifo_batch(uint8_t start, uint8_t buf[], struct mpl3115a2_data_t* data) {
+void mpl3115a2_convert_fifo_batch(uint8_t start, volatile uint8_t buf[], struct mpl3115a2_data_t* data) {
     // convert a batch of fifo data into temperature and altitude data
 
     // 3 altitude registers: MSB (8 bits), CSB (8 bits) and LSB (4 bits, starting from MSB)
     // first two are integer bits (2's complement) and LSB is fractional bits -> makes 20 bit signed integer
-    int32_t h;
-    if (buf[start] & 0x80 == 0x80) {
+    int32_t h = 0;
+    if ((buf[start] & 0x80) == 0x80) {
         // signed bit is 1, so invert and add 1
         h = ~(buf[start] << 8 | buf[start + 1]) + 1;
         h = h << 4;
@@ -152,8 +162,8 @@ void mpl3115a2_convert_fifo_batch(uint8_t start, uint8_t buf[], struct mpl3115a2
     }
     data->altitude = h;
 
-    int16_t t;
-    if (buf[start + 3] & 0x80 == 0x80) {
+    int16_t t = 0;
+    if ((buf[start + 3] & 0x80) == 0x80) {
         // signed bit is 1, so invert and add 1
         t = ~buf[start + 3] + 1;
         t = t << 8;
@@ -201,7 +211,7 @@ int main() {
             struct mpl3115a2_data_t data;
             for (int i = 0; i < MPL3115A2_FIFO_SIZE; i++) {
                 mpl3115a2_convert_fifo_batch(i * MPL3115A2_DATA_BATCH_SIZE, fifo_data, &data);
-                printf("t: %f C, h: %f m", data.temperature / (1 << MPL3115A2_NUM_FRAC_BITS), data.altitude / (1 << MPL3115A2_NUM_FRAC_BITS));
+                printf("t: %f C, h: %f m\n", data.temperature / (1 << MPL3115A2_NUM_FRAC_BITS), data.altitude / (1 << MPL3115A2_NUM_FRAC_BITS));
             }
 
             has_new_data = false;
