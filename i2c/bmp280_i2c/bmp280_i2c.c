@@ -148,11 +148,14 @@ int32_t bmp280_convert(int32_t temp, struct bmp280_calib_param* params) {
 }
 
 int32_t bmp280_convert_temp(int32_t temp, struct bmp280_calib_param* params) {
+    // uses the BMP280 calibration parameters to compensate the temperature value read from its registers
     int32_t t_fine = bmp280_convert(temp, params);
     return (t_fine * 5 + 128) >> 8;
 }
 
 int32_t bmp280_convert_pressure(int32_t pressure, int32_t temp, struct bmp280_calib_param* params) {
+    // uses the BMP280 calibration parameters to compensate the pressure value read from its registers
+
     int32_t t_fine = bmp280_convert(temp, params);
 
     int32_t var1, var2;
@@ -241,10 +244,10 @@ int main() {
     sleep_ms(250); // sleep so that data polling and register update don't collide
     while (1) {
         bmp280_read_raw(&raw_temperature, &raw_pressure);
-        float temperature = bmp280_convert_temp(raw_temperature, &params);
-        float pressure = bmp280_convert_pressure(raw_pressure, raw_temperature, &params);
-        printf("Pressure = %.3f kPa\n", pressure / 1000.0);
-        printf("Temp. = %.2f C\n", temperature / 100.0);
+        int32_t temperature = bmp280_convert_temp(raw_temperature, &params);
+        int32_t pressure = bmp280_convert_pressure(raw_pressure, raw_temperature, &params);
+        printf("Pressure = %.3f kPa\n", pressure / 1000.f);
+        printf("Temp. = %.2f C\n", temperature / 100.f);
         // poll every 500ms
         sleep_ms(500);
     }
