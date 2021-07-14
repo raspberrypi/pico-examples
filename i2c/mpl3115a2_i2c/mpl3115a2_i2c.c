@@ -19,7 +19,6 @@
     GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is 4 (pin 6)) -> SDA on MPL3115A2 board
     GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is 5 (pin 7)) -> SCL on MPL3115A2 board
     GPIO 16 -> INT1 on MPL3115A2 board
-    GPIO 17 -> INT2 on MPL3115A2 board
     3.3v (pin 36) -> VCC on MPL3115A2 board
     GND (pin 38)  -> GND on MPL3115A2 board
  */
@@ -27,7 +26,6 @@
  // 7-bit address
 #define ADDR 0x60
 #define INT1_PIN _u(16)
-#define INT2_PIN _u(17)
 
 // following definitions only valid for F_MODE > 0 (ie. if FIFO enabled)
 #define MPL3115A2_F_DATA _u(0x01)
@@ -39,6 +37,7 @@
 #define MPL3115A2_CTRLREG3 _u(0x28)
 #define MPL3115A2_CTRLREG4 _u(0x29)
 #define MPL3115A2_CTRLREG5 _u(0x2A)
+#define MPL3115A2_PT_DATA_CFG _u(0x13)
 #define MPL3115A2_OFF_P _u(0x2B)
 #define MPL3115A2_OFF_T _u(0x2C)
 #define MPL3115A2_OFF_H _u(0x2D)
@@ -48,6 +47,8 @@
 #define MPL3115A2_FIFO_SIZE 32
 #define MPL3115A2_DATA_BATCH_SIZE 5
 #define MPL3115A2_ALTITUDE_NUM_REGS 3
+#define MPL3115A2_ALTITUDE_INT_SIZE 20
+#define MPL3115A2_TEMPERATURE_INT_SIZE 12
 #define MPL3115A2_NUM_FRAC_BITS 4
 
 #define PARAM_ASSERTIONS_ENABLE_I2C 1
@@ -57,12 +58,12 @@ volatile bool has_new_data = false;
 
 struct mpl3115a2_data_t {
     // Q8.4 fixed point
-    int16_t temperature;
+    float temperature;
     // Q16.4 fixed-point
-    int32_t altitude;
+    float altitude;
 };
 
-void copy_to_vbuf(uint8_t buf1[], volatile uint8_t buf2[], int buflen){
+void copy_to_vbuf(uint8_t buf1[], volatile uint8_t buf2[], int buflen) {
     for (size_t i = 0; i < buflen; i++) {
         buf2[i] = buf1[i];
     }
@@ -96,14 +97,14 @@ void mpl3115a2_init() {
     i2c_write_blocking(i2c_default, ADDR, buf, 2, false);
 
     // set both interrupts pins to active low and enable internal pullups
-    buf[0] = MPL3115A2_CTRLREG3, buf[1] = 0x00;
+    buf[0] = MPL3115A2_CTRLREG3, buf[1] = 0x01;
     i2c_write_blocking(i2c_default, ADDR, buf, 2, false);
 
-    // enable FIFO and temperature change interrupts
-    buf[0] = MPL3115A2_CTRLREG4, buf[1] = 0x41;
+    // enable FIFO interrupt
+    buf[0] = MPL3115A2_CTRLREG4, buf[1] = 0x40;
     i2c_write_blocking(i2c_default, ADDR, buf, 2, false);
 
-    // tie FIFO interrupt to pin INT1, temp change to pin INT2
+    // tie FIFO interrupt to pin INT1
     buf[0] = MPL3115A2_CTRLREG5, buf[1] = 0x40;
     i2c_write_blocking(i2c_default, ADDR, buf, 2, false);
 
@@ -125,20 +126,17 @@ void gpio_callback(uint gpio, uint32_t events) {
     // if we had enabled more than 2 interrupts on same pin, then we should read
     // INT_SOURCE reg to find out which interrupt triggered
 
+    // we can filter by which GPIO was triggered
     if (gpio == INT1_PIN) {
         // FIFO overflow interrupt
         // watermark bits set to 0 in F_SETUP reg, so only possible event is an overflow
         // otherwise, we would read F_STATUS to confirm it was an overflow
-
+        printf("FIFO overflow!\n");
         // drain the fifo
         mpl3115a2_read_fifo(fifo_data);
-        printf("%d %d %d", fifo_data[0], fifo_data[1], fifo_data[2] >> 4);
         // read status register to clear interrupt bit
         mpl3115a2_read_reg(MPL3115A2_F_STATUS);
         has_new_data = true;
-    } else if (gpio == INT2_PIN) {
-        // temp change interrupt
-        //printf("the temperature changed!\n");
     }
 }
 #endif
@@ -148,31 +146,13 @@ void mpl3115a2_convert_fifo_batch(uint8_t start, volatile uint8_t buf[], struct 
 
     // 3 altitude registers: MSB (8 bits), CSB (8 bits) and LSB (4 bits, starting from MSB)
     // first two are integer bits (2's complement) and LSB is fractional bits -> makes 20 bit signed integer
-    int32_t h = 0;
-    if ((buf[start] & 0x80) == 0x80) {
-        // signed bit is 1, so invert and add 1
-        h = ~(buf[start] << 8 | buf[start + 1]) + 1;
-        h = h << 4;
-        h = h * (1 << MPL3115A2_NUM_FRAC_BITS) | buf[start + 2] >> 4;
-        h *= -1;
-    } else {
-        h = buf[start] << 8 | buf[start + 1];
-        h = h << 4;
-        h = h * (1 << MPL3115A2_NUM_FRAC_BITS) | buf[start + 2] >> 4;
-    }
-    data->altitude = h;
+    int32_t h = (int32_t)((uint32_t)buf[start] << 24 | buf[start + 1] << 16 | buf[start + 2] << 8);
+    data->altitude = h * 1.f / 65536;
 
-    int16_t t = 0;
-    if ((buf[start + 3] & 0x80) == 0x80) {
-        // signed bit is 1, so invert and add 1
-        t = ~buf[start + 3] + 1;
-        t = t << 8;
-        t = t * (1 << MPL3115A2_NUM_FRAC_BITS) | buf[start + 4] >> 4;
-        t *= -1;
-    } else {
-        t = (buf[start + 3] << 8) * (1 << MPL3115A2_NUM_FRAC_BITS) | buf[start + 4] >> 4;
-    }
-    data->temperature = t;
+    // 2 temperature registers: MSB (8 bits) and LSB (4 bits, starting from MSB)
+    // first 8 are integer bits with sign and LSB is fractional bits -> 12 bit signed integer
+    int16_t t = (int16_t)(((uint16_t)buf[start + 3]) << 8 | buf[start + 4]);
+    data->temperature = t * 1.f / 256;
 }
 
 // to clear fifo interrupt bits, we must read from the status register
@@ -192,28 +172,28 @@ int main() {
     gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
 
     gpio_init(INT1_PIN);
-    gpio_init(INT2_PIN);
+    gpio_pull_up(INT1_PIN); // pull it up even more!
 
     // add program information for picotool
     bi_decl(bi_program_name("Example in the pico-examples library for the MPL3115A2 altimeter"));
     bi_decl(bi_1pin_with_name(16, "Interrupt pin 1"));
-    bi_decl(bi_1pin_with_name(17, "Interrupt pin 2"));
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
 
     mpl3115a2_init();
 
     gpio_set_irq_enabled_with_callback(INT1_PIN, GPIO_IRQ_LEVEL_LOW, true, &gpio_callback);
-    gpio_set_irq_enabled_with_callback(INT2_PIN, GPIO_IRQ_LEVEL_LOW, true, &gpio_callback);
 
     while (1) {
         // as interrupt data comes in, let's print the 32 sample average
         if (has_new_data) {
+            float tsum = 0, hsum = 0;
             struct mpl3115a2_data_t data;
             for (int i = 0; i < MPL3115A2_FIFO_SIZE; i++) {
                 mpl3115a2_convert_fifo_batch(i * MPL3115A2_DATA_BATCH_SIZE, fifo_data, &data);
-                printf("t: %f C, h: %f m\n", data.temperature / (1 << MPL3115A2_NUM_FRAC_BITS), data.altitude / (1 << MPL3115A2_NUM_FRAC_BITS));
+                tsum += data.temperature;
+                hsum += data.altitude;
             }
-
+            printf("%d sample average -> t: %.4f C, h: %.4f m\n", MPL3115A2_FIFO_SIZE, tsum / MPL3115A2_FIFO_SIZE, hsum / MPL3115A2_FIFO_SIZE);
             has_new_data = false;
         }
         sleep_ms(10);
