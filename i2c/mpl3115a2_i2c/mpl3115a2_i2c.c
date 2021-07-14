@@ -155,7 +155,6 @@ void mpl3115a2_convert_fifo_batch(uint8_t start, volatile uint8_t buf[], struct 
     data->temperature = t * 1.f / 256;
 }
 
-// to clear fifo interrupt bits, we must read from the status register
 int main() {
     stdio_init_all();
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
