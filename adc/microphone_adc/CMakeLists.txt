@@ -2,7 +2,7 @@ add_executable(microphone_adc
         microphone_adc.c
         )
 
-# Pull in our get you started dependencies
+# pull in common dependencies and adc hardware support
 target_link_libraries(microphone_adc pico_stdlib hardware_adc)
 
 # create map/bin/hex file etc.
