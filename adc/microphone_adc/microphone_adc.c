@@ -11,7 +11,8 @@
 #include "hardware/uart.h"
 #include "pico/binary_info.h"
 
- /* Example code to plot analog values from a microphone
+ /* Example code to extract analog values from a microphone using the ADC
+    with accompanying Python file to plot these values
 
     Connections on Raspberry Pi Pico board, other boards may vary.
 
