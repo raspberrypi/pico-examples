@@ -77,7 +77,7 @@ App|Description
 ---|---
 [bus_scan](i2c/bus_scan) | Scan the I2C bus for devices and display results.
 [lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C.
-[mpl3115a2_i2c](i2c/mpl511a2_i2c) | Interface with an MPL3115A2 altimeter, exploring interrupts and advanced board features, via I2C.
+[mpl3115a2_i2c](i2c/mpl3115a2_i2c) | Interface with an MPL3115A2 altimeter, exploring interrupts and advanced board features, via I2C.
 [mpu6050_i2c](i2c/mpu6050_i2c) | Read acceleration and angular rate values from a MPU6050 accelerometer/gyro, attached to an I2C bus.
 
 ### Interpolator
