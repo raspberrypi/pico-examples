@@ -76,7 +76,7 @@ App|Description
 App|Description
 ---|---
 [bus_scan](i2c/bus_scan) | Scan the I2C bus for devices and display results.
-[lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C
+[lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C.
 [mcp9808_i2c](i2c/mcp9808_i2c) | Read temperature, set limits and raise alerts when limits are surpassed.
 [mpu6050_i2c](i2c/mpu6050_i2c) | Read acceleration and angular rate values from a MPU6050 accelerometer/gyro, attached to an I2C bus.
 
