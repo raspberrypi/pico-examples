@@ -2,7 +2,7 @@
 
 This example code shows how to interface the Raspberry Pi Pico to the MCP9808 digital temperature sensor board. 
 ======
-This example reads the ambient temperature value each second from the sensor and sets upper, lower and critical limits for the temperature. The
+This example reads the ambient temperature value each second from the sensor and sets upper, lower and critical limits for the temperature and checks if alerts need to be raised. The CONFIG register can also be used to check for an alert if the critical temperature is surpassed.
 ======
 
 == Wiring information
@@ -30,8 +30,8 @@ mcp9808_i2c.c:: The example code.
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | http://raspberrypi.org/
-| MPU6050 board| 1 | generic part
-| M/M Jumper wires | 8 | generic part
+| MCP9808 board| 1 | generic part
+| M/M Jumper wires | 7 | generic part
 |===
 
 
