@@ -20,7 +20,7 @@ image::microphone_adc_plotter.png[]
 
 Wiring up the device requires 3 jumpers, to connect VCC (3.3v), GND, and AOUT. The example here uses ADC0, which is GP26. Power is supplied from the 3.3V pin.
 
-WARNING: Most boards will take a range of voltages from the Pico's default 3.3v to the 5 volts commonly seen on other microcontrollers. Ensure your board works with either the 3.3V or 5V supplied by the Pico.
+WARNING: Most boards will take a range of voltages from the Pico's default 3.3v to the 5 volts commonly seen on other microcontrollers. Ensure your board works with either the 3.3V or 5V supplied by the Pico. If you supply 5V, then the board must have a level shifter to reduce the output voltage to 3.3V to be compatible with the Pico's GPIOs, otherwise you risk damaging the Pico!
 
 WARNING: Do not connect a voltage greater than 3.3V to the Pico's ADC (and any of its GPIO) as this may result in permanent damage.
 
