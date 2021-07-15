@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
  *
- * SPDX-License-Identifier: BSD-3-Clause
+ * SPDx-License-Identifier: BSD-3-Clause
  */
 
 #include <stdio.h>
@@ -16,30 +16,30 @@
 
    Connections on Raspberry Pi Pico board, other boards may vary.
 
-   GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is 4 (pin 6)) -> SDA on MCP9808 board
-   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is 5 (pin 7)) -> SCL on MCP9808 board
-   Vsys (pin 39) -> VDD on MCP9808 board
-   GND (pin 38)  -> GND on MCP9808 board
+   GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is GP4 (physical pin 6)) -> SDA on MCP9808 board
+   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is GP5 (physcial pin 7)) -> SCL on MCP9808 board
+   Vsys (physical pin 39) -> VDD on MCP9808 board
+   GND (physical pin 38)  -> GND on MCP9808 board
 
 */
 //The bus address is determined by the state of pins A0, A1 and A2 on the MCP9808 board
-static uint8_t ADDRESS = 0X18;
+static uint8_t ADDRESS = 0x18;
 
-const uint8_t WRITE_MODE = 0XFE;
-const uint8_t READ_MODE = 0XFF;
+const uint8_t WRITE_MODE = 0xFE;
+const uint8_t READ_MODE = 0xFF;
 
 
 //hardware registers
 
-const uint8_t REG_POINTER = 0X00;
-const uint8_t REG_CONFIG = 0X01;
-const uint8_t REG_TEMP_UPPER = 0X02;
-const uint8_t REG_TEMP_LOWER = 0X03;
-const uint8_t REG_TEMP_CRIT = 0X04;
-const uint8_t REG_TEMP_AMB = 0X05;
-const uint8_t REG_MAN_ID = 0X06;
-const uint8_t REG_DEV_ID = 0X07;
-const uint8_t REG_RESOLUTION = 0X08;
+const uint8_t REG_POINTER = 0x00;
+const uint8_t REG_CONFIG = 0x01;
+const uint8_t REG_TEMP_UPPER = 0x02;
+const uint8_t REG_TEMP_LOWER = 0x03;
+const uint8_t REG_TEMP_CRIT = 0x04;
+const uint8_t REG_TEMP_AMB = 0x05;
+const uint8_t REG_MAN_ID = 0x06;
+const uint8_t REG_DEV_ID = 0x07;
+const uint8_t REG_RESOLUTION = 0x08;
 
 
 void mcp9808_check_limits(uint8_t upper_byte) {
@@ -51,33 +51,21 @@ void mcp9808_check_limits(uint8_t upper_byte) {
     if ((upper_byte & 0x20) == 0x20) { //TA < TLOWER
         printf("Temperature is below the lower temperature limit.\n");
     }
-    if ((upper_byte & 0x80) == 0x80) { //TA < TCRIT
+    if ((upper_byte & 0x80) == 0x80) { //TA > TCRIT
         printf("Temperature is above the critical temperature limit.\n");
     }
 }
 
-float mcp9808_convert_temp(uint8_t buf[]){
+float mcp9808_convert_temp(uint8_t upper_byte, uint8_t lower_byte) {
 
-    uint16_t upper_byte;
-    uint16_t lower_byte;
     float temperature;
-
-    upper_byte = buf[0];
-    lower_byte = buf[1];
-
-
-    mcp9808_check_limits(upper_byte);
-
-    //Clear flag bits
-    upper_byte = upper_byte & 0x1F; 
 
 
     //Check if TA <= 0°C and convert to denary accordingly
     if ((upper_byte & 0x10) == 0x10) { 
         upper_byte = upper_byte & 0x0F; 
         temperature = 256 - (((float)upper_byte * 16) + ((float)lower_byte / 16));
-    }
-    else {
+    } else {
         temperature = (((float)upper_byte * 16) + ((float)lower_byte / 16));
   
     }
@@ -85,35 +73,17 @@ float mcp9808_convert_temp(uint8_t buf[]){
 }
 
 
-void mcp9808_read_temp(){  
-
-    uint8_t buf[2];
-    float temperature;
-
-    while (1) {
-    // Start reading ambient temperature register for 2 bytes
-    i2c_write_blocking (i2c_default, 0x18 & WRITE_MODE ,&REG_TEMP_AMB,1,true);
-    i2c_read_blocking(i2c_default, 0x18 & READ_MODE, buf, 2, false);
-
-    temperature = mcp9808_convert_temp(buf);
-    printf("Ambient temperature: %.4f°C\n", temperature);
-
-    sleep_ms(1000); 
-    }   
-}
-
-
-void mcp9808_set_limits(){
+void mcp9808_set_limits() {
     
     //Set an upper limit of 30°C for the temperature
     uint8_t upper_temp_msb = 0x01;
     uint8_t upper_temp_lsb = 0xE0;
 
-    //Set an lower limit of 30°C for the temperature
+    //Set a lower limit of 20°C for the temperature
     uint8_t lower_temp_msb = 0x01;
     uint8_t lower_temp_lsb = 0x40;
 
-    //Set an critical limit of 30°C for the temperature
+    //Set a critical limit of 40°C for the temperature
     uint8_t crit_temp_msb = 0x02;
     uint8_t crit_temp_lsb = 0x80;
 
@@ -121,17 +91,17 @@ void mcp9808_set_limits(){
     buf[0] = REG_TEMP_UPPER;
     buf[1] = upper_temp_msb;
     buf[2] = upper_temp_lsb; 
-    i2c_write_blocking (i2c_default, ADDRESS, buf, 3, false);
+    i2c_write_blocking(i2c_default, ADDRESS, buf, 3, false);
 
     buf[0] = REG_TEMP_LOWER;
     buf[1] = lower_temp_msb;
     buf[2] = lower_temp_lsb; 
-    i2c_write_blocking (i2c_default, ADDRESS, buf, 3, false);
+    i2c_write_blocking(i2c_default, ADDRESS, buf, 3, false);
 
     buf[0] = REG_TEMP_CRIT;
     buf[1] = crit_temp_msb;
     buf[2] = crit_temp_lsb; ;
-    i2c_write_blocking (i2c_default, ADDRESS, buf, 3, false);
+    i2c_write_blocking(i2c_default, ADDRESS, buf, 3, false);
 }
 
 
@@ -156,6 +126,28 @@ int main() {
 #endif
 
     mcp9808_set_limits();
+    
+    uint8_t buf[2];
+    uint16_t upper_byte;
+    uint16_t lower_byte;
 
-    mcp9808_read_temp();
+    float temperature;
+
+    while (1) {
+        // Start reading ambient temperature register for 2 bytes
+        i2c_write_blocking(i2c_default, ADDRESS & WRITE_MODE, &REG_TEMP_AMB, 1, true);
+        i2c_read_blocking(i2c_default, ADDRESS & READ_MODE, buf, 2, false);
+         
+        upper_byte = buf[0];
+        lower_byte = buf[1];
+
+        //isolates limit flags in upper byte
+        mcp9808_check_limits(upper_byte & 0xE0);
+        
+        //clears flag bits in upper byte
+        temperature = mcp9808_convert_temp(upper_byte & 0x1F, lower_byte);
+        printf("Ambient temperature: %.4f°C\n", temperature);        
+        
+        sleep_ms(1000); 
+    }   
 }

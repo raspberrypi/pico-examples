@@ -7,7 +7,7 @@ This example reads the ambient temperature value each second from the sensor and
 
 == Wiring information
 
-Wiring up the device requires 7 jumpers, to connect VDD, GND, SDA, SCL, A0, A1 and A2 pins. An additional 2 jumpers could also be required to connect the Pico GND and Pico VSYS pin to the power rail on the breadboard. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the VSYS pin.
+Wiring up the device requires 4 jumpers, to connect VDD, GND, SDA and SCL. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the VSYS pin.
 
 
 
@@ -30,8 +30,8 @@ mcp9808_i2c.c:: The example code.
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | http://raspberrypi.org/
-| MCP9808 board| 1 | generic part
-| M/M Jumper wires | 7 | generic part
+| MCP9808 board| 1 | https://www.adafruit.com/product/1782
+| M/M Jumper wires | 4 | generic part
 |===
 
 
