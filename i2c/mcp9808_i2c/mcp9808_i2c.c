@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
  *
- * SPDx-License-Identifier: BSD-3-Clause
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <stdio.h>
