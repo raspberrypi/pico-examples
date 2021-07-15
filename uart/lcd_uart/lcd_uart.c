@@ -41,6 +41,7 @@
 #define LCD_SET_BACKLIGHT_COLOR 0xD0
 #define LCD_SET_DISPLAY_SIZE 0xD1
 
+// change to 0 if display is not RGB capable
 #define LCD_IS_RGB 1
 
 void lcd_write(uint8_t cmd, uint8_t* buf, uint8_t buflen) {
