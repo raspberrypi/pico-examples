@@ -7,7 +7,7 @@ This example reads the ambient temperature value each second from the sensor and
 
 == Wiring information
 
-Wiring up the device requires 7 jumpers, to connect VDD, GND, SDA, SCL, A0, A1 and A2 pins. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the VSYS pin.
+Wiring up the device requires 7 jumpers, to connect VDD, GND, SDA, SCL, A0, A1 and A2 pins. An additional jumper could also be required to connect the Pico GND to the power rail on the breadboard. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the VSYS pin.
 
 
 
