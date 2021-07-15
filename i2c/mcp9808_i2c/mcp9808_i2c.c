@@ -56,27 +56,30 @@ void mcp9808_check_limits(uint8_t upper_byte) {
     }
 }
 
-uint16_t mcp9808_convert_temp(uint8_t buf[]){
+float mcp9808_convert_temp(uint8_t buf[]){
 
     uint16_t upper_byte;
     uint16_t lower_byte;
-    uint16_t temperature;
+    float temperature;
 
     upper_byte = buf[0];
     lower_byte = buf[1];
+
 
     mcp9808_check_limits(upper_byte);
 
     //Clear flag bits
     upper_byte = upper_byte & 0x1F; 
 
+
     //Check if TA <= 0°C and convert to denary accordingly
     if ((upper_byte & 0x10) == 0x10) { 
         upper_byte = upper_byte & 0x0F; 
-        temperature = 256 - ((upper_byte * 16) + (lower_byte / 16));
+        temperature = 256 - (((float)upper_byte * 16) + ((float)lower_byte / 16));
     }
     else {
-        temperature = ((upper_byte * 16) + (lower_byte / 16));
+        temperature = (((float)upper_byte * 16) + ((float)lower_byte / 16));
+  
     }
     return temperature;
 }
@@ -85,7 +88,7 @@ uint16_t mcp9808_convert_temp(uint8_t buf[]){
 void mcp9808_read_temp(){  
 
     uint8_t buf[2];
-    uint16_t temperature;
+    float temperature;
 
     while (1) {
     // Start reading ambient temperature register for 2 bytes
@@ -93,7 +96,7 @@ void mcp9808_read_temp(){
     i2c_read_blocking(i2c_default, 0x18 & READ_MODE, buf, 2, false);
 
     temperature = mcp9808_convert_temp(buf);
-    printf("Ambient temperature: %d\n", temperature);
+    printf("Ambient temperature: %.4f°C\n", temperature);
 
     sleep_ms(1000); 
     }   
