@@ -118,35 +118,26 @@ void mcp9808_set_limits(){
     buf[0] = REG_TEMP_UPPER;
     buf[1] = upper_temp_msb;
     buf[2] = upper_temp_lsb; 
-    i2c_write_blocking (i2c_default, 0x18, buf, 3, false);
+    i2c_write_blocking (i2c_default, ADDRESS, buf, 3, false);
 
     buf[0] = REG_TEMP_LOWER;
     buf[1] = lower_temp_msb;
     buf[2] = lower_temp_lsb; 
-    i2c_write_blocking (i2c_default, 0x18, buf, 3, false);
+    i2c_write_blocking (i2c_default, ADDRESS, buf, 3, false);
 
     buf[0] = REG_TEMP_CRIT;
     buf[1] = crit_temp_msb;
     buf[2] = crit_temp_lsb; ;
-    i2c_write_blocking (i2c_default, 0x18, buf, 3, false);
+    i2c_write_blocking (i2c_default, ADDRESS, buf, 3, false);
 }
 
-void mcp9808_init(){
-
-    //set address (where am i sending it to?? sort this out)
-    i2c_write_blocking(i2c_default, 0x32 & WRITE_MODE, &ADDRESS, 1, true);
-
-    mcp9808_set_limits();
-
-    mcp9808_read_temp();
-}
 
 int main() {
 
     stdio_init_all();
 
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
-    #warning i2c/mpu6050_i2c example requires a board with I2C pins
+    #warning i2c/mcp9808_i2c example requires a board with I2C pins
     puts("Default I2C pins were not defined");
 #else
     printf("Hello, MCP9808! Reading raw data from registers...\n");
@@ -161,5 +152,7 @@ int main() {
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
 #endif
 
-    mcp9808_init();
+    mcp9808_set_limits();
+
+    mcp9808_read_temp();
 }
