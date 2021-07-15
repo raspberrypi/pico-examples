@@ -2,12 +2,16 @@
 
 This example code shows how to interface the Raspberry Pi Pico to one of the very common 16x2 LCD character displays. Due to the large number of pins these displays use, they are commonly used with extra drivers or backpacks. In this example, we will use an Adafruit LCD display backpack, which supports communication over USB or TTL. An RGB display is also used, but the backpack is compatible with white/blue or one color displays too.
 
+The backpack processes a set of commands that are documented https://learn.adafruit.com/usb-plus-serial-backpack/command-reference[here] and preceded by the "special" byte 0xFE. The backpack does the ASCII character conversion and even supports custom character creation. In this example, we use the primary UART (uart0) to read characters and print them onto the LCD. We also define a special startup sequence and vary the display's backlight color.
+
 [NOTE]
 ======
 These LCD displays can also be driven directly using GPIO without the use of an adapter board. That is beyond the scope of this example and not very commonly done.
 ======
 
 TIP: The Adafruit backpack uses a microcontroller (At90USB162) of its own to interface with commands sent to it and the raw pin outputs, providing a convenient layer of abstraction over the LCD. The backpack breaks out a few pins from this microcontroller and the RX pin too, so you could program it to do more! The software flashed onto the board is also https://learn.adafruit.com/usb-plus-serial-backpack/downloads[available to inspect].
+
+WARNING: While this display will work at 3.3V, it will be quite dim. If powering the Pico via USB (which provides 5V) consider powering the backpack via VBUS (pin 40). However, if you do this, DO NOT connect any other pins on the backpack to the Pico (which is not 5V tolerant) apart from the needed TX (Pico) -> RX (backpack) as the backpack's IO are now at 5V.
 
 == Wiring information
 
@@ -32,7 +36,7 @@ lcd_uart.c:: The example code.
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | http://raspberrypi.org/
-| 16x2 RGB LCD panel 3.3v | 1 | generic part, available on Adafruit[https://www.adafruit.com/product/398]
+| 16x2 RGB LCD panel 3.3v | 1 | generic part, https://www.adafruit.com/product/398[available on Adafruit]
 | 16x2 LCD backpack | 1 | https://www.adafruit.com/product/781[from Adafruit]
 | M/M Jumper wires | 3 | generic part
 |===
