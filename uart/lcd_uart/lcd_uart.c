@@ -4,6 +4,21 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+/* Example code to drive a 16x2 LCD panel via an Adafruit TTL LCD "backpack"
+
+   Optionally, the backpack can be connected the VBUS (pin 40) at 5V if
+   the Pico in question is powered by USB for greater brightness.
+   
+   If this is done, then no other connections should be made to the backpack apart
+   from those listed below as the backpack's logic levels will change.
+
+   Connections on Raspberry Pi Pico board, other boards may vary.
+
+   GPIO 8 (pin 11)-> RX on backpack
+   3.3v (pin 36) -> 3.3v on backpack
+   GND (pin 38)  -> GND on backpack
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include "pico/stdlib.h"
