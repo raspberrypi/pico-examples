@@ -96,10 +96,9 @@ void bmp280_init() {
     // use the "handheld device dynamic" optimal setting (see datasheet)
     uint8_t buf[2];
 
-    // 500ms sampling time, x16 filter, not set
+    // 500ms sampling time, x16 filter
     const uint8_t reg_config_val = ((0x04 << 5) | (0x05 << 2)) & 0xFC;
 
-    // LSB of slave address sets read or write mode
     // send register number followed by its corresponding value
     buf[0] = REG_CONFIG;
     buf[1] = reg_config_val;
@@ -114,8 +113,8 @@ void bmp280_init() {
 
 void bmp280_read_raw(int32_t* temp, int32_t* pressure) {
     // BMP280 data registers are auto-incrementing and we have 3 temperature and
-    // pressure registers each, so we start at 0xF7 and read 6 bytes to 0xFC note:
-    // normal mode does not require further ctrl_meas and config register writes
+    // pressure registers each, so we start at 0xF7 and read 6 bytes to 0xFC
+    // note: normal mode does not require further ctrl_meas and config register writes
 
     uint8_t buf[6];
     i2c_write_blocking(i2c_default, ADDR, (uint8_t*)REG_PRESSURE_MSB, 1, true);  // true to keep master control of bus
@@ -132,12 +131,12 @@ void bmp280_reset() {
     i2c_write_blocking(i2c_default, ADDR, buf, 2, false);
 }
 
+// intermediate function that calculates the fine resolution temperature
+// used for both pressure and temperature conversions
 int32_t bmp280_convert(int32_t temp, struct bmp280_calib_param* params) {
-    // intermediate function that calculates the fine resolution temperature
-    // used for both pressure and temperature conversions
-
     // use the 32-bit fixed point compensation implementation given in the
     // datasheet
+    
     int32_t var1, var2;
     var1 = ((((temp >> 3) - ((int32_t)params->dig_t1 << 1))) * ((int32_t)params->dig_t2)) >> 11;
     var2 = (((((temp >> 4) - ((int32_t)params->dig_t1)) * ((temp >> 4) - ((int32_t)params->dig_t1))) >> 12) * ((int32_t)params->dig_t3)) >> 14;
