@@ -97,10 +97,9 @@ void lcd_set_cursor(bool is_on) {
 }
 
 void lcd_set_backlight(bool is_on) {
-    // turn the backline on (true) or off (false)
-    uint8_t pre = 0;
+    // turn the backlight on (true) or off (false)
     if (is_on) {
-        lcd_write(LCD_DISPLAY_ON, &pre, 1);
+        lcd_write(LCD_DISPLAY_ON, (uint8_t *) 0, 1);
     } else {
         lcd_write(LCD_DISPLAY_OFF, NULL, 0);
     }
