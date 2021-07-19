@@ -76,8 +76,8 @@ App|Description
 
 App|Description
 ---|---
-[bmp280_i2c](i2c/bmp280_i2c) | Read and convert temperature and pressure data from a BMP280 sensor, attached to an I2C bus.
 [bus_scan](i2c/bus_scan) | Scan the I2C bus for devices and display results.
+[bmp280_i2c](i2c/bmp280_i2c) | Read and convert temperature and pressure data from a BMP280 sensor, attached to an I2C bus.
 [lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C.
 [mcp9808_i2c](i2c/mcp9808_i2c) | Read temperature, set limits and raise alerts when limits are surpassed.
 [mpl3115a2_i2c](i2c/mpl3115a2_i2c) | Interface with an MPL3115A2 altimeter, exploring interrupts and advanced board features, via I2C.
