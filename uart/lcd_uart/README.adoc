@@ -2,13 +2,13 @@
 
 This example code shows how to interface the Raspberry Pi Pico to one of the very common 16x2 LCD character displays. Due to the large number of pins these displays use, they are commonly used with extra drivers or backpacks. In this example, we will use an Adafruit LCD display backpack, which supports communication over USB or TTL. A monochrome display with an RGB backlight is also used, but the backpack is compatible with monochrome backlight displays too. There is <<_attaching_a_16x2_lcd_via_i2c, another example>> that uses I2C to control a 16x2 display.
 
-The backpack processes a set of commands that are documented https://learn.adafruit.com/usb-plus-serial-backpack/command-reference[here] and preceded by the "special" byte 0xFE. The backpack does the ASCII character conversion and even supports custom character creation. In this example, we use the Pico's primary UART (uart0) to read characters and print them onto the LCD. We also define a special startup sequence and vary the display's backlight color.
+The backpack processes a set of commands that are documented https://learn.adafruit.com/usb-plus-serial-backpack/command-reference[here] and preceded by the "special" byte 0xFE. The backpack does the ASCII character conversion and even supports custom character creation. In this example, we use the Pico's primary UART (uart0) to read characters from our computer and send them via the other UART (uart1) to print them onto the LCD. We also define a special startup sequence and vary the display's backlight color.
 
-TIP: The Adafruit backpack uses a microcontroller (At90USB162) of its own to interface with commands sent to it and the raw pin outputs, providing a convenient layer of abstraction over the LCD. The backpack breaks out a few GPIO pins from this microcontroller and its TX/RX pins too. The software flashed onto the board is also https://learn.adafruit.com/usb-plus-serial-backpack/downloads[available to inspect].
+NOTE: You can change where stdio output goes (Pico's USB, uart0 or both) with CMake directives. The CMakeLists.txt file shows how to enable both.
 
 == Wiring information
 
-Wiring up the device requires 3 jumpers, to connect VCC (3.3v), GND, TX. The example here uses both of the Pico's UARTs, one (uart0) for stdio and the other (uart1)for communication with the backpack. Pin 8 is used as the TX pin. Power is supplied from the 3.3V pin. To connect the backpack to the display, it is common practice to solder it onto the back of the display or during the prototyping stage to use the same parallel lanes on a breadboard.
+Wiring up the backpack to the Pico requires 3 jumpers, to connect VCC (3.3v), GND, TX. The example here uses both of the Pico's UARTs, one (uart0) for stdio and the other (uart1) for communication with the backpack. Pin 8 is used as the TX pin. Power is supplied from the 3.3V pin. To connect the backpack to the display, it is common practice to solder it onto the back of the display, or during the prototyping stage to use the same parallel lanes on a breadboard.
 
 NOTE: While this display will work at 3.3V, it will be quite dim. Using a 5V source will make it brighter.
 
