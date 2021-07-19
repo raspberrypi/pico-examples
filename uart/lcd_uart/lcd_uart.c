@@ -156,8 +156,12 @@ int main() {
 #endif
 
     while (1) {
+        // send any chars from stdio straight to the backpack
         char c = uart_getc(uart_default);
-        if (c < 128) uart_putc_raw(UART_ID, c); // skip extra chars
+        // any bytes not followed by 0xFE (the special command) are interpreted
+        // as text to be displayed on the backpack, so we just send the char
+        // down the UART byte pipe!
+        if (c < 128) uart_putc_raw(UART_ID, c); // skip extra non-ASCII chars
 #if LCD_IS_RGB
         // change the display color on keypress, rainbow style!
         red = sin(frequency * i + 0) * 127 + 128;
