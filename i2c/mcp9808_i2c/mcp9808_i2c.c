@@ -25,10 +25,6 @@
 //The bus address is determined by the state of pins A0, A1 and A2 on the MCP9808 board
 static uint8_t ADDRESS = 0x18;
 
-const uint8_t WRITE_MODE = 0xFE;
-const uint8_t READ_MODE = 0xFF;
-
-
 //hardware registers
 
 const uint8_t REG_POINTER = 0x00;
@@ -37,8 +33,6 @@ const uint8_t REG_TEMP_UPPER = 0x02;
 const uint8_t REG_TEMP_LOWER = 0x03;
 const uint8_t REG_TEMP_CRIT = 0x04;
 const uint8_t REG_TEMP_AMB = 0x05;
-const uint8_t REG_MAN_ID = 0x06;
-const uint8_t REG_DEV_ID = 0x07;
 const uint8_t REG_RESOLUTION = 0x08;
 
 
@@ -135,8 +129,8 @@ int main() {
 
     while (1) {
         // Start reading ambient temperature register for 2 bytes
-        i2c_write_blocking(i2c_default, ADDRESS & WRITE_MODE, &REG_TEMP_AMB, 1, true);
-        i2c_read_blocking(i2c_default, ADDRESS & READ_MODE, buf, 2, false);
+        i2c_write_blocking(i2c_default, ADDRESS, &REG_TEMP_AMB, 1, true);
+        i2c_read_blocking(i2c_default, ADDRESS, buf, 2, false);
          
         upper_byte = buf[0];
         lower_byte = buf[1];
