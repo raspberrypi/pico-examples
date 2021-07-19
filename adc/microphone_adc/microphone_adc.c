@@ -24,7 +24,7 @@
 #define ADC_PIN 0
 #define ADC_VREF 3.3
 #define ADC_RANGE (1 << 12)
-#define ADC_CONVERT ADC_VREF / ADC_RANGE
+#define ADC_CONVERT ADC_VREF / (ADC_RANGE - 1) 
 
 int main() {
     stdio_init_all();

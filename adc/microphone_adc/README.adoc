@@ -22,8 +22,6 @@ Wiring up the device requires 3 jumpers, to connect VCC (3.3v), GND, and AOUT. T
 
 WARNING: Most boards will take a range of VCC voltages from the Pico's default 3.3V to the 5 volts commonly seen on other microcontrollers. Ensure your board doesn't output an analogue signal greater than 3.3V as this may result in permanent damage to the Pico's ADC.
 
-WARNING: Do not connect a voltage greater than 3.3V to the Pico's ADC (and any of its GPIO) as this may result in permanent damage.
-
 [[ics-40180-adc_wiring]]
 [pdfwidth=75%]
 .Wiring Diagram for ICS-40180 microphone breakout board.
