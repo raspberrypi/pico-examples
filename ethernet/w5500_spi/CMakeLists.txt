@@ -1,5 +1,6 @@
 if (NOT IO_LIBRARY_DRIVER_DIR)
-    set(IO_LIBRARY_DRIVER_DIR /home/pi/Documents/ioLibrary_Driver)
+    #replace path to the library here
+    set(IO_LIBRARY_DRIVER_DIR ${YOUR_LIB_PATH_HERE})
 endif()
 
 if (EXISTS ${IO_LIBRARY_DRIVER_DIR}/Ethernet)
@@ -24,7 +25,7 @@ else()
     message(WARNING "IOLibrary Ethernet Driver not found; looked in ${IO_LIBRARY_DRIVER_DIR}")
 endif()
 
-# check if we have the library?
+# proceeds if library is present 
 if (TARGET w5500_ethernet)
     add_executable(w5500_spi w5500_spi.c)
 
@@ -38,5 +39,5 @@ if (TARGET w5500_ethernet)
     # add url via pico_set_program_url
     example_auto_set_url(w5500_spi)
 else()
-    message("Skipping w5500_spi example as ethernet driver not found")
+    message("Skipping w5500_spi example because the ethernet driver is not found")
 endif()
