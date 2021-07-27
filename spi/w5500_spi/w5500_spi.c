@@ -95,7 +95,7 @@ uint8_t  wiznet_read(void) {
     // first, then subsequently read from the device. The register is auto incrementing
     // so we don't need to keep sending the register we want, just the first.
     uint8_t rx = 0, tx = 0xFF;
-    spi_read_blocking(SPI_PORT, &tx,  &rx, 1);
+    spi_read_blocking(SPI_PORT, tx,  &rx, 1);
     return rx;
         
 }

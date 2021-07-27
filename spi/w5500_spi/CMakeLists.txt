@@ -1,30 +1,42 @@
-#[[add_executable(w5500_spi
-        w5500_spi.c
-        loopback.c socket.c w5500.c wizchip_conf.c
-        )
-#add_library(loopback.c socket.c w5500.c wizchip_conf.c)
-# Pull in our (to be renamed) simple get you started dependencies
-target_link_libraries(w5500_spi pico_stdlib hardware_spi) 
+if (NOT IO_LIBRARY_DRIVER_DIR)
+    set(IO_LIBRARY_DRIVER_DIR /home/pi/Documents/ioLibrary_Driver)
+endif()
 
-# create map/bin/hex file etc.
-pico_add_extra_outputs(w5500_spi)
+if (EXISTS ${IO_LIBRARY_DRIVER_DIR}/Ethernet)
+    set(IO_LIBRARY_ETHERNET_DIR ${IO_LIBRARY_DRIVER_DIR}/Ethernet)
+    set(IO_LIBRARY_LOOPBACK_DIR ${IO_LIBRARY_DRIVER_DIR}/Application/loopback)
 
-# add url via pico_set_program_url
-example_auto_set_url(w5500_spi)]]#
+    add_library(io_library_ethernet INTERFACE)
+    target_sources(io_library_ethernet INTERFACE
+            ${IO_LIBRARY_ETHERNET_DIR}/socket.c
+            ${IO_LIBRARY_ETHERNET_DIR}/wizchip_conf.c
+            ${IO_LIBRARY_LOOPBACK_DIR}/loopback.c)
+    target_include_directories(io_library_ethernet INTERFACE ${IO_LIBRARY_ETHERNET_DIR} ${IO_LIBRARY_LOOPBACK_DIR})
 
-set (ETHERNET /home/pi/Documents/ioLibrary_Driver-master/Ethernet)
+    add_library(w5500_ethernet INTERFACE)
+    target_sources(w5500_ethernet INTERFACE ${IO_LIBRARY_ETHERNET_DIR}/W5500/w5500.c)
+    target_include_directories(w5500_ethernet INTERFACE ${IO_LIBRARY_ETHERNET_DIR}/W5500)
+    target_compile_definitions(w5500_ethernet INTERFACE _WIZCHIP_=W5500)
+    target_link_libraries(w5500_ethernet INTERFACE io_library_ethernet)
 
-add_subdirectory(${ETHERNET} ${CMAKE_BINARY_DIR}/eth)
 
-add_executable(w5500_spi w5500_spi.c 
-w5500.c loopback.c wizchip_conf.c)
+else()
+    message(WARNING "IOLibrary Ethernet Driver not found; looked in ${IO_LIBRARY_DRIVER_DIR}")
+endif()
 
-pico_enable_stdio_uart(w5500_spi 1)
-pico_enable_stdio_usb(w5500_spi 0)
+# check if we have the library?
+if (TARGET w5500_ethernet)
+    add_executable(w5500_spi w5500_spi.c)
 
-target_link_libraries(w5500_spi PUBLIC pico_stdio hardware_spi socket)
+    pico_enable_stdio_uart(w5500_spi 1)
+    pico_enable_stdio_usb(w5500_spi 0)
 
-pico_add_extra_outputs(w5500_spi)
+    target_link_libraries(w5500_spi PUBLIC pico_stdlib hardware_spi w5500_ethernet)
 
-# add url via pico_set_program_url
-example_auto_set_url(w5500_spi)
+    pico_add_extra_outputs(w5500_spi)
+
+    # add url via pico_set_program_url
+    example_auto_set_url(w5500_spi)
+else()
+    message("Skipping w5500_spi example as ethernet driver not found")
+endif()
