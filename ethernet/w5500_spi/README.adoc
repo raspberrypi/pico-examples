@@ -11,34 +11,33 @@ This example simply sends and receives data from the W5500 chip using the pollin
 
 == Importing external libraries
 
-In order to import the libraries needed for this example, you should first download all the files from the following respository: https://github.com/Wiznet/ioLibrary_Driver. Then in the CMakeLists.txt file in this directory replace "${YOUR_LIB_PATH_HERE}" on line 3 with the full path address of where the ioLibrary_driver folder is stored in your local machine.  
+The libraries required for this example are added to the .gitmodules file as a submodule and are imported automatically. 
 
-The structure used to generally add additional libraries is:
-   The addition of 2 source libraries is demonstrated here. These lines can be added in any CMake file in the project. Variables to be changed are in bold. 
+The structure used to generally add libraries to any project is:
 
-   1) It is good practice to set paths for all the source file directories first
-      set(*source_directory_1_path /path/to/your/first/directory*)
-      set(*source_directory_2_path /path/to/your/second/directory*)
+   The addition of 2 source libraries is demonstrated here. These lines can be added in any CMake file in the project. 
+   1) Add the source directory to the existing .gitmodules file through the following bash command.
+      $ git submodule add https://github.com/source/link
 
-   2) Create a library.
+   2) The source directory should be saved in the folder you are currently in. Set a path navigating to it. 
+      set(*source_directory_path /path/to/source/directory*)
+
+   3) Create a library.
       add_library(*library_name* INTERFACE)
 
-   3) Decide which files you want to add to your library. 
-      target_sources(*library_name* INTERFACE *${source_directory_1_path}/source_file1.c ${source_directory_2_path}/source_file2.c*)
+   4) Decide which files you want to add to your library. 
+      target_sources(*library_name* INTERFACE *${source_directory_path}/source_file1.c ${source_directory_path}/source_file2.c*)
 
-   4) Add the directories to your source files.
-      target_include_directories(*library_name ${source_directory_1_path} ${source_directory_2_path}*)
+   5) Add the source file directory to the library.
+      target_include_directories(*library_name ${source_directory_path}*)
 
    Finally, remember to add the library_name to the target_link_libraries() command in the CMakeLists.txt file in the same directory as your target.
    
-
-
-
 == Wiring information
 
 Wiring information for the WIZ850io board and the Raspberry Pi Pico Ethernet shield, both containing the W5500 chip, is provided below.
 
-WIZ850io board:
+===WIZ850io board:
 
 More information at https://eshop.wiznet.io/shop/module/wiz850io/.
 
@@ -54,10 +53,8 @@ Wiring up the device requires 6 jumpers as follows:
 
 The example here uses SPI port 0. Power is supplied from the 3.3V pin.
 
-Raspberry Pi Pico Ethernet Shield:
-
+===Raspberry Pi Pico Ethernet Shield:
 More information at https://dokkotai.tistory.com/198.
-
 The Pico board connects straight on top of the ethernet shield. The USB symbol printed on the ethernet shield should align with the micro USB port on the Pico board.
 
 [NOTE]
@@ -75,8 +72,6 @@ image::wiz850io.png[]
 
 CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
 w5500_spi.c:: The example main code.
-
-
 
 
 == Bill of Materials

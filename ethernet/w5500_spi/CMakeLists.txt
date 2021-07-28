@@ -1,6 +1,6 @@
 if (NOT IO_LIBRARY_DRIVER_DIR)
     #replace path to the library here
-    set(IO_LIBRARY_DRIVER_DIR ${YOUR_LIB_PATH_HERE})
+    set(IO_LIBRARY_DRIVER_DIR ${CMAKE_CURRENT_LIST_DIR}/ioLibrary_Driver)
 endif()
 
 if (EXISTS ${IO_LIBRARY_DRIVER_DIR}/Ethernet)

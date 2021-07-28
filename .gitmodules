@@ -1,0 +1,3 @@
+[submodule "ioLibrary_Driver"]
+	path = ethernet/w5500_spi/ioLibrary_Driver
+	url = https://github.com/Wiznet/ioLibrary_Driver
