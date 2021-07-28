@@ -37,14 +37,12 @@ The structure used to generally add libraries to any project is:
 
 Wiring information for the WIZ850io board and the Raspberry Pi Pico Ethernet shield, both containing the W5500 chip, is provided below.
 
-===WIZ850io board:
-
-More information at https://eshop.wiznet.io/shop/module/wiz850io/.
-
+WIZ850io board:
+More information is available [here](https://eshop.wiznet.io/shop/module/wiz850io/).
 Wiring up the device requires 6 jumpers as follows:
 
    * GPIO 2 (physical pin 4) SCK/spi0_sclk -> CLK on WIZ850io board
-   * GPIO 3 (physical pin 5) MOSI/spi0_tx -> MOSIon WIZ850io board
+   * GPIO 3 (physical pin 5) MOSI/spi0_tx -> MOSI on WIZ850io board
    * GPIO 4 (physical pin 6) MISO/spi0_rx-> MISO on WIZ850io board
    * GPIO 5 (physical pin 7) Chip select -> NCS on WIZ850io board
    * GPIO 6 (physical pin 9) Reset/GPIO -> Reset on WIZ850io board
@@ -53,15 +51,15 @@ Wiring up the device requires 6 jumpers as follows:
 
 The example here uses SPI port 0. Power is supplied from the 3.3V pin.
 
-===Raspberry Pi Pico Ethernet Shield:
-More information at https://dokkotai.tistory.com/198.
+Raspberry Pi Pico Ethernet Shield:
+More information is available [here](https://dokkotai.tistory.com/198).
 The Pico board connects straight on top of the ethernet shield. The USB symbol printed on the ethernet shield should align with the micro USB port on the Pico board.
+
 
 [NOTE]
 ======
 There are many different manufacturers who sell boards containing the W5500. They typically require the same 6 pins for power and communication as the WIZ850io board.
 ======
-
 
 [[w5500_spi_wiring]]
 [pdfwidth=75%]
