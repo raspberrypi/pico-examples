@@ -16,7 +16,7 @@ int main() {
     PIO pio = pio0;
     uint offset = pio_add_program(pio, &i2s_microphone_program);
     uint sm = pio_claim_unused_sm(pio, true);
-    i2s_microphone_2_program_init(pio, sm, offset, PIO_OUTPUT_PIN_BASE, PIO_INPUT_PIN_BASE);
+    i2s_microphone_program_init(pio, sm, offset, PIO_OUTPUT_PIN_BASE, PIO_INPUT_PIN_BASE);
 
     while (1);
     
