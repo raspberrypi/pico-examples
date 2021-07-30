@@ -1,0 +1,81 @@
+.program i2s_microphone
+
+.side_set 1
+
+/*
+entry_point:
+    set x, 31         side 0b11
+bitloop1:          
+    nop               side 0b10
+    jmp x-- bitloop1  side 0b11
+    nop               side 0b00
+    set x, 31         side 0b01
+bitloop0:
+    nop               side 0b00
+    jmp x-- bitloop0  side 0b01
+    nop               side 0b10
+*/
+
+/*
+.wrap_target
+loop:
+    in pins, 1        side 1
+    jmp x-- loop      side 0
+ws_toggle:
+    in pins, 1        side 1
+    mov osr, ~y       side 0
+    in pins, 1        side 1
+    out pins, 1       side 0
+    in pins, 1        side 1
+    set x, 31         side 0
+.wrap
+*/
+
+ws_toggle:
+    nop               side 1
+    mov osr, !osr     side 0
+    nop               side 1
+    out pins, 1       side 0
+    nop               side 1
+    set x, 31         side 0
+loop:
+    nop               side 1
+    jmp x-- loop      side 0
+
+% c-sdk {
+static inline void i2s_microphone_program_init(PIO pio, uint sm, uint offset, uint clock_pin_base, uint data_pin) {
+    pio_sm_config c = i2s_microphone_program_get_default_config(offset);
+    pio_sm_set_pins(pio, sm, 0);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin_base, 2, true);
+    pio_gpio_init(pio, clock_pin_base);
+    pio_gpio_init(pio, clock_pin_base + 1);
+    
+    sm_config_set_clkdiv_int_frac(&c, 30, 128);
+    sm_config_set_sideset_pins(&c, clock_pin_base);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+% c-sdk {
+static inline void i2s_microphone_2_program_init(PIO pio, uint sm, uint offset, uint clock_pin_base, uint data_pin) {
+    pio_sm_config c = i2s_microphone_program_get_default_config(offset);
+    pio_sm_set_pins(pio, sm, 0);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin_base, 2, true);
+    //pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, false);
+    pio_gpio_init(pio, clock_pin_base);
+    pio_gpio_init(pio, clock_pin_base + 1);
+    
+    sm_config_set_clkdiv_int_frac(&c, 30, 128);
+    sm_config_set_sideset_pins(&c, clock_pin_base);
+    sm_config_set_out_pins(&c, clock_pin_base + 1, 1);
+    //sm_config_set_in_pins(&c, data_pin)
+
+    pio_sm_init(pio, sm, offset, &c);
+
+    //pio_sm_exec(pio, sm, pio_encode_set(pio_y, 0u));
+    //pio_sm_exec(pio, sm, pio_encode_set(pio_x, 31u));
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
