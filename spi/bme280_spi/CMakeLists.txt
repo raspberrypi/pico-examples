@@ -2,7 +2,7 @@ add_executable(bme280_spi
         bme280_spi.c
         )
 
-# Pull in our get you started dependencies
+# Pull in our (to be renamed) simple get you started dependencies
 target_link_libraries(bme280_spi pico_stdlib hardware_spi)
 
 # create map/bin/hex file etc.

@@ -2,7 +2,7 @@ add_executable(i2c_bus_scan
         bus_scan.c
         )
 
-# Pull in our get you started dependencies
+# Pull in our (to be renamed) simple get you started dependencies
 target_link_libraries(i2c_bus_scan pico_stdlib hardware_i2c)
 
 # create map/bin/hex file etc.

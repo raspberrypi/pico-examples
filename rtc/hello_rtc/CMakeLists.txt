@@ -2,7 +2,7 @@ add_executable(hello_rtc
         hello_rtc.c
         )
 
-# Pull in our get you started dependencies
+# Pull in our (to be renamed) simple get you started dependencies
 target_link_libraries(hello_rtc pico_stdlib hardware_rtc)
 
 # create map/bin/hex file etc.
