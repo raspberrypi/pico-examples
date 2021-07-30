@@ -2,7 +2,7 @@ add_executable(hello_uart
         hello_uart.c
         )
 
-# pull in common dependencies
+# pull in common dependencies and additional uart hardware support
 target_link_libraries(hello_uart pico_stdlib)
 
 # create map/bin/hex file etc.
