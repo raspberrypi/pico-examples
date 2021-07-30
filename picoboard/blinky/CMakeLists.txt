@@ -2,7 +2,7 @@ add_executable(picoboard_blinky
         blinky.c
         )
 
-# pull in common dependencies
+# Pull in our pico_stdlib which pulls in commonly used features
 target_link_libraries(picoboard_blinky pico_stdlib)
 
 # create map/bin/hex file etc.

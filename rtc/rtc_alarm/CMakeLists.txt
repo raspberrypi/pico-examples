@@ -2,7 +2,7 @@ add_executable(rtc_alarm
         rtc_alarm.c
         )
 
-# pull in common dependencies and additional rtc hardware support
+# Pull in our get you started dependencies
 target_link_libraries(rtc_alarm pico_stdlib hardware_rtc)
 
 # create map/bin/hex file etc.

@@ -2,7 +2,7 @@ add_executable(bme280_spi
         bme280_spi.c
         )
 
-# pull in common dependencies and additional spi hardware support
+# Pull in our get you started dependencies
 target_link_libraries(bme280_spi pico_stdlib hardware_spi)
 
 # create map/bin/hex file etc.

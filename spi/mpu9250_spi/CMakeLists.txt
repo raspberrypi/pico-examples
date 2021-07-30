@@ -2,7 +2,7 @@ add_executable(mpu9250_spi
         mpu9250_spi.c
         )
 
-# pull in common dependencies and additional spi hardware support
+# Pull in our get you started dependencies
 target_link_libraries(mpu9250_spi pico_stdlib hardware_spi)
 
 # create map/bin/hex file etc.

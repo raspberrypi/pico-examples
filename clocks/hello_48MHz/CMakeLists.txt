@@ -2,7 +2,7 @@ add_executable(hello_48MHz
         hello_48MHz.c
         )
 
-# pull in common dependencies
+# Pull in our pico_stdlib which pulls in commonly used features
 target_link_libraries(hello_48MHz pico_stdlib hardware_clocks)
 
 # create map/bin/hex file etc.

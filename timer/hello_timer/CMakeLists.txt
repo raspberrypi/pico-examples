@@ -2,7 +2,7 @@ add_executable(hello_timer
         hello_timer.c
         )
 
-# pull in common dependencies
+# Pull in our get you started dependencies
 target_link_libraries(hello_timer pico_stdlib)
 
 # create map/bin/hex file etc.

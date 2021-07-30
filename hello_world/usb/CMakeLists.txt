@@ -3,7 +3,7 @@ if (TARGET tinyusb_device)
             hello_usb.c
             )
 
-    # pull in common dependencies
+    # Pull in our pico_stdlib which aggregates commonly used features
     target_link_libraries(hello_usb pico_stdlib)
 
     # enable usb output, disable uart output

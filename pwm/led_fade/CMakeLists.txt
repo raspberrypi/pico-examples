@@ -2,7 +2,7 @@ add_executable(pwm_led_fade
         pwm_led_fade.c
         )
 
-# pull in common dependencies and additional pwm hardware support
+# Pull in our pico_stdlib which pulls in commonly used features
 target_link_libraries(pwm_led_fade pico_stdlib hardware_pwm)
 
 # create map/bin/hex file etc.
