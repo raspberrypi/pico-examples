@@ -1,6 +1,3 @@
-[submodule "ethernet/lan8270_rmii"]
-	path = ethernet/lan8270_rmii
-	url = https://github.com/sandeepmistry/pico-rmii-ethernet.git
 [submodule "ethernet/lan8720_rmii/pico-rmii-ethernet"]
 	path = ethernet/lan8720_rmii/pico-rmii-ethernet
 	url = https://github.com/sandeepmistry/pico-rmii-ethernet.git
