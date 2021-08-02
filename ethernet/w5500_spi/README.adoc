@@ -17,19 +17,19 @@ The structure used to generally add libraries to any project is:
 
    The addition of 2 source libraries is demonstrated here. These lines can be added in any CMake file in the project. 
    1) Add the source directory to the existing .gitmodules file through the following bash command.
-      $ git submodule add **https://github.com/source/link**
+      $ git submodule add https://github.com/source/link
 
    2) The source directory should be saved in the folder you are currently in. Set a path navigating to it. 
-      set(**source_directory_path /path/to/source/directory**)
+      set(*source_directory_path /path/to/source/directory*)
 
    3) Create a library.
-      add_library(**library_name** INTERFACE)
+      add_library(*library_name* INTERFACE)
 
    4) Decide which files you want to add to your library. 
-      target_sources(**library_name** INTERFACE **${source_directory_path}/source_file1.c ${source_directory_path}/source_file2.c**)
+      target_sources(*library_name* INTERFACE *${source_directory_path}/source_file1.c ${source_directory_path}/source_file2.c*)
 
    5) Add the source file directory to the library.
-      target_include_directories(**library_name ${source_directory_path}**)
+      target_include_directories(*library_name ${source_directory_path}*)
 
    Finally, remember to add the library_name to the target_link_libraries() command in the CMakeLists.txt file in the same directory as your target.
    
