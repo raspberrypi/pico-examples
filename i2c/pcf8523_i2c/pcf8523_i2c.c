@@ -41,37 +41,70 @@ static void pcf8520_reset() {
     i2c_write_blocking(i2c_default, addr, buf, 2, false);
 }
 
-static uint8_t pcf8520_read_raw() {
+static void pcf820_write_current_time() {
+    // buf[0] is the register to write to
+    // buf[1] is the value that will be written tot he register
+    uint8_t buf[2];
+    
+    // Write the current value to second register
+    buf[0] = 0x03;
+    buf[1] = 0x00;
+    i2c_write_blocking(i2c_default, addr, buf, 2, false);
+
+    // Write the current value to minute register
+    buf[0] = 0x04;
+    buf[1] = 0x00;
+    i2c_write_blocking(i2c_default, addr, buf, 2, false);
+
+    // Write the current value to hour register
+    buf[0] = 0x05;
+    buf[1] = 0x00;
+    i2c_write_blocking(i2c_default, addr, buf, 2, false);
+
+    // Write the current value to day of the month register
+    buf[0] = 0x06;
+    buf[1] = 0x00;
+    i2c_write_blocking(i2c_default, addr, buf, 2, false);
+
+    // Write the current value to the day of the week register
+    // where Sunday = 0x00, Monday = 0x01, Tuesday... ...Saturday = 0x06
+    buf[0] = 0x07;
+    buf[1] = 0x00;
+    i2c_write_blocking(i2c_default, addr, buf, 2, false);
+
+    // Write the current value to the month register
+    buf[0] = 0x08;
+    buf[1] = 0x00;
+    i2c_write_blocking(i2c_default, addr, buf, 2, false);
+
+    // Write the current value to day of the day of the year register
+    buf[0] = 0x09;
+    buf[1] = 0x00;
+    i2c_write_blocking(i2c_default, addr, buf, 2, false);
+}
+ 
+
+static void pcf8520_read_raw(uint8_t *buffer) {
     // For this particular device, we send the device the register we want to read
     // first, then subsequently read from the device. The register is auto incrementing
     // so we don't need to keep sending the register we want, just the first.
 
-    uint8_t buffer[6];
-
     // Start reading acceleration registers from register 0x3B for 6 bytes
     uint8_t val = 0x03;
     i2c_write_blocking(i2c_default, addr, &val, 1, true); // true to keep master control of bus
-    i2c_read_blocking(i2c_default, addr, buffer, 6, false);
-    printf("%d\n",buffer[0]);
-    printf("%d\n",buffer[1]);
-    printf("%d\n",buffer[2]);
-    printf("%d\n",buffer[3]);
-
-    return buffer;
+    i2c_read_blocking(i2c_default, addr, buffer, 7, false);
 }
 //#endif
 
-int convert_time(uint8_t raw_time[]){
-    int conv_time[6];
-    conv_time[0]= (10*((int)(raw_time[0]>>4)));
-    printf("infucnt");
-    conv_time[1]= (10*((int)(raw_time[0]>>4)));
-    conv_time[2]= (10*((int)(raw_time[0]>>4)));
-    conv_time[3]= (10*((int)(raw_time[0]>>4)));
-    conv_time[4]= (10*((int)(raw_time[0]>>4)));
-    conv_time[5]= (10*((int)(raw_time[0]>>4)));
+void convert_time(int conv_time[7],uint8_t raw_time[7]){
 
-    return conv_time;
+    conv_time[0]= (10*(int)((raw_time[0] & 0x70)>>4)) + ((int)(raw_time[0] & 0x0F));
+    conv_time[1]= (10*(int)((raw_time[1] & 0x70)>>4)) + ((int)(raw_time[1] & 0x0F));
+    conv_time[2]= (10*(int)((raw_time[2] & 0x30)>>4)) + ((int)(raw_time[2] & 0x0F));
+    conv_time[3]= (10*(int)((raw_time[3] & 0x30)>>4)) + ((int)(raw_time[3] & 0x0F));
+    conv_time[4]= (int)(raw_time[4] & 0x07);
+    conv_time[5]= (int)(raw_time[5] & 0x1F);
+    conv_time[6]= (int)raw_time[6];
 }
 
 int main() {
@@ -92,14 +125,25 @@ int main() {
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
 
     pcf8520_reset();
-    uint8_t raw_time[];
-    int real_time[];
+
+    pcf820_write_current_time();
+
+    uint8_t raw_time[7];
+    int real_time[7];
+    char days_of_week[7][12] = {"Sunday","Monday","Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
     while (1) {
         
-        raw_time = pcf8520_read_raw();
-        real_time = convert_time(raw_time);
+        pcf8520_read_raw(raw_time);
+        convert_time(real_time, raw_time);
+        printf("Time: %02d : %02d : %02d\n",real_time[2],real_time[1],real_time[0]);
+        printf("Date: %s %02d / %02d / %02d\n",days_of_week[real_time[4]], real_time[3], real_time[5], real_time[6]);
+        
+        
         sleep_ms(1000);
+
+        // Clear terminal 
+        printf("\e[1;1H\e[2J");
     }
 
 #endif
