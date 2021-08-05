@@ -23,7 +23,7 @@
 // By default these devices  are on bus address 0x68
 static int addr = 0x68;
 
-//#ifdef i2c_default
+#ifdef i2c_default
 static void pcf8520_reset() {
     // Two byte reset. First byte register, second byte data
     // There are a load more options to set up the device in different ways that could be added here
@@ -55,7 +55,6 @@ static void pcf820_write_current_time() {
         i2c_write_blocking(i2c_default, addr, buf, 2, false);
     }
 }
- 
 
 static void pcf8520_read_raw(uint8_t *buffer) {
     // For this particular device, we send the device the register we want to read
@@ -67,7 +66,7 @@ static void pcf8520_read_raw(uint8_t *buffer) {
     i2c_write_blocking(i2c_default, addr, &val, 1, true); // true to keep master control of bus
     i2c_read_blocking(i2c_default, addr, buffer, 7, false);
 }
-//#endif
+
 
 void set_alarm(){
     // buf[0] is the register to write to
@@ -88,8 +87,8 @@ void set_alarm(){
         buf[1] = alarm_val[i - 10];
         i2c_write_blocking(i2c_default, addr, buf, 2, false);
     }
- 
 }
+#endif
 
 void check_alarm(){
     // Check bit 3 of control register 2 for alarm flags
@@ -103,7 +102,6 @@ void check_alarm(){
     } else {
         printf("Alarm not triggered yet");
     }
-
 }
 
 void convert_time(int conv_time[7],uint8_t raw_time[7]){
@@ -159,7 +157,6 @@ int main() {
         // Clear terminal 
         printf("\e[1;1H\e[2J");
     }
-
-#endif
     return 0;
 }
+#endif
