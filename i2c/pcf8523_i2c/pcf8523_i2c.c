@@ -68,7 +68,7 @@ static void pcf8520_read_raw(uint8_t *buffer) {
 }
 
 
-void set_alarm(){
+void pcf8520_set_alarm(){
     // buf[0] is the register to write to
     // buf[1] is the value that will be written to the register
     uint8_t buf[2];
@@ -90,7 +90,7 @@ void set_alarm(){
 }
 #endif
 
-void check_alarm(){
+void pcf8520_check_alarm(){
     // Check bit 3 of control register 2 for alarm flags
     uint8_t status[1];
     uint8_t val = 0x01;
@@ -104,7 +104,7 @@ void check_alarm(){
     }
 }
 
-void convert_time(int conv_time[7],uint8_t raw_time[7]){
+void pcf8520_convert_time(int conv_time[7],uint8_t raw_time[7]){
     // Convert raw data into time
     conv_time[0]= (10*(int)((raw_time[0] & 0x70) >> 4)) + ((int)(raw_time[0] & 0x0F));
     conv_time[1]= (10*(int)((raw_time[1] & 0x70) >> 4)) + ((int)(raw_time[1] & 0x0F));
@@ -135,8 +135,8 @@ int main() {
     pcf8520_reset();
 
     pcf820_write_current_time();
-    set_alarm();
-    check_alarm();
+    pcf8520_set_alarm();
+    pcf8520_check_alarm();
 
     uint8_t raw_time[7];
     int real_time[7];
@@ -145,11 +145,11 @@ int main() {
     while (1) {
         
         pcf8520_read_raw(raw_time);
-        convert_time(real_time, raw_time);
+        pcf8520_convert_time(real_time, raw_time);
 
         printf("Time: %02d : %02d : %02d\n",real_time[2],real_time[1],real_time[0]);
         printf("Date: %s %02d / %02d / %02d\n",days_of_week[real_time[4]], real_time[3], real_time[5], real_time[6]);
-        check_alarm();
+        pcf8520_check_alarm();
         
         
         sleep_ms(500);
