@@ -10,24 +10,14 @@
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
 
-/* Example code to talk to a PCF8520 MEMS accelerometer and gyroscope
-
-   This is taking to simple approach of simply reading registers. It's perfectly
-   possible to link up an interrupt line and set things up to read from the
-   inbuilt FIFO to make it more useful.
-
-   NOTE: Ensure the device is capable of being driven at 3.3v NOT 5v. The Pico
-   GPIO (and therefor I2C) cannot be used at 5v.
-
-   You will need to use a level shifter on the I2C lines if you want to run the
-   board at 5v.
+/* Example code to talk to a PCF8520 Real Time Clock module 
 
    Connections on Raspberry Pi Pico board, other boards may vary.
 
-   GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is 4 (pin 6)) -> SDA on PCF8520 board
-   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is 5 (pin 7)) -> SCL on PCF8520 board
-   3.3v (pin 36) -> VCC on PCF8520 board
-   GND (pin 38)  -> GND on PCF8520 board
+   GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is 4 (physical pin 6)) -> SDA on PCF8520 board
+   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is 5 (physical pin 7)) -> SCL on PCF8520 board
+   5V (physical pin 40) -> VCC on PCF8520 board
+   GND (physical pin 38)  -> GND on PCF8520 board
 */
 
 // By default these devices  are on bus address 0x68
@@ -47,13 +37,15 @@ static void pcf820_write_current_time() {
     uint8_t buf[2];
 
     //Write values for the current time in the array
-    //index 0 -> seconds: bits 4-6 are responsible for the ten's digit and bits 0-3 for the unit's digit
-    //index 1 -> minutes: bits 4-6 are responsible for the ten's digit and bits 0-3 for the unit's digit
-    //index 2 -> hours: bits 4-5 are responsible for the ten's digit and bits 0-3 for the unit's digit
-    //index 3 -> day of the month: bits 4-6 are responsible for the ten's digit and bits 0-3 for the unit's digit
+    //index 0 -> second: bits 4-6 are responsible for the ten's digit and bits 0-3 for the unit's digit
+    //index 1 -> minute: bits 4-6 are responsible for the ten's digit and bits 0-3 for the unit's digit
+    //index 2 -> hour: bits 4-5 are responsible for the ten's digit and bits 0-3 for the unit's digit
+    //index 3 -> day of the month: bits 4-5 are responsible for the ten's digit and bits 0-3 for the unit's digit
     //index 4 -> day of the week: where Sunday = 0x00, Monday = 0x01, Tuesday... ...Saturday = 0x06
-    //index 5 -> day of the week: bit 4 is responsible for the ten's digit and bits 0-3 for the unit's digit
-    //index 6 -> years: bits 4-7 are responsible for the ten's digit and bits 0-3 for the unit's digit
+    //index 5 -> month: bit 4 is responsible for the ten's digit and bits 0-3 for the unit's digit
+    //index 6 -> year: bits 4-7 are responsible for the ten's digit and bits 0-3 for the unit's digit
+
+    //NOTE: if the value in the year register is a multiple for 4, it will be considered a leap year and hence will include the 29th of February
 
     uint8_t current_val[7] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
@@ -84,13 +76,13 @@ void set_alarm(){
 
     // Default value of alarm register is 0x80
     // Set bit 8 of values to 0 to activate that particular alarm
-    // Index 0 -> minutes: bits 4-5 are responsible for the ten's digit and bits 0-3 for the unit's digit
-    // Index 1 -> hours: bits 4-6 are responsible for the ten's digit and bits 0-3 for the unit's digit
-    // Index 2 -> day of the month: bits 4-6 are responsible for the ten's digit and bits 0-3 for the unit's digit
+    // Index 0 -> minute: bits 4-5 are responsible for the ten's digit and bits 0-3 for the unit's digit
+    // Index 1 -> hour: bits 4-6 are responsible for the ten's digit and bits 0-3 for the unit's digit
+    // Index 2 -> day of the month: bits 4-5 are responsible for the ten's digit and bits 0-3 for the unit's digit
     // Index 3 -> day of the week: where Sunday = 0x00, Monday = 0x01, Tuesday... ...Saturday = 0x06
 
     uint8_t alarm_val[4] = {0x01, 0x80, 0x80, 0x80};
-    // Writes alarm values to registers
+    // Write alarm values to registers
     for (int i = 10; i < 14; ++i){
         buf[0] = (uint8_t) i;
         buf[1] = alarm_val[i - 10];
@@ -100,7 +92,7 @@ void set_alarm(){
 }
 
 void check_alarm(){
-    // Checks bit 3 of control register 2 for alarm flags
+    // Check bit 3 of control register 2 for alarm flags
     uint8_t status[1];
     uint8_t val = 0x01;
     i2c_write_blocking(i2c_default, addr, &val, 1, true); // true to keep master control of bus
@@ -115,7 +107,7 @@ void check_alarm(){
 }
 
 void convert_time(int conv_time[7],uint8_t raw_time[7]){
-    // Converts raw data into time
+    // Convert raw data into time
     conv_time[0]= (10*(int)((raw_time[0] & 0x70) >> 4)) + ((int)(raw_time[0] & 0x0F));
     conv_time[1]= (10*(int)((raw_time[1] & 0x70) >> 4)) + ((int)(raw_time[1] & 0x0F));
     conv_time[2]= (10*(int)((raw_time[2] & 0x30) >> 4)) + ((int)(raw_time[2] & 0x0F));
