@@ -10,7 +10,7 @@
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
 
-/* Example code to talk to a MMA8451 ±0.5°C Digital temperature Sensor
+/* Example code to talk to a MMA8451 triple-axis accelerometer.
    
    This reads and writes to registers on the board. 
 
@@ -24,7 +24,6 @@
 */
 
 const uint8_t ADDRESS = 0x1D; 
-
 
 //hardware registers
 
@@ -42,7 +41,6 @@ const uint8_t range_config = 0x01; // 0x00 for ±2g, 0x01 for ±4g, 0x02 for ±8
 const float count = 2048; // 4096 for ±2g, 2048 for ±4g, 1024 for ±8g
 
 uint8_t buf[2];
-
 
 float mma8451_convert_accel(uint16_t raw_accel) {
     float acceleration;
@@ -130,7 +128,3 @@ int main() {
 
 #endif
 }
-
-
-
-
