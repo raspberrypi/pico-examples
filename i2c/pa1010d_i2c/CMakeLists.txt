@@ -5,10 +5,6 @@ add_executable(pa1010d_i2c
 # Pull in our (to be renamed) simple get you started dependencies
 target_link_libraries(pa1010d_i2c pico_stdlib hardware_i2c)
 
-
-pico_enable_stdio_usb(pa1010d_i2c 1)
-pico_enable_stdio_uart(pa1010d_i2c 0)
-
 # create map/bin/hex file etc.
 pico_add_extra_outputs(pa1010d_i2c)
 
