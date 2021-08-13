@@ -13,7 +13,7 @@ Wiring up the device requires 4 jumpers, to connect VDD, GND, SDA and SCL. The e
 [[pcf8523_i2c_wiring]]
 [pdfwidth=75%]
 .Wiring Diagram for PCF8523.
-image::pcf8523_i2c_bb.png[]
+image::pcf8523_i2c.png[]
 
 == List of Files
 
