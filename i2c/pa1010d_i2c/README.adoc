@@ -7,12 +7,14 @@ This example allows you read basic location and time data from the Recommended M
 [NOTE]
 ======
 Each command requires a checksum after the asterisk. The checksum can be calculated for your command using the following website: https://nmeachecksum.eqth.net/.
+
+The GPS needs to be used outdoors in open skies and requires about 15 seconds to acquire a satellite signal in order to display valid data. 
 ======
 
 
 == Wiring information
 
-Wiring up the device requires 4 jumpers, to connect VDD, GND, SDA and SCL. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the 3V pin.
+Wiring up the device requires # Pull in our (to be renamed) simple get you started dependencies4 jumpers, to connect VDD, GND, SDA and SCL. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the 3V pin.
 
 
 [[pa1010d_i2c_wiring]]
