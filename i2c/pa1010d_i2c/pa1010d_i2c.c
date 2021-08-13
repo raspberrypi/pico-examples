@@ -36,8 +36,6 @@ void pa1010d_write_command(char command[], int com_length){
         int_command[i] = command[i];
         i2c_write_blocking(i2c_default, addr, &int_command[i], 1, true);
     }
-
-    
 }
 void pa1010d_parse_string(char output[], char protocol[]){
     // Finds location of protocol message in output
@@ -93,8 +91,6 @@ void pa1010d_parse_string(char output[], char protocol[]){
 
 }
 void pa1010d_read_raw(char numcommand[]) {
-
-    
     uint8_t buffer[max_read];
 
     int i = 0;
