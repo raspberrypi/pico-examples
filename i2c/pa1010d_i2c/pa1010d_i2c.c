@@ -9,90 +9,124 @@
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
+#include "string.h"
 
-/* Example code to talk to a MPU6050 MEMS accelerometer and gyroscope
+/* Example code to talk to a PA1010D Mini GPS module.
 
-   This is taking to simple approach of simply reading registers. It's perfectly
-   possible to link up an interrupt line and set things up to read from the
-   inbuilt FIFO to make it more useful.
-
-   NOTE: Ensure the device is capable of being driven at 3.3v NOT 5v. The Pico
-   GPIO (and therefor I2C) cannot be used at 5v.
-
-   You will need to use a level shifter on the I2C lines if you want to run the
-   board at 5v.
+   This example reads the Recommended Minimum Specific GNSS Sentence, which includes basic location and time data, each second, formats and displays it.
 
    Connections on Raspberry Pi Pico board, other boards may vary.
 
-   GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is 4 (pin 6)) -> SDA on MPU6050 board
-   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is 5 (pin 7)) -> SCL on MPU6050 board
-   3.3v (pin 36) -> VCC on MPU6050 board
-   GND (pin 38)  -> GND on MPU6050 board
+   GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is 4 (physical pin 6)) -> SDA on PA1010D board
+   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is 5 (physical pin 7)) -> SCL on PA1010D board
+   3.3v (physical pin 36) -> VCC on PA1010D board
+   GND (physical pin 38)  -> GND on PA1010D board
 */
 
-// By default these devices  are on bus address 0x68
-static int addr = 0x10;
+const int addr = 0x10;
+const int max_read = 250;
 
 #ifdef i2c_default
 
+void pa1010d_write_command(char command[], int com_length){
+    // Convert character array to bytes for writing
+    uint8_t int_command[com_length];
 
-static void write_command(char command[]){
-    
-    int length2 = sizeof(command);
-    uint8_t numcommand[length2];
-    for (int i = 0; i <length2;++i){
-        numcommand[i] = command[i];
+    for (int i = 0; i < com_length; ++i){
+        int_command[i] = command[i];
+        i2c_write_blocking(i2c_default, addr, &int_command[i], 1, true);
     }
-    int length1 = sizeof(numcommand);
 
-    printf("%d.....%d",length1, length2);
-    i2c_write_blocking(i2c_default, addr, numcommand, length2, true);
-
-    length2 = sizeof(numcommand);
-    char numcommand2[length2-1];
-    for (int i = 0; i <length2;++i){
-        numcommand2[i] = numcommand[i];
-    }
-    length1 = sizeof(numcommand2);
-
-    //printf("%d.....%d\n",length1, length2);
-    //printf("%c,,,,%c\n",numcommand[0],numcommand[1]);
-    printf("%s",numcommand2);
     
 }
+void pa1010d_parse_string(char output[], char protocol[]){
+    // Finds location of protocol message in output
+    char *com_index = strstr(output,protocol);
+    int p = com_index - output;
 
-static void mpu6050_read_raw() {
-    // For this particular device, we send the device the register we want to read
-    // first, then subsequently read from the device. The register is auto incrementing
-    // so we don't need to keep sending the register we want, just the first.
-    uint8_t buffer[90];
+    // Splits components of output sentence into array
+    int no_of_fields = 14;
+    int max_len = 15;
 
-    // Start reading acceleration registers from register 0x3B for 6 bytes
-    //i2c_write_blocking(i2c_default, addr, &val, 1, true); // true to keep master control of bus
-    i2c_read_blocking(i2c_default, addr, buffer, 90, false);
+    int n = 0;
+    int m = 0;
+    
+    char gps_data[no_of_fields][max_len];
+    memset(gps_data, 0, sizeof(gps_data));
 
-    int length2 = sizeof(buffer);
-    char numcommand[length2];
-    for (int i = 0; i <length2;++i){
-        numcommand[i] = buffer[i];
+    bool complete = false;
+    while (output[p] != '$'  && n < max_len && complete == false){
+        if (output[p] == ','|| output[p] == '*'){
+            n += 1;
+            m = 0;
+        }
+        else{
+            gps_data[n][m] = output[p];
+            // Checks if sentence is complete
+            if (m < no_of_fields){
+               m++; 
+            } else {
+                complete = true;
+            }
+        }
+        p++;
     }
-    //int length1 = sizeof(numcommand);
 
-    //printf("%d.....%d\n",length1, length2);
-    //printf("%c,,,,%c\n",numcommand[0],numcommand[1]);
-    printf("%s\n",numcommand);
+    // Displays GNRMC data
+    // Similarly, additional if statements can be used to add more protocols 
+    if (strcmp(protocol, "GNRMC") == 0){
+        printf("Protcol:%s\n", gps_data[0]);
+        printf("UTC Time: %s\n", gps_data[1]);
+        printf("Status: %s\n", gps_data[2][0] == 'V'? "Data invalid. GPS fix not found.":"Data Valid");
+        printf("Latitude: %s\n", gps_data[3]);
+        printf("N/S indicator: %s\n", gps_data[4]);
+        printf("Longitude: %s\n", gps_data[5]);
+        printf("E/W indicator: %s\n", gps_data[6]);
+        printf("Speed over ground: %s\n", gps_data[7]);
+        printf("Course over ground: %s\n", gps_data[8]);
+        printf("Date: %c%c/%c%c/%c%c\n", gps_data[9][0], gps_data[9][1], gps_data[9][2], gps_data[9][3], gps_data[9][4], gps_data[9][5]);
+        printf("Magnetic Variation: %s\n", gps_data[10]);
+        printf("E/W degree indicator: %s\n", gps_data[11]);
+        printf("Mode: %s\n", gps_data[12]);
+        printf("Checksum: %c%c\n", gps_data[13][0], gps_data[13][1]);
+    }
 
+}
+void pa1010d_read_raw(char numcommand[]) {
+
+    
+    uint8_t buffer[max_read];
+
+    int i = 0;
+    bool complete = false;
+
+    i2c_read_blocking(i2c_default, addr, buffer, max_read, false);
+
+    // Convert bytes to characters
+    while(i < max_read && complete == false){
+        numcommand[i] = buffer[i];
+        // Stop converting at end of message 
+        if (buffer[i] == 10 && buffer[i + 1] == 10){
+            complete = true;
+        }
+        i++;
+    } 
 }
 #endif
 
 
 int main() {
+
     stdio_init_all();
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
     #warning i2c/mpu6050_i2c example requires a board with I2C pins
     puts("Default I2C pins were not defined");
 #else
     
+    char numcommand[max_read];
+
+    // Decide which protocols you would like to retrieve data from
+    char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
 
     // This example will use I2C0 on the default SDA and SCL pins (4, 5 on a Pico)
     i2c_init(i2c_default, 400 * 1000);
@@ -102,13 +136,23 @@ int main() {
     gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
-    printf("Hello, MPU6050! Reading raw data from registers...\n");
-    write_command("$PMTK314,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0*34\r\n");
-    //write_command("$PMTK314,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0*28\r\n");
+
+    printf("Hello, PA1010D! Reading raw data from module...\n");
+    
+    pa1010d_write_command(init_command, sizeof(init_command));
 
     while (1) {
-        mpu6050_read_raw();
-        sleep_ms(1000);
+        // Clear array
+        memset(numcommand, 0, max_read);
+        // Read and re-format
+        pa1010d_read_raw(numcommand);
+        pa1010d_parse_string(numcommand, "GNRMC");
+
+        // Wait for data to refresh
+        sleep_ms(1000); 
+
+        // Clear terminal 
+        printf("\e[1;1H\e[2J");
     }
 
 #endif
