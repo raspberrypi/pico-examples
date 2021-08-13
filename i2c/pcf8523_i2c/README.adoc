@@ -29,7 +29,7 @@ pcf8523_i2c.c:: The example code.
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | http://raspberrypi.org/
-| PCF board| 1 | https://www.adafruit.com/product/3295
+| PCF8523 board| 1 | https://www.adafruit.com/product/3295
 | M/M Jumper wires | 4 | generic part
 |===
 
