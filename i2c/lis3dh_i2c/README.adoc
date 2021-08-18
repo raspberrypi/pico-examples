@@ -1,0 +1,40 @@
+= Attaching a LIS3DH Nano Accelerometer via i2c.
+
+This example code shows how to interface the Raspberry Pi Pico to the LIS3DH accelerometer and temperature sensor.
+======
+This example reads and displays the acceleration values of the board in the 3 axes as well as simultaneously displaying the temperature value. Values often have an offset which can be accounted for by writing to the offset correction registers. The datasheet for the sensor can be found at https://www.st.com/resource/en/datasheet/cd00274221.pdf.
+======
+[NOTE]
+======
+Changing the module to low power mode alters its sensitivity and therefore the value of the 'sensitivity' variable has to be changed. 
+
+======
+
+
+== Wiring information
+
+Wiring up the device requires 4 jumpers, to connect VIN, GND, SDA and SCL. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the 3V pin.
+
+
+[[lis3dh_i2c_wiring]]
+[pdfwidth=75%]
+.Wiring Diagram for LIS3DH.
+image::lis3dh_i2c.png[]
+
+== List of Files
+
+CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
+lis3dh_i2c.c:: The example code.
+
+== Bill of Materials
+
+.A list of materials required for the example
+[[lis3dh-bom-table]]
+[cols=3]
+|===
+| *Item* | *Quantity* | Details
+| Breadboard | 1 | generic part
+| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| LIS3DH board| 1 | https://www.adafruit.com/product/2809
+| M/M Jumper wires | 4 | generic part
+|===
