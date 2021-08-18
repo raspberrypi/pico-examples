@@ -63,9 +63,9 @@ int main() {
         // Skip over any reserved addresses.
         int ret;
         uint8_t rxdata;
-        if (reserved_addr(addr))
-            ret = PICO_ERROR_GENERIC;
-        else
+        //if (reserved_addr(addr))
+            //ret = PICO_ERROR_GENERIC;
+        //else
             ret = i2c_read_blocking(i2c_default, addr, &rxdata, 1, false);
 
         printf(ret < 0 ? "." : "@");
