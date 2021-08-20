@@ -27,7 +27,6 @@ const int addr = 0x10;
 const int max_read = 250;
 
 #ifdef i2c_default
-
 void pa1010d_write_command(char command[], int com_length){
     // Convert character array to bytes for writing
     uint8_t int_command[com_length];
@@ -37,6 +36,7 @@ void pa1010d_write_command(char command[], int com_length){
         i2c_write_blocking(i2c_default, addr, &int_command[i], 1, true);
     }
 }
+
 void pa1010d_parse_string(char output[], char protocol[]){
     // Finds location of protocol message in output
     char *com_index = strstr(output,protocol);
@@ -88,8 +88,8 @@ void pa1010d_parse_string(char output[], char protocol[]){
         printf("Mode: %s\n", gps_data[12]);
         printf("Checksum: %c%c\n", gps_data[13][0], gps_data[13][1]);
     }
-
 }
+
 void pa1010d_read_raw(char numcommand[]) {
     uint8_t buffer[max_read];
 
@@ -110,9 +110,7 @@ void pa1010d_read_raw(char numcommand[]) {
 }
 #endif
 
-
 int main() {
-
     stdio_init_all();
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
     #warning i2c/mpu6050_i2c example requires a board with I2C pins
@@ -150,7 +148,6 @@ int main() {
         // Clear terminal 
         printf("\e[1;1H\e[2J");
     }
-
 #endif
     return 0;
 }

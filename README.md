@@ -85,7 +85,7 @@ App|Description
 [mpl3115a2_i2c](i2c/mpl3115a2_i2c) | Interface with an MPL3115A2 altimeter, exploring interrupts and advanced board features, via I2C.
 [mpu6050_i2c](i2c/mpu6050_i2c) | Read acceleration and angular rate values from a MPU6050 accelerometer/gyro, attached to an I2C bus.
 [oled_i2c](i2c/oled_i2c) | Convert and display a bitmap on a 128x32 SSD1306-driven OLED display
-[pa1010d_i2c](i2c/pa1010d_i2c) | Read GPS location data, parse and display data.
+[pa1010d_i2c](i2c/pa1010d_i2c) | Read GPS location data, parse and display data via I2C.
 [pcf8523_i2c](i2c/pcf8523_i2c) | Read time and date values from a real time clock. Set current time and alarms on it.
 
 ### Interpolator
