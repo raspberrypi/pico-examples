@@ -12,7 +12,7 @@
 
 /* Example code to talk to a LIS3DH Mini GPS module.
 
-   This example reads data from all 3 axes of the accelerometer and uses an aux ADC to output temperature values.
+   This example reads data from all 3 axes of the accelerometer and uses an auxillary ADC to output temperature values.
 
    Connections on Raspberry Pi Pico board, other boards may vary.
 
@@ -28,7 +28,6 @@ const int ADDRESS = 0x18;
 const uint8_t CTRL_REG_1 = 0x20;
 const uint8_t CTRL_REG_4 = 0x23;
 const uint8_t TEMP_CFG_REG = 0xC0;
-
 
 #ifdef i2c_default
 void lis3dh_init(){
@@ -70,7 +69,6 @@ void lis3dh_calc_value(uint16_t raw_value, float *final_value, bool isAccel){
     }    
 }
 
-
 void lis3dh_read_data(uint8_t reg, float *final_value, bool IsAccel){
         // Read two bytes of data and store in a 16 bit data structure 
         uint8_t lsb;
@@ -87,8 +85,8 @@ void lis3dh_read_data(uint8_t reg, float *final_value, bool IsAccel){
 
         lis3dh_calc_value(raw_accel, final_value, IsAccel);
 }
-
 #endif
+
 int main() {
     stdio_init_all();
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
@@ -111,7 +109,6 @@ int main() {
     lis3dh_init();
 
     while (1) {
-
         lis3dh_read_data(0x28, &x_accel, true);
         lis3dh_read_data(0x2A, &y_accel, true);
         lis3dh_read_data(0x2C, &z_accel, true );
@@ -130,7 +127,6 @@ int main() {
         // Clear terminal 
         printf("\e[1;1H\e[2J");
     }
-
 #endif
     return 0;
 }

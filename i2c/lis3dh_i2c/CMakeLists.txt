@@ -1,5 +1,5 @@
 add_executable(lis3dh_i2c
-lis3dh_i2c.c
+        lis3dh_i2c.c
         )
 
 # pull in common dependencies and additional i2c hardware support
