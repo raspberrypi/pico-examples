@@ -25,7 +25,7 @@
    Connections on Raspberry Pi Pico board, other boards may vary.
 
    GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is 4 (pin 6)) -> SDA on MPU6050 board
-   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is 5 (pin 7)) -> SCL on MPU6050 board
+   GPIO PICO_DEFAULT_I2C_SCL_PIN (On Pico this is 5 (pin 7)) -> SCL on MPU6050 board
    3.3v (pin 36) -> VCC on MPU6050 board
    GND (pin 38)  -> GND on MPU6050 board
 */
