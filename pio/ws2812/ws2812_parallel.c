@@ -18,9 +18,6 @@
 #define FRAC_BITS 4
 #define PIN_TX 0
 
-CU_REGISTER_DEBUG_PINS(timing)
-CU_SELECT_DEBUG_PINS(timing)
-
 // horrible temporary hack to avoid changing pattern code
 static uint8_t *current_string_out;
 static bool current_string_4color;
@@ -235,7 +232,6 @@ void __isr dma_complete_handler() {
         // clear IRQ
         dma_hw->ints0 = DMA_CHANNEL_MASK;
         // when the dma is complete we start the reset delay timer
-        DEBUG_PINS_SET(timing, 4);
         if (reset_delay_alarm_id) cancel_alarm(reset_delay_alarm_id);
         reset_delay_alarm_id = add_alarm_in_us(400, reset_delay_complete, NULL, true);
     }
@@ -272,13 +268,11 @@ void dma_init(PIO pio, uint sm) {
 }
 
 void output_strings_dma(value_bits_t *bits, uint value_length) {
-    DEBUG_PINS_SET(timing, 3);
     for (uint i = 0; i < value_length; i++) {
         fragment_start[i] = (uintptr_t) bits[i].planes; // MSB first
     }
     fragment_start[value_length] = 0;
     dma_channel_hw_addr(DMA_CB_CHANNEL)->al3_read_addr_trig = (uintptr_t) fragment_start;
-    DEBUG_PINS_CLR(timing, 3);
 }
 
 
@@ -286,9 +280,7 @@ int main() {
     //set_sys_clock_48();
     stdio_init_all();
     puts("WS2812 parallel");
-#if PIN_TX != 3
-    gpio_debug_pins_init();
-#endif
+
     // todo get free sm
     PIO pio = pio0;
     int sm = 0;
@@ -309,26 +301,17 @@ int main() {
         uint current = 0;
         for (int i = 0; i < 1000; ++i) {
             int n = 64;
-            DEBUG_PINS_SET(timing, 1);
+
             current_string_out = string0.data;
             current_string_4color = false;
             pattern_table[pat].pat(n, t);
             current_string_out = string1.data;
             current_string_4color = true;
             pattern_table[pat].pat(n, t);
-            DEBUG_PINS_CLR(timing, 1);
 
-            DEBUG_PINS_SET(timing, 2);
             transform_strings(strings, count_of(strings), colors, n * 4, brightness);
-            DEBUG_PINS_CLR(timing, 2);
-
-            DEBUG_PINS_SET(timing, 1);
             dither_values(colors, states[current], states[current ^ 1], n * 4);
-            DEBUG_PINS_CLR(timing, 1);
-
             sem_acquire_blocking(&reset_delay_complete_sem);
-            DEBUG_PINS_CLR(timing, 4);
-
             output_strings_dma(states[current], n * 4);
 
             current ^= 1;

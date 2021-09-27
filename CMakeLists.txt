@@ -19,6 +19,12 @@ add_subdirectory(blink)
 # Add hello world example
 add_subdirectory(hello_world)
 
+add_compile_options(-Wall
+        -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
+        -Wno-unused-function # we have some for the docs that aren't called
+        -Wno-maybe-uninitialized
+        )
+
 # Hardware-specific examples in subdirectories:
 add_subdirectory(adc)
 add_subdirectory(clocks)

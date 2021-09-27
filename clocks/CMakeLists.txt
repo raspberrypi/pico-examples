@@ -1,4 +1,5 @@
 if (NOT PICO_NO_HARDWARE)
+    add_subdirectory(detached_clk_peri)
     add_subdirectory(hello_48MHz)
     add_subdirectory(hello_gpout)
     add_subdirectory(hello_resus)

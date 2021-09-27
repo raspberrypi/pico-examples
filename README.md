@@ -156,7 +156,7 @@ App|Description
 
 App|Description
 ---|---
-[hello_double_tap](system/hello_double_tap) | On dev boards with a reset button (but no BOOTSEL), a magic number in RAM can be used to enter the USB bootloader, when the reset button is pressed twice quickly.
+[hello_double_tap](system/hello_double_tap) | An LED blink with the `pico_bootsel_via_double_reset` library linked. This enters the USB bootloader when it detects the system being reset twice in quick succession, which is useful for boards with a reset button but no BOOTSEL button.
 [narrow_io_write](system/narrow_io_write) | Demonstrate the effects of 8-bit and 16-bit writes on a 32-bit IO register.
 [unique_board_id](system/unique_board_id) | Read the 64 bit unique ID from external flash, which serves as a unique identifier for the board.
 ### Timer
@@ -176,18 +176,47 @@ App|Description
 
 ### USB Device
 
+#### TinyUSB Examples 
+
+All but one of the USB device examples come directly from the TinyUSB device examples directory [here](https://github.com/hathach/tinyusb/tree/master/examples/device).
+Those that are supported on RP2040 devices are automatically included as part of the pico-examples
+build as targets named `tinyusb_dev_<example_name>`, e.g. https://github.com/hathach/tinyusb/tree/master/examples/device/hid_composite
+is built as `tinyusb_dev_hid_composite`.
+
+At the time of writing, these examples are available:
+
+- tinyusb_dev_audio_4_channel_mic
+- tinyusb_dev_audio_test
+- tinyusb_dev_board_test
+- tinyusb_dev_cdc_dual_ports
+- tinyusb_dev_cdc_msc
+- tinyusb_dev_dfu
+- tinyusb_dev_dfu_runtime
+- tinyusb_dev_dynamic_configuration
+- tinyusb_dev_hid_composite
+- tinyusb_dev_hid_generic_inout
+- tinyusb_dev_hid_multiple_interface
+- tinyusb_dev_midi_test
+- tinyusb_dev_msc_dual_lun
+- tinyusb_dev_uac2_headset
+- tinyusb_dev_usbtmc
+- tinyusb_dev_webusb_serial
+
+#### Low Level examples
 App|Description
 ---|---
-[dev_audio_headset](usb/device/dev_audio_headset) | Audio headset example from TinyUSB
-[dev_hid_composite](usb/device/dev_hid_composite) | Composite HID (mouse + keyboard) example from TinyUSB
-[dev_hid_generic_inout](usb/device/dev_hid_generic_inout) | Generic HID device example from TinyUSB
 [dev_lowlevel](usb/device/dev_lowlevel) | A USB Bulk loopback implemented with direct access to the USB hardware (no TinyUSB)
 
 ### USB Host
 
-App|Description
----|---
-[host_hid](usb/host/host_hid) | Use USB in host mode to poll an attached HID keyboard (TinyUSB example)
+All the USB host examples come directly from the TinyUSB host examples directory [here](https://github.com/hathach/tinyusb/tree/master/examples/host).
+Those that are supported on RP2040 devices are automatically included as part of the pico-examples
+build as targets named `tinyusb_host_<example_name>`, e.g. https://github.com/hathach/tinyusb/tree/master/examples/host/cdc_msc_hid
+is built as `tinyusb_host_cdc_msc_hid`.
+
+At the time of writing, there is only one host example available:
+
+- tinyusb_host_cdc_msc_hid
 
 ### Watchdog
 

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "pico/stdlib.h"
+#include "pico/binary_info.h"
 #include "hardware/spi.h"
 
 /* Example code to talk to a bme280 humidity/temperature/pressure sensor.
@@ -24,7 +25,7 @@
    GPIO 17 (pin 22) Chip select -> CSB/!CS on bme280 board
    GPIO 18 (pin 24) SCK/spi0_sclk -> SCL/SCK on bme280 board
    GPIO 19 (pin 25) MOSI/spi0_tx -> SDA/SDI on bme280 board
-   3.3v (pin 3;6) -> VCC on bme280 board
+   3.3v (pin 36) -> VCC on bme280 board
    GND (pin 38)  -> GND on bme280 board
 
    Note: SPI devices can have a number of different naming schemes for pins. See
@@ -36,12 +37,6 @@
    https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bme280-ds002.pdf
 */
 
-#define PIN_MISO 16
-#define PIN_CS   17
-#define PIN_SCK  18
-#define PIN_MOSI 19
-
-#define SPI_PORT spi0
 #define READ_BIT 0x80
 
 int32_t t_fine;
@@ -110,24 +105,27 @@ uint32_t compensate_humidity(int32_t adc_H) {
     return (uint32_t) (v_x1_u32r >> 12);
 }
 
+#ifdef PICO_DEFAULT_SPI_CSN_PIN
 static inline void cs_select() {
     asm volatile("nop \n nop \n nop");
-    gpio_put(PIN_CS, 0);  // Active low
+    gpio_put(PICO_DEFAULT_SPI_CSN_PIN, 0);  // Active low
     asm volatile("nop \n nop \n nop");
 }
 
 static inline void cs_deselect() {
     asm volatile("nop \n nop \n nop");
-    gpio_put(PIN_CS, 1);
+    gpio_put(PICO_DEFAULT_SPI_CSN_PIN, 1);
     asm volatile("nop \n nop \n nop");
 }
+#endif
 
+#if defined(spi_default) && defined(PICO_DEFAULT_SPI_CSN_PIN)
 static void write_register(uint8_t reg, uint8_t data) {
     uint8_t buf[2];
     buf[0] = reg & 0x7f;  // remove read bit as this is a write
     buf[1] = data;
     cs_select();
-    spi_write_blocking(SPI_PORT, buf, 2);
+    spi_write_blocking(spi_default, buf, 2);
     cs_deselect();
     sleep_ms(10);
 }
@@ -138,9 +136,9 @@ static void read_registers(uint8_t reg, uint8_t *buf, uint16_t len) {
     // so we don't need to keep sending the register we want, just the first.
     reg |= READ_BIT;
     cs_select();
-    spi_write_blocking(SPI_PORT, &reg, 1);
+    spi_write_blocking(spi_default, &reg, 1);
     sleep_ms(10);
-    spi_read_blocking(SPI_PORT, 0, buf, len);
+    spi_read_blocking(spi_default, 0, buf, len);
     cs_deselect();
     sleep_ms(10);
 }
@@ -184,22 +182,31 @@ static void bme280_read_raw(int32_t *humidity, int32_t *pressure, int32_t *tempe
     *temperature = ((uint32_t) buffer[3] << 12) | ((uint32_t) buffer[4] << 4) | (buffer[5] >> 4);
     *humidity = (uint32_t) buffer[6] << 8 | buffer[7];
 }
+#endif
 
 int main() {
     stdio_init_all();
+#if !defined(spi_default) || !defined(PICO_DEFAULT_SPI_SCK_PIN) || !defined(PICO_DEFAULT_SPI_TX_PIN) || !defined(PICO_DEFAULT_SPI_RX_PIN) || !defined(PICO_DEFAULT_SPI_CSN_PIN)
+#warning spi/bme280_spi example requires a board with SPI pins
+    puts("Default SPI pins were not defined");
+#else
 
     printf("Hello, bme280! Reading raw data from registers via SPI...\n");
 
     // This example will use SPI0 at 0.5MHz.
-    spi_init(SPI_PORT, 500 * 1000);
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
+    spi_init(spi_default, 500 * 1000);
+    gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
+    gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
+    gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
+    // Make the SPI pins available to picotool
+    bi_decl(bi_3pins_with_func(PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN, PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI));
 
     // Chip select is active-low, so we'll initialise it to a driven-high state
-    gpio_init(PIN_CS);
-    gpio_set_dir(PIN_CS, GPIO_OUT);
-    gpio_put(PIN_CS, 1);
+    gpio_init(PICO_DEFAULT_SPI_CSN_PIN);
+    gpio_set_dir(PICO_DEFAULT_SPI_CSN_PIN, GPIO_OUT);
+    gpio_put(PICO_DEFAULT_SPI_CSN_PIN, 1);
+    // Make the CS pin available to picotool
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "SPI CS"));
 
     // See if SPI is working - interrograte the device for its I2C ID number, should be 0x60
     uint8_t id;
@@ -230,4 +237,5 @@ int main() {
     }
 
     return 0;
+#endif
 }
