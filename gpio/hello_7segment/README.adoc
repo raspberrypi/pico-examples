@@ -40,11 +40,9 @@ hello_7segment.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | 7 segment LED module | 1 | generic part
 | 68 ohm resistor | 7 | generic part
 | DIL push to make switch | 1 | generic switch
 | M/M Jumper wires | 10 | generic part
 |===
-
-
