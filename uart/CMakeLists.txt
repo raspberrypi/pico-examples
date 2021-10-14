@@ -1,4 +1,5 @@
 if (NOT PICO_NO_HARDWARE)
     add_subdirectory(hello_uart)
+    add_subdirectory(lcd_uart)
     add_subdirectory(uart_advanced)
 endif ()
