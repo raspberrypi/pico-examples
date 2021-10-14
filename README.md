@@ -80,6 +80,7 @@ App|Description
 [lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C.
 [mpl3115a2_i2c](i2c/mpl3115a2_i2c) | Interface with an MPL3115A2 altimeter, exploring interrupts and advanced board features, via I2C.
 [mpu6050_i2c](i2c/mpu6050_i2c) | Read acceleration and angular rate values from a MPU6050 accelerometer/gyro, attached to an I2C bus.
+[oled_i2c](i2c/oled_i2c) | Convert and display a bitmap on a 128x32 SSD1306-driven OLED display
 
 ### Interpolator
 
