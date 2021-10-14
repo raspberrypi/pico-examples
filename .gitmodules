@@ -1,3 +1,6 @@
 [submodule "ethernet/w5500_spi/ioLibrary_Driver"]
 	path = ethernet/w5500_spi/ioLibrary_Driver
 	url = https://github.com/Wiznet/ioLibrary_Driver
+[submodule "ethernet/lan8720_rmii/pico-rmii-ethernet"]
+	path = ethernet/lan8720_rmii/pico-rmii-ethernet
+	url = https://github.com/sandeepmistry/pico-rmii-ethernet.git

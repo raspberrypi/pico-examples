@@ -20,6 +20,7 @@ App|Description
 [hello_adc](adc/hello_adc)|Display the voltage from an ADC input.
 [joystick_display](adc/joystick_display)|Display a Joystick X/Y input based on two ADC inputs.
 [adc_console](adc/adc_console)|An interactive shell for playing with the ADC. Includes example of free-running capture mode.
+[microphone_adc](adc/microphone_adc)|Read analog values from a microphone and plot the measured sound amplitude.
 
 ### Clocks
 
@@ -76,8 +77,11 @@ App|Description
 App|Description
 ---|---
 [bus_scan](i2c/bus_scan) | Scan the I2C bus for devices and display results.
+[bmp280_i2c](i2c/bmp280_i2c) | Read and convert temperature and pressure data from a BMP280 sensor, attached to an I2C bus.
 [lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C.
+[mpl3115a2_i2c](i2c/mpl3115a2_i2c) | Interface with an MPL3115A2 altimeter, exploring interrupts and advanced board features, via I2C.
 [mpu6050_i2c](i2c/mpu6050_i2c) | Read acceleration and angular rate values from a MPU6050 accelerometer/gyro, attached to an I2C bus.
+[oled_i2c](i2c/oled_i2c) | Convert and display a bitmap on a 128x32 SSD1306-driven OLED display
 
 ### Interpolator
 
@@ -172,6 +176,7 @@ App|Description
 App|Description
 ---|---
 [hello_uart](uart/hello_uart) | Print some text from one of the UART serial ports, without going through `stdio`.
+[lcd_uart](uart/lcd_uart) | Display text and symbols on a 16x02 RGB LCD display via UART
 [uart_advanced](uart/uart_advanced) | Use some other UART features like RX interrupts, hardware control flow, and data formats other than 8n1.
 
 ### USB Device
