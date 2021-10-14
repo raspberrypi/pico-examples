@@ -32,10 +32,8 @@ lcd_1602_i2c.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | 1602A based LCD panel 3.3v | 1 | generic part
 | 1602A to I2C bridge device 3.3v | 1 | generic part
 | M/M Jumper wires | 4 | generic part
 |===
-
-
