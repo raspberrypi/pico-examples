@@ -13,13 +13,13 @@ const int PIO_I2C_NAK_LSB    = 0;
 
 
 bool pio_i2c_check_error(PIO pio, uint sm) {
-    return !!(pio->irq & (1u << sm));
+    return pio_interrupt_get(pio, sm);
 }
 
 void pio_i2c_resume_after_error(PIO pio, uint sm) {
     pio_sm_drain_tx_fifo(pio, sm);
     pio_sm_exec(pio, sm, (pio->sm[sm].execctrl & PIO_SM0_EXECCTRL_WRAP_BOTTOM_BITS) >> PIO_SM0_EXECCTRL_WRAP_BOTTOM_LSB);
-    pio->irq = 1u << sm;
+    pio_interrupt_clear(pio, sm);
 }
 
 void pio_i2c_rx_enable(PIO pio, uint sm, bool en) {

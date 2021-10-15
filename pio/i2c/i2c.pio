@@ -108,10 +108,11 @@ static inline void i2c_program_init(PIO pio, uint sm, uint offset, uint pin_sda,
     gpio_set_oeover(pin_scl, GPIO_OVERRIDE_INVERT);
     pio_sm_set_pins_with_mask(pio, sm, 0, both_pins);
 
-    // Clear IRQ flag before starting
-    hw_clear_bits(&pio->inte0, 1u << sm);
-    hw_clear_bits(&pio->inte1, 1u << sm);
-    pio->irq = 1u << sm;
+    // Clear IRQ flag before starting, and make sure flag doesn't actually
+    // assert a system-level interrupt (we're using it as a status flag)
+    pio_set_irq0_source_mask_enabled(pio, 1u << sm, false);
+    pio_set_irq1_source_mask_enabled(pio, 1u << sm, false);
+    pio_interrupt_clear(pio, sm);
 
     // Configure and start SM
     pio_sm_init(pio, sm, offset + i2c_offset_entry_point, &c);
