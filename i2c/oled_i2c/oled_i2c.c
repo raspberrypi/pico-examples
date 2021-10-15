@@ -5,6 +5,8 @@
  */
 
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
@@ -75,12 +77,9 @@ void fill(uint8_t buf[], uint8_t fill) {
     }
 };
 
-void fill_page(uint8_t buf[], uint8_t fill, uint8_t page) {
+void fill_page(uint8_t *buf, uint8_t fill, uint8_t page) {
     // fill entire page with the same byte
-    for (int i = 0; i < OLED_WIDTH; i++) {
-        buf[(page * OLED_WIDTH) + i] = fill;
-    }
-
+    memset(buf + (page * OLED_WIDTH), fill, OLED_WIDTH);
 };
 
 // convenience methods for printing out a buffer to be rendered
@@ -104,10 +103,10 @@ void print_buf_pages(uint8_t buf[]) {
     }
 }
 
-void print_buf_area(uint8_t buf[], struct render_area* area) {
+void print_buf_area(uint8_t *buf, struct render_area* area) {
     // print a render area of generic size
-    uint8_t area_width = area->end_col - area->start_col + 1;
-    uint8_t area_height = area->end_page - area->start_page + 1; // in pages, not pixels
+    int area_width = area->end_col - area->start_col + 1;
+    int area_height = area->end_page - area->start_page + 1; // in pages, not pixels
     for (int i = 0; i < area_height; i++) {
         for (int j = 0; j < OLED_PAGE_HEIGHT; j++) {
             for (int k = 0; k < area_width; k++) {
@@ -144,13 +143,16 @@ void oled_send_buf(uint8_t buf[], int buflen) {
 
     // TODO find a more memory-efficient way to do this..
     // maybe break the data transfer into pages?
-    uint8_t temp_buf[buflen + 1];
+    uint8_t *temp_buf = malloc(buflen + 1);
+
     for (int i = 1; i < buflen + 1; i++) {
         temp_buf[i] = buf[i - 1];
     }
     // Co = 0, D/C = 1 => the driver expects data to be written to RAM
     temp_buf[0] = 0x40;
     i2c_write_blocking(i2c_default, (OLED_ADDR & OLED_WRITE_MODE), temp_buf, buflen + 1, false);
+
+    free(temp_buf);
 }
 
 void oled_init() {
@@ -211,7 +213,7 @@ void oled_init() {
     oled_send_cmd(OLED_SET_DISP | 0x01); // turn display on
 }
 
-void render(uint8_t buf[], struct render_area* area) {
+void render(uint8_t *buf, struct render_area* area) {
     // update a portion of the display with a render area
     oled_send_cmd(OLED_SET_COL_ADDR);
     oled_send_cmd(area->start_col);
