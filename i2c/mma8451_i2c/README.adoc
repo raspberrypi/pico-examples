@@ -29,7 +29,7 @@ mma8451_i2c.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.com/
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | MMA8451 board| 1 | https://www.adafruit.com/product/2019
 | M/M Jumper wires | 4 | generic part
 |===

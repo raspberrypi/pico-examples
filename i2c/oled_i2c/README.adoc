@@ -70,7 +70,7 @@ oled_i2c.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.com/
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | SSD1306-based OLED display | 1 | https://www.adafruit.com/product/4440[Adafruit part]
 | M/M Jumper wires | 4 | generic part
 |===

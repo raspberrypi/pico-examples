@@ -35,7 +35,7 @@ pa1010d_i2c.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | PA1010D board| 1 | https://shop.pimoroni.com/products/pa1010d-gps-breakout
 | M/M Jumper wires | 4 | generic part
 |===

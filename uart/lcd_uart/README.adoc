@@ -30,7 +30,7 @@ lcd_uart.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.com/
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | 16x2 RGB LCD panel 3.3v | 1 | generic part, https://www.adafruit.com/product/398[available on Adafruit]
 | 16x2 LCD backpack | 1 | https://www.adafruit.com/product/781[from Adafruit]
 | M/M Jumper wires | 3 | generic part
