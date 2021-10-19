@@ -42,7 +42,7 @@ bme280_spi.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| Raspberry Pi Pico | 1 | http://raspberrypi.com/
 | BME280 board| 1 | generic part
 | M/M Jumper wires | 6 | generic part
 |===

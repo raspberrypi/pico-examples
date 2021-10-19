@@ -7,7 +7,7 @@ This example code shows how to interface the Raspberry Pi Pico with a standard a
 An analog to digital converter (ADC) is responsible for reading continually varying input signals that may range from 0 to a specified reference voltage (in the Pico's case this reference voltage is set by the supply voltage and can be measured on pin 35, ADC_VREF) and converting them into binary, i.e. a number that can be digitally stored.
 ======
 
-The Pico has a 12-bit ADC (ENOB of 8.7-bit, see https://datasheets.raspberrypi.org/rp2040/rp2040-datasheet.pdf[RP2040 datasheet section 4.9.3 for more details]), meaning that a read operation will return a number ranging from 0 to 4095 (2^12 - 1) for a total of 4096 possible values. Therefore, the resolution of the ADC is 3.3/4096, so roughly steps of 0.8 millivolts. The SparkFun breakout uses an OPA344 operational amplifier to boost the signal coming from the microphone to voltage levels that can be easily read by the ADC. An important side effect is that a bias of 0.5*Vcc is added to the signal, even when the microphone is not picking up any sound.
+The Pico has a 12-bit ADC (ENOB of 8.7-bit, see https://datasheets.raspberrypi.com/rp2040/rp2040-datasheet.pdf[RP2040 datasheet section 4.9.3 for more details]), meaning that a read operation will return a number ranging from 0 to 4095 (2^12 - 1) for a total of 4096 possible values. Therefore, the resolution of the ADC is 3.3/4096, so roughly steps of 0.8 millivolts. The SparkFun breakout uses an OPA344 operational amplifier to boost the signal coming from the microphone to voltage levels that can be easily read by the ADC. An important side effect is that a bias of 0.5*Vcc is added to the signal, even when the microphone is not picking up any sound.
 
 The ADC provides us with a raw voltage value but when dealing with sound, we're more interested in the amplitude of the audio signal. This is defined as one half the peak-to-peak amplitude. Included with this example is a very simple Python script that will plot the voltage values it receives via the serial port. By tweaking the sampling rates, and various other parameters, the data from the microphone can be analysed in various ways, such as in a Fast Fourier Transform to see what frequencies make up the signal.
 
@@ -40,7 +40,7 @@ microphone_adc.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| Raspberry Pi Pico | 1 | http://raspberrypi.com/
 | ICS-40180 microphone breakout board or similar | 1 | https://www.sparkfun.com/products/18011[From SparkFun]
 | M/M Jumper wires | 3 | generic part
 |===

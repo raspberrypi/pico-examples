@@ -1,0 +1,45 @@
+;
+; Copyright (c) 2021 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+; I2S microphone data format is 24 bits with 32 bit words for WS toggling
+; ws_toggle branch takes 2 cycles
+; loop takes 30 cycles
+; note: we don't read data during the WS toggling but this is OK as our data is 24 bits long
+
+.program i2s_microphone
+
+.side_set 1 ; BCLK pin
+
+ws_toggle:
+    mov y, !y         side 1
+    mov osr, y        side 0
+    set x, 29         side 1
+    out pins, 1       side 0
+loop:
+    in pins, 1        side 1
+    jmp x-- loop      side 0
+
+% c-sdk {
+static inline void i2s_microphone_program_init(PIO pio, uint sm, uint offset, uint clock_pin_base, uint data_pin) {
+    pio_gpio_init(pio, clock_pin_base);
+    pio_gpio_init(pio, clock_pin_base + 1);
+    pio_sm_set_consecutive_pindirs(pio, sm, clock_pin_base, 2, true);
+    pio_sm_set_pins(pio, sm, 0);
+    pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, false);
+
+    pio_sm_config c = i2s_microphone_program_get_default_config(offset);    
+    sm_config_set_clkdiv_int_frac(&c, 30, 128);
+    sm_config_set_sideset_pins(&c, clock_pin_base);
+    sm_config_set_out_pins(&c, clock_pin_base + 1, 1);
+    sm_config_set_out_shift(&c, true, false, 32);
+    sm_config_set_in_shift(&c, false, true, 30);
+    sm_config_set_in_pins(&c, data_pin);
+
+    pio_sm_init(pio, sm, offset, &c);
+
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

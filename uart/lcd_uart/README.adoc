@@ -1,6 +1,6 @@
 = Attaching a 16x2 LCD via TTL
 
-This example code shows how to interface the Raspberry Pi Pico to one of the very common 16x2 LCD character displays. Due to the large number of pins these displays use, they are commonly used with extra drivers or backpacks. In this example, we will use an Adafruit LCD display backpack, which supports communication over USB or TTL. A monochrome display with an RGB backlight is also used, but the backpack is compatible with monochrome backlight displays too. There is <<_attaching_a_16x2_lcd_via_i2c, another example>> that uses I2C to control a 16x2 display.
+This example code shows how to interface the Raspberry Pi Pico to one of the very common 16x2 LCD character displays. Due to the large number of pins these displays use, they are commonly used with extra drivers or backpacks. In this example, we will use an Adafruit LCD display backpack, which supports communication over USB or TTL. A monochrome display with an RGB backlight is also used, but the backpack is compatible with monochrome backlight displays too. There is another example that uses I2C to control a 16x2 display.
 
 The backpack processes a set of commands that are documented https://learn.adafruit.com/usb-plus-serial-backpack/command-reference[here] and preceded by the "special" byte 0xFE. The backpack does the ASCII character conversion and even supports custom character creation. In this example, we use the Pico's primary UART (uart0) to read characters from our computer and send them via the other UART (uart1) to print them onto the LCD. We also define a special startup sequence and vary the display's backlight color.
 
@@ -30,7 +30,7 @@ lcd_uart.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| Raspberry Pi Pico | 1 | http://raspberrypi.com/
 | 16x2 RGB LCD panel 3.3v | 1 | generic part, https://www.adafruit.com/product/398[available on Adafruit]
 | 16x2 LCD backpack | 1 | https://www.adafruit.com/product/781[from Adafruit]
 | M/M Jumper wires | 3 | generic part
