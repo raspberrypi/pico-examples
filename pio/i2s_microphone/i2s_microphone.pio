@@ -36,7 +36,7 @@ static inline void i2s_microphone_program_init(PIO pio, uint sm, uint offset, ui
     sm_config_set_out_pins(&c, clock_pin_base + 1, 1);
     sm_config_set_out_shift(&c, true, false, 32);
     sm_config_set_in_shift(&c, false, true, 30);
-    sm_config_set_in_pins(&c, data_pin)
+    sm_config_set_in_pins(&c, data_pin);
 
     pio_sm_init(pio, sm, offset, &c);
 
