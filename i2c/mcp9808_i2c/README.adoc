@@ -14,7 +14,7 @@ Wiring up the device requires 4 jumpers, to connect VDD, GND, SDA and SCL. The e
 [[mcp9808_i2c_wiring]]
 [pdfwidth=75%]
 .Wiring Diagram for MCP9808.
-image::mcp9808_i2c_bb.png[]
+image::mcp9808_i2c.png[]
 
 == List of Files
 
