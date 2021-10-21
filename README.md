@@ -178,7 +178,7 @@ App|Description
 
 #### TinyUSB Examples 
 
-All but one of the USB device examples come directly from the TinyUSB device examples directory [here](https://github.com/hathach/tinyusb/tree/master/examples/device).
+Most of the USB device examples come directly from the TinyUSB device examples directory [here](https://github.com/hathach/tinyusb/tree/master/examples/device).
 Those that are supported on RP2040 devices are automatically included as part of the pico-examples
 build as targets named `tinyusb_dev_<example_name>`, e.g. https://github.com/hathach/tinyusb/tree/master/examples/device/hid_composite
 is built as `tinyusb_dev_hid_composite`.
@@ -198,11 +198,24 @@ At the time of writing, these examples are available:
 - tinyusb_dev_hid_multiple_interface
 - tinyusb_dev_midi_test
 - tinyusb_dev_msc_dual_lun
+- tinyusb_dev_net_lwip_webserver
 - tinyusb_dev_uac2_headset
 - tinyusb_dev_usbtmc
+- tinyusb_dev_video_capture
 - tinyusb_dev_webusb_serial
 
-#### Low Level examples
+Whilst these examples ably demonstrate how to use TinyUSB in device mode, their `CMakeLists.txt` is set up in a way
+tailored to how TinyUSB builds their examples within their source tree.
+
+For a better example of how to configure `CMakeLists.txt` for using TinyUSB in device mode with the Raspberry Pi SDK
+see below:
+
+#### SDK build example 
+App|Description
+---|---
+[dev_hid_composite](usb/device/dev_hid_composite) | A copy of the TinyUSB device example with the same name, but with a CMakeLists.txt which demonstrates how to add a dependency on the TinyUSB device libraries with the Raspberry Pi Pico SDK
+
+#### Low Level example
 App|Description
 ---|---
 [dev_lowlevel](usb/device/dev_lowlevel) | A USB Bulk loopback implemented with direct access to the USB hardware (no TinyUSB)
