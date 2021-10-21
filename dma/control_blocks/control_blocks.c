@@ -84,7 +84,7 @@ int main() {
 
     c = dma_channel_get_default_config(data_chan);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-    channel_config_set_dreq(&c, DREQ_UART0_TX + 2 * uart_get_index(uart_default));
+    channel_config_set_dreq(&c, uart_get_dreq(uart_default, true));
     // Trigger ctrl_chan when data_chan completes
     channel_config_set_chain_to(&c, ctrl_chan);
     // Raise the IRQ flag when 0 is written to a trigger register (end of chain):

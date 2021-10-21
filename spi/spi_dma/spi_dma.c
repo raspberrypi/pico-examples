@@ -56,7 +56,7 @@ int main() {
     printf("Configure TX DMA\n");
     dma_channel_config c = dma_channel_get_default_config(dma_tx);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-    channel_config_set_dreq(&c, spi_get_index(spi_default) ? DREQ_SPI1_TX : DREQ_SPI0_TX);
+    channel_config_set_dreq(&c, spi_get_dreq(spi_default, true));
     dma_channel_configure(dma_tx, &c,
                           &spi_get_hw(spi_default)->dr, // write address
                           txbuf, // read address
@@ -70,7 +70,7 @@ int main() {
     // address to increment (so data is written throughout the buffer)
     c = dma_channel_get_default_config(dma_rx);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
-    channel_config_set_dreq(&c, spi_get_index(spi_default) ? DREQ_SPI1_RX : DREQ_SPI0_RX);
+    channel_config_set_dreq(&c, spi_get_dreq(spi_default, false));
     channel_config_set_read_increment(&c, false);
     channel_config_set_write_increment(&c, true);
     dma_channel_configure(dma_rx, &c,
