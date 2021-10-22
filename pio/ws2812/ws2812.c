@@ -12,6 +12,13 @@
 #include "hardware/clocks.h"
 #include "ws2812.pio.h"
 
+#define IS_RGBW true
+#define NUM_PIXELS 150
+#ifndef PICO_DEFAULT_WS2812_PIN
+#warning "no WS2812 default PIN defined for board, please check if pin 2 is okay"
+#define PICO_DEFAULT_WS2812_PIN 2
+#endif
+
 static inline void put_pixel(uint32_t pixel_grb) {
     pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
 }
@@ -71,8 +78,6 @@ const struct {
         {pattern_greys,   "Greys"},
 };
 
-const int PIN_TX = 0;
-
 int main() {
     //set_sys_clock_48();
     stdio_init_all();
@@ -83,7 +88,7 @@ int main() {
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_program);
 
-    ws2812_program_init(pio, sm, offset, PIN_TX, 800000, true);
+    ws2812_program_init(pio, sm, offset, PICO_DEFAULT_WS2812_PIN, 800000, IS_RGBW);
 
     int t = 0;
     while (1) {
@@ -92,7 +97,7 @@ int main() {
         puts(pattern_table[pat].name);
         puts(dir == 1 ? "(forward)" : "(backward)");
         for (int i = 0; i < 1000; ++i) {
-            pattern_table[pat].pat(150, t);
+            pattern_table[pat].pat(NUM_PIXELS, t);
             sleep_ms(10);
             t += dir;
         }
