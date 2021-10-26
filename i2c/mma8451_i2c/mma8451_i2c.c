@@ -56,11 +56,13 @@ float mma8451_convert_accel(uint16_t raw_accel) {
     return acceleration;
 }
 
+#ifdef i2c_default
 void mma8451_set_state(uint8_t state) {
     buf[0] = REG_CTRL_REG1;
     buf[1] = state; // Set RST bit to 1
     i2c_write_blocking(i2c_default, ADDRESS, buf, 2, false);
 }
+#endif
 
 int main() {
     stdio_init_all();

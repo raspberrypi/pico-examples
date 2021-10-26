@@ -20,10 +20,10 @@
    GND (physical pin 38)  -> GND on PCF8520 board
 */
 
+#ifdef i2c_default
+
 // By default these devices  are on bus address 0x68
 static int addr = 0x68;
-
-#ifdef i2c_default
 
 static void pcf8520_reset() {
     // Two byte reset. First byte register, second byte data
@@ -90,8 +90,6 @@ void pcf8520_set_alarm() {
     }
 }
 
-#endif
-
 void pcf8520_check_alarm() {
     // Check bit 3 of control register 2 for alarm flags
     uint8_t status[1];
@@ -106,6 +104,7 @@ void pcf8520_check_alarm() {
     }
 }
 
+
 void pcf8520_convert_time(int conv_time[7], const uint8_t raw_time[7]) {
     // Convert raw data into time
     conv_time[0] = (10 * (int) ((raw_time[0] & 0x70) >> 4)) + ((int) (raw_time[0] & 0x0F));
@@ -116,6 +115,7 @@ void pcf8520_convert_time(int conv_time[7], const uint8_t raw_time[7]) {
     conv_time[5] = (10 * (int) ((raw_time[5] & 0x10) >> 4)) + ((int) (raw_time[5] & 0x0F));
     conv_time[6] = (10 * (int) ((raw_time[6] & 0xF0) >> 4)) + ((int) (raw_time[6] & 0x0F));
 }
+#endif
 
 int main() {
     stdio_init_all();
@@ -158,7 +158,7 @@ int main() {
         // Clear terminal 
         printf("\e[1;1H\e[2J");
     }
+#endif
     return 0;
 }
 
-#endif
