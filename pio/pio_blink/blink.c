@@ -21,9 +21,10 @@ int main() {
     uint offset = pio_add_program(pio, &blink_program);
     printf("Loaded program at %d\n", offset);
 
-    blink_pin_forever(pio, 0, offset, 0, 3);
-    blink_pin_forever(pio, 1, offset, 6, 4);
-    blink_pin_forever(pio, 2, offset, 11, 1);
+    blink_pin_forever(pio, 0, offset, 2, 1);
+    blink_pin_forever(pio, 1, offset, 3, 2);
+    blink_pin_forever(pio, 2, offset, 4, 4);
+    blink_pin_forever(pio, 4, offset, 25, 1);  // Blink onboard LED at same rate as pin 2
 }
 
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
@@ -31,5 +32,5 @@ void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
     pio_sm_set_enabled(pio, sm, true);
 
     printf("Blinking pin %d at %d Hz\n", pin, freq);
-    pio->txf[sm] = clock_get_hz(clk_sys) / 2 * freq;
+    pio->txf[sm] = clock_get_hz(clk_sys) / (2 * freq);
 }
