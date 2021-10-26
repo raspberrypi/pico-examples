@@ -118,6 +118,7 @@ App|Description
 [differential_manchester](pio/differential_manchester)| Send and receive differential Manchester-encoded serial (BMC).
 [hub75](pio/hub75)| Display an image on a 128x64 HUB75 RGB LED matrix.
 [i2c](pio/i2c)| Scan an I2C bus.
+[ir_nec](pio/ir_nec)| Sending and receiving IR (infra-red) codes using the PIO.
 [logic_analyser](pio/logic_analyser)| Use PIO and DMA to capture a logic trace of some GPIOs, whilst a PWM unit is driving them.
 [manchester_encoding](pio/manchester_encoding)| Send and receive Manchester-encoded serial.
 [pio_blink](pio/pio_blink)| Set up some PIO state machines to blink LEDs at different frequencies, according to delay counts pushed into their FIFOs.
@@ -125,6 +126,7 @@ App|Description
 [spi](pio/spi)| Use PIO to erase, program and read an external SPI flash chip. A second example runs a loopback test with all four CPHA/CPOL combinations.
 [squarewave](pio/squarewave)| Drive a fast square wave onto a GPIO. This example accesses low-level PIO registers directly, instead of using the SDK functions.
 [st7789_lcd](pio/st7789_lcd)| Set up PIO for 62.5 Mbps serial output, and use this to display a spinning image on a ST7789 serial LCD.
+[quadrature_encoder](pio/quadrature_encoder)| A quadrature encoder using PIO to maintain counts independent of the CPU. 
 [uart_rx](pio/uart_rx)| Implement the receive component of a UART serial port. Attach it to the spare Arm UART to see it receive characters.
 [uart_tx](pio/uart_tx)| Implement the transmit component of a UART serial port, and print hello world.
 [ws2812](pio/ws2812)| Examples of driving WS2812 addressable RGB LEDs.

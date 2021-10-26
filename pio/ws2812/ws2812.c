@@ -14,9 +14,12 @@
 
 #define IS_RGBW true
 #define NUM_PIXELS 150
-#ifndef PICO_DEFAULT_WS2812_PIN
-#warning "no WS2812 default PIN defined for board, please check if pin 2 is okay"
-#define PICO_DEFAULT_WS2812_PIN 2
+
+#ifdef PICO_DEFAULT_WS2812_PIN
+#define WS2812_PIN PICO_DEFAULT_WS2812_PIN
+#else
+// default to pin 2 if the board doesn't have a default WS2812 pin defined
+#define WS2812_PIN 2
 #endif
 
 static inline void put_pixel(uint32_t pixel_grb) {
@@ -81,14 +84,14 @@ const struct {
 int main() {
     //set_sys_clock_48();
     stdio_init_all();
-    puts("WS2812 Smoke Test");
+    printf("WS2812 Smoke Test, using pin %d", WS2812_PIN);
 
     // todo get free sm
     PIO pio = pio0;
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_program);
 
-    ws2812_program_init(pio, sm, offset, PICO_DEFAULT_WS2812_PIN, 800000, IS_RGBW);
+    ws2812_program_init(pio, sm, offset, WS2812_PIN, 800000, IS_RGBW);
 
     int t = 0;
     while (1) {

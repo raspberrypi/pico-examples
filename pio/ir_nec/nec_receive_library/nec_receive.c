@@ -4,56 +4,40 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-
 // SDK types and declarations
-//
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/clocks.h"    // for clock_get_hz()
 
-
-// declare the public API functions
-//
 #include "nec_receive.h"
 
-
 // import the assembled PIO state machine program
-//
 #include "nec_receive.pio.h"
-
-
-// define the public API functions
-//
 
 // Claim an unused state machine on the specified PIO and configure it
 // to receive NEC IR frames on the given GPIO pin.
 //
 // Returns: the state machine number on success, otherwise -1
-//
 int nec_rx_init(PIO pio, uint pin_num) {
 
     // disable pull-up and pull-down on gpio pin
-    //
-    gpio_disable_pulls (pin_num);
+    gpio_disable_pulls(pin_num);
 
     // install the program in the PIO shared instruction space
-    //
     uint offset;
-    if (pio_can_add_program (pio, &nec_receive_program)) {
-        offset = pio_add_program (pio, &nec_receive_program);
+    if (pio_can_add_program(pio, &nec_receive_program)) {
+        offset = pio_add_program(pio, &nec_receive_program);
     } else {
         return -1;      // the program could not be added
     }
 
     // claim an unused state machine on this PIO
-    //
-    int sm = pio_claim_unused_sm (pio, true);
+    int sm = pio_claim_unused_sm(pio, true);
     if (sm == -1) {
         return -1;      // we were unable to claim a state machine
     }
 
     // configure and enable the state machine
-    //
     nec_receive_program_init(pio, sm, offset, pin_num);
 
     return sm;
@@ -64,8 +48,7 @@ int nec_rx_init(PIO pio, uint pin_num) {
 // provided.
 //
 // Returns: `true` if the frame was valid, otherwise `false`
-//
-bool nec_decode_frame (uint32_t frame, uint8_t *p_address, uint8_t *p_data) {
+bool nec_decode_frame(uint32_t frame, uint8_t *p_address, uint8_t *p_data) {
 
     // access the frame data as four 8-bit fields
     //
@@ -83,14 +66,12 @@ bool nec_decode_frame (uint32_t frame, uint8_t *p_address, uint8_t *p_data) {
 
     // a valid (non-extended) 'NEC' frame should contain 8 bit
     // address, inverted address, data and inverted data
-    //
     if (f.address != (f.inverted_address ^ 0xff) ||
         f.data != (f.inverted_data ^ 0xff)) {
         return false;
     }
 
     // store the validated address and data
-    //
     *p_address = f.address;
     *p_data = f.data;
 
