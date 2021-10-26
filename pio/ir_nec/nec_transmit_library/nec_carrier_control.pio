@@ -1,0 +1,79 @@
+;
+; Copyright (c) 2021 mjcross
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+
+.program nec_carrier_control
+
+; Transmit an encoded 32-bit frame in NEC IR format.
+;
+; Accepts 32-bit words from the transmit FIFO and sends them least-significant bit first
+; using pulse position modulation.
+;
+; Carrier bursts are generated using the nec_carrier_burst program, which is expected to be
+; running on a separate state machine.
+;
+; This program expects there to be 2 state machine ticks per 'normal' 562.5us
+; burst period.
+;
+.define BURST_IRQ 7                     ; the IRQ used to trigger a carrier burst
+.define NUM_INITIAL_BURSTS 16           ; how many bursts to transmit for a 'sync burst'
+
+.wrap_target
+    pull                                ; fetch a data word from the transmit FIFO into the
+                                        ; output shift register, blocking if the FIFO is empty
+
+    set X, (NUM_INITIAL_BURSTS - 1)     ; send a sync burst (9ms)
+long_burst:
+    irq BURST_IRQ
+    jmp X-- long_burst
+
+    nop [15]                            ; send a 4.5ms space
+    irq BURST_IRQ [1]                   ; send a 562.5us burst to begin the first data bit
+
+data_bit:
+    out X, 1                            ; shift the least-significant bit from the OSR
+    jmp !X burst                        ; send a short delay for a '0' bit
+    nop [3]                             ; send an additional delay for a '1' bit
+burst:
+    irq BURST_IRQ                       ; send a 562.5us burst to end the data bit
+
+jmp !OSRE data_bit                      ; continue sending bits until the OSR is empty
+
+.wrap                                   ; fetch another data word from the FIFO
+
+
+% c-sdk {
+static inline void nec_carrier_control_program_init (PIO pio, uint sm, uint offset, float tick_rate, int bits_per_frame) {
+
+    // create a new state machine configuration
+    //
+    pio_sm_config c = nec_carrier_control_program_get_default_config(offset);
+
+    // configure the output shift register
+    //
+    sm_config_set_out_shift (&c,
+                             true,       // shift right
+                             false,      // disable autopull
+                             bits_per_frame);
+
+    // join the FIFOs to make a single large transmit FIFO
+    //
+    sm_config_set_fifo_join (&c, PIO_FIFO_JOIN_TX);
+
+    // configure the clock divider
+    //
+    float div = clock_get_hz (clk_sys) / tick_rate;
+    sm_config_set_clkdiv (&c, div);
+
+    // apply the configuration to the state machine
+    //
+    pio_sm_init(pio, sm, offset, &c);
+
+    // set the state machine running
+    //
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}

@@ -1,0 +1,61 @@
+;
+; Copyright (c) 2021 mjcross
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+
+.program nec_carrier_burst
+
+; Generate bursts of carrier.
+;
+; Repeatedly wait for an IRQ to be set then clear it and generate 21 cycles of
+; carrier with 25% duty cycle
+;
+.define NUM_CYCLES 21               ; how many carrier cycles to generate
+.define BURST_IRQ 7                 ; which IRQ should trigger a carrier burst
+.define public TICKS_PER_LOOP 4     ; the number of instructions in the loop (for timing)
+
+.wrap_target
+    set X, (NUM_CYCLES - 1)         ; initialise the loop counter
+    wait 1 irq BURST_IRQ            ; wait for the IRQ then clear it
+cycle_loop:
+    set pins, 1                     ; set the pin high (1 cycle)
+    set pins, 0 [1]                 ; set the pin low (2 cycles)
+    jmp X--, cycle_loop             ; (1 more cycle)
+.wrap
+
+
+% c-sdk {
+static inline void nec_carrier_burst_program_init(PIO pio, uint sm, uint offset, uint pin, float freq) {
+    // Create a new state machine configuration
+    //
+    pio_sm_config c = nec_carrier_burst_program_get_default_config (offset);
+
+    // Map the SET pin group to one pin, namely the `pin`
+    // parameter to this function.
+    //
+    sm_config_set_set_pins (&c, pin, 1);
+
+    // Set the GPIO function of the pin (connect the PIO to the pad)
+    //
+    pio_gpio_init (pio, pin);
+
+    // Set the pin direction to output at the PIO
+    //
+    pio_sm_set_consecutive_pindirs (pio, sm, pin, 1, true);
+
+    // Set the clock divider to generate the required frequency
+    //
+    float div = clock_get_hz (clk_sys) / (freq * nec_carrier_burst_TICKS_PER_LOOP);
+    sm_config_set_clkdiv (&c, div);
+
+    // Apply the configuration to the state machine
+    //
+    pio_sm_init (pio, sm, offset, &c);
+
+    // Set the state machine running
+    //
+    pio_sm_set_enabled (pio, sm, true);
+}
+%}
