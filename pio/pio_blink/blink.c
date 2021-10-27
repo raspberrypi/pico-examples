@@ -24,7 +24,7 @@ int main() {
     blink_pin_forever(pio, 0, offset, 2, 1);
     blink_pin_forever(pio, 1, offset, 3, 2);
     blink_pin_forever(pio, 2, offset, 4, 4);
-    blink_pin_forever(pio, 4, offset, 25, 1);  // Blink onboard LED at same rate as pin 2
+    blink_pin_forever(pio, 4, offset, PICO_DEFAULT_LED_PIN, 1);  // Blink onboard LED at same rate as pin 2
 }
 
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
