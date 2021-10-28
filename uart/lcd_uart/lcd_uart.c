@@ -156,7 +156,7 @@ int main() {
 
     while (1) {
         // send any chars from stdio straight to the backpack
-        char c = uart_getc(uart_default);
+        char c = uart_getc(UART_ID);
         // any bytes not followed by 0xFE (the special command) are interpreted
         // as text to be displayed on the backpack, so we just send the char
         // down the UART byte pipe!
