@@ -1,3 +1,8 @@
+;
+; Copyright (c) 2021 pmarques-dev @ github
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
 
 .program quadrature_encoder
 
@@ -6,7 +11,7 @@
 .origin 0
 
 
-; the code works by running a loop that contiously shifts the 2 phase pins into
+; the code works by running a loop that continuously shifts the 2 phase pins into
 ; ISR and looks at the lower 4 bits to do a computed jump to an instruction that
 ; does the proper "do nothing" | "increment" | "decrement" action for that pin
 ; state change (or no change)
