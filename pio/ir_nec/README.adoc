@@ -49,7 +49,7 @@ nec_carrier_control.pio::: The PIO assembler code to transmit a complete frame.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | Infra-Red LED | 1 | generic part
 | 1500 ohm resistor | 1 | generic part
 | Infra-Red Detector | 1 | generic part e.g. VS1838b
