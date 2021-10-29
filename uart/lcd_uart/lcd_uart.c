@@ -150,13 +150,13 @@ int main() {
 
 #if LCD_IS_RGB
     uint8_t i = 0; // it's ok if this overflows and wraps, we're using sin
-    const float frequency = 0.1;
+    const float frequency = 0.1f;
     float red, green, blue;
 #endif
 
     while (1) {
         // send any chars from stdio straight to the backpack
-        char c = uart_getc(uart_default);
+        char c = getchar();
         // any bytes not followed by 0xFE (the special command) are interpreted
         // as text to be displayed on the backpack, so we just send the char
         // down the UART byte pipe!
