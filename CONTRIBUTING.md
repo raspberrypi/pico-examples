@@ -2,7 +2,7 @@
 
 ## How to Report a Bug
 
-We use GitHub to host code, track [issues](https://github.com/raspberrypi/pico-examples/issues) and feature requests, and to accept [pull requests](https://github.com/raspberrypi/pico-examples/pulls). If you find think you have found a bug in the SDK please report it by [opening a new issue](https://github.com/raspberrypi/pico-examples/issues/new). Please include as much detail as possible, and ideally some code to reproduce the problem.
+We use GitHub to host code, track [issues](https://github.com/raspberrypi/pico-examples/issues) and feature requests, and to accept [pull requests](https://github.com/raspberrypi/pico-examples/pulls). If you find think you have found a bug, please report it by [opening a new issue](https://github.com/raspberrypi/pico-examples/issues/new). Please include as much detail as possible, and ideally some code to reproduce the problem.
 
 ## How to Contribute Code
 
