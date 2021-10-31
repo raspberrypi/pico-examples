@@ -10,8 +10,6 @@ In order to contribute new or updated code, you must first create a GitHub accou
 
 **NOTE:** Development takes place on the `develop` branch in this repository. Please open your https://github.com/raspberrypi/pico-examples/pulls[pull request] (PR) against the [`develop`](https://github.com/raspberrypi/pico-examples/tree/develop) branch, pull requests against the `master` branch will automatically CI fail checks and will not be accepted. You will be asked to rebase your PR against `develop` and if you do not do so, your PR will be closed.
 
-While we are happy to take contributions, big or small, changes in the SDK may have knock-on effects in other places so it is possible that apparently benign pull requests that make seemingly small changes could be refused.
-
 ### Code Style
 
 If you are contributing new or updated code please match the existing code style, particularly:
