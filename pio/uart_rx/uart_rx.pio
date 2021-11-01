@@ -71,7 +71,7 @@ static inline void uart_rx_program_init(PIO pio, uint sm, uint offset, uint pin,
     pio_sm_config c = uart_rx_program_get_default_config(offset);
     sm_config_set_in_pins(&c, pin); // for WAIT, IN
     sm_config_set_jmp_pin(&c, pin); // for JMP
-    // Shift to right, autopull disabled
+    // Shift to right, autopush disabled
     sm_config_set_in_shift(&c, true, false, 32);
     // Deeper FIFO as we're not doing any TX
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);

@@ -2,7 +2,7 @@ add_executable(hello_serial
         hello_serial.c
         )
 
-# Pull in our pico_stdlib which aggregates commonly used features
+# pull in common dependencies
 target_link_libraries(hello_serial pico_stdlib)
 
 # create map/bin/hex/uf2 file etc.

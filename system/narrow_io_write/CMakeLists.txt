@@ -2,7 +2,7 @@ add_executable(narrow_io_write
         narrow_io_write.c
         )
 
-# Pull in our pico_stdlib which pulls in commonly used features
+# pull in common dependencies
 target_link_libraries(narrow_io_write pico_stdlib)
 
 # create map/bin/hex file etc.

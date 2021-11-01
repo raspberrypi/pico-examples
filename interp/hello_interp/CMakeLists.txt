@@ -3,7 +3,7 @@ if (TARGET hardware_interp)
             hello_interp.c
             )
 
-    # Pull in dependencies
+    # pull in common dependencies and additional interpolator hardware support
     target_link_libraries(hello_interp pico_stdlib hardware_interp)
 
     # create map/bin/hex file etc.

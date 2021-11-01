@@ -3,7 +3,7 @@ if (TARGET hardware_resets)
             hello_reset.c
             )
 
-    # Pull in our pico_stdlib which pulls in commonly used features
+    # pull in common dependencies and additional reset hardware support
     target_link_libraries(hello_reset pico_stdlib hardware_resets)
 
     # create map/bin/hex file etc.
