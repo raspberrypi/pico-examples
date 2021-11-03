@@ -1,9 +1,8 @@
 = Attaching a MMA8451 3-axis digital accelerometer via I2C
 
 This example code shows how to interface the Raspberry Pi Pico to the MMA8451 digital accelerometer sensor board. 
-======
+
 This example reads and displays the acceleration values of the board in the 3 axis. It also allows the user to set the trade-off between the range and precision based on the values they require. Values often have an offset which can be accounted for by writing to the offset correction registers. The datasheet for the sensor can be found at https://cdn-shop.adafruit.com/datasheets/MMA8451Q-1.pdf for additional information.
-======
 
 == Wiring information
 

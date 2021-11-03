@@ -1,14 +1,12 @@
 = Attaching a PCF8523 Real Time Clock via I2C
 
 This example code shows how to interface the Raspberry Pi Pico to the PCF8523 Real Time Clock
-======
-This example allows you to set the current time and date to initialise it and then refreshes it every half-second. Additionally it lets you set an alarm for a particular time + date and raises an alert accordingly. More information about the module is available at https://learn.adafruit.com/adafruit-pcf8523-real-time-clock. 
-======
+
+This example allows you to initialise the current time and date and then displays it every half-second. Additionally it lets you set an alarm for a particular time and date and raises an alert accordingly. More information about the module is available at https://learn.adafruit.com/adafruit-pcf8523-real-time-clock. 
 
 == Wiring information
 
 Wiring up the device requires 4 jumpers, to connect VDD, GND, SDA and SCL. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the 5V pin.
-
 
 [[pcf8523_i2c_wiring]]
 [pdfwidth=75%]
