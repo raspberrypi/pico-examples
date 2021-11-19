@@ -26,20 +26,17 @@ After a successful build the executable program can be found in the **build/ir_l
 == List of Files
 
 CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
-ir_loopback:: A directory containing the code for the loopback example.
-CMakeLists.txt::: CMake file to incorporate the example in to the examples build tree.
-ir_loopback.c::: The code for the loopback example.
-nec_receive_library:: A directory containing the code for the IR receive functions.
-CMakeLists.txt::: CMake file to incorporate the IR receive library in to the examples build tree.
-nec_receive.c::: The source code for the IR receive functions.
-nec_receive.h::: The headers for the IR receive functions.
-nec_receive.pio::: The PIO assembler code to receive a frame.
-nec_transmit_library:: A directory containing the code for the IR transmit functions.
-CMakeLists.txt::: CMake file to incorporate the IR transmit library in to the examples build tree.
-nec_transmit.c::: The source code for the IR transmit functions.
-nec_transmit.h::: The headers for the IR transmit functions.
-nec_carrier_burst.pio::: The PIO assembler code to generate a carrier burst.
-nec_carrier_control.pio::: The PIO assembler code to transmit a complete frame.
+ir_loopback/CMakeLists.txt:: CMake file to incorporate the loopback example in to the examples build tree.
+ir_loopback/ir_loopback.c:: The code for the loopback example.
+nec_receive_library/CMakeLists.txt:: CMake file to incorporate the IR receive library in to the examples build tree.
+nec_receive_library/nec_receive.c:: The source code for the IR receive functions.
+nec_receive_library/nec_receive.h:: The headers for the IR receive functions.
+nec_receive_library/nec_receive.pio:: The PIO assembler code to receive a frame.
+nec_transmit_library/CMakeLists.txt:: CMake file to incorporate the IR transmit library in to the examples build tree.
+nec_transmit_library/nec_transmit.c:: The source code for the IR transmit functions.
+nec_transmit_library/nec_transmit.h:: The headers for the IR transmit functions.
+nec_transmit_library/nec_carrier_burst.pio:: The PIO assembler code to generate a carrier burst.
+nec_transmit_library/nec_carrier_control.pio:: The PIO assembler code to transmit a complete frame.
 
 == Bill of Materials
 
