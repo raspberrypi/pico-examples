@@ -117,7 +117,8 @@ void bmp280_read_raw(int32_t* temp, int32_t* pressure) {
     // note: normal mode does not require further ctrl_meas and config register writes
 
     uint8_t buf[6];
-    i2c_write_blocking(i2c_default, ADDR, (uint8_t*)REG_PRESSURE_MSB, 1, true);  // true to keep master control of bus
+    uint8_t reg = REG_PRESSURE_MSB;
+    i2c_write_blocking(i2c_default, ADDR, &reg, 1, true);  // true to keep master control of bus
     i2c_read_blocking(i2c_default, ADDR, buf, 6, false);  // false - finished with bus
 
     // store the 20 bit read in a 32 bit signed integer for conversion
@@ -184,7 +185,8 @@ void bmp280_get_calib_params(struct bmp280_calib_param* params) {
     // and MSB register, so we read from 24 registers
 
     uint8_t buf[NUM_CALIB_PARAMS] = { 0 };
-    i2c_write_blocking(i2c_default, ADDR, (uint8_t*)REG_DIG_T1_LSB, 1, true);  // true to keep master control of bus
+    uint8_t reg = REG_DIG_T1_LSB;
+    i2c_write_blocking(i2c_default, ADDR, &reg, 1, true);  // true to keep master control of bus
     // read in one go as register addresses auto-increment
     i2c_read_blocking(i2c_default, ADDR, buf, NUM_CALIB_PARAMS, false);  // false, we're done reading
 
