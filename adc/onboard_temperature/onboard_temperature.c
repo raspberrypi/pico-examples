@@ -58,6 +58,4 @@ int main() {
 #endif
         sleep_ms(990);
     }
-
-    return 0;
 }

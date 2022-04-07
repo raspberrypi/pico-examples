@@ -162,6 +162,7 @@ int main() {
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
 #warning i2c / mpl3115a2_i2c example requires a board with I2C pins
     puts("Default I2C pins were not defined");
+    return 0;
 #else
     printf("Hello, MPL3115A2. Waiting for something to interrupt me!...\n");
 
@@ -202,5 +203,4 @@ int main() {
     };
 
 #endif
-    return 0;
 }

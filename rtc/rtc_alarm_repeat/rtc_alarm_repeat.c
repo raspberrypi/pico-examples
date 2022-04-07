@@ -56,6 +56,4 @@ int main() {
 
     // Alarm will keep firing forever
     while(1);
-
-    return 0;
 }

@@ -163,7 +163,5 @@ int main() {
             lcd_clear();
         }
     }
-
-    return 0;
 #endif
 }

@@ -575,6 +575,4 @@ int main(void) {
     while (1) {
         tight_loop_contents();
     }
-
-    return 0;
 }
