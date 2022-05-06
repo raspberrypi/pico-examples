@@ -21,12 +21,6 @@ The example here uses SPI port 0. Power is supplied from the 5V pin.
 There are many different manufacturers who sell boards with the max7219. Whilst they all appear slightly different, they all have, at least, the same 5 pins required to power and communicate. When wiring up a board that is different to the one in the diagram, ensure you connect up as described in the previous paragraph.
 ======
 
-
-[[max7219_spi_wiring]]
-[pdfwidth=75%]
-.Wiring Diagram for max7219.
-image::max7219_spi_bb.png[]
-
 == List of Files
 
 CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
