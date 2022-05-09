@@ -116,8 +116,8 @@ int main() {
     for (int i=0; i<256; i++)
     {
         for (int j=0; j<8; j++)
-
-        write_register_all(CMD_DIGIT0+j, i);
+            write_register_all(CMD_DIGIT0+j, i);
+            
         sleep_ms(20);
     }
 

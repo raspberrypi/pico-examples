@@ -37,5 +37,5 @@ max7219_8x7seg_spi.c:: The example code.
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | max7219 board with 8x7segment LEDs| 1 | generic part
-| M/M Jumper wires | 6 | generic part
+| M/M Jumper wires | 5 | generic part
 |===
