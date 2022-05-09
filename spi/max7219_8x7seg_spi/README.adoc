@@ -7,13 +7,13 @@ The Max7219 datasheet can be found here https://datasheets.maximintegrated.com/e
 
 == Wiring information
 
-Wiring up the device requires 6 jumpers as follows:
+Wiring up the device requires 5 jumpers as follows:
 
-   * GPIO 16 (pin 21) MISO/spi0_rx-> DIN on max7219 board
-   * GPIO 17 (pin 22) Chip select -> CS on max7219 board
-   * GPIO 18 (pin 24) SCK/spi0_sclk -> CLK on max7219 board
-   * 5v (pin 40) -> VCC on max7219 board
-   * GND (pin 38)  -> GND on max7219 board
+   * GPIO 17 (pin 22) Chip select -> CS on Max7219 board
+   * GPIO 18 (pin 24) SCK/spi0_sclk -> CLK on Max7219 board
+   * GPIO 19 (pin 25) MOSI/spi0_tx -> DIN on Max7219 board
+   * 5v (pin 40) -> VCC on Max7219 board
+   * GND (pin 38)  -> GND on Max7219 board
 
 The example here uses SPI port 0. Power is supplied from the 5V pin.
 

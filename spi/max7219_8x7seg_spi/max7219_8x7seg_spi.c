@@ -17,11 +17,11 @@
    Connections on Raspberry Pi Pico board and a generic Max7219 board, other
    boards may vary.
 
-   * GPIO 17 (pin 22) Chip select -> CS on max7219 board
-   * GPIO 18 (pin 24) SCK/spi0_sclk -> CLK on max7219 board
-   * GPIO 19 (pin 25) MOSI/spi0_tx -> DIN on max7219 board
-   * 3.3v (pin 36) -> VCC on max7219 board
-   * GND (pin 38)  -> GND on max7219 board
+   * GPIO 17 (pin 22) Chip select -> CS on Max7219 board
+   * GPIO 18 (pin 24) SCK/spi0_sclk -> CLK on Max7219 board
+   * GPIO 19 (pin 25) MOSI/spi0_tx -> DIN on Max7219 board
+   * 5v (pin 40) -> VCC on Max7219 board
+   * GND (pin 38)  -> GND on Max7219 board
 
    Note: SPI devices can have a number of different naming schemes for pins. See
    the Wikipedia page at https://en.wikipedia.org/wiki/Serial_Peripheral_Interface
@@ -73,8 +73,7 @@ static void write_register_all(uint8_t reg, uint8_t data) {
     for (int i = 0; i< NUM_MODULES;i++)
         spi_write_blocking(spi_default, buf, 2);
     cs_deselect();
- 
-
+}
 #endif
 
 
@@ -100,7 +99,7 @@ int main() {
     stdio_init_all();
 
 #if !defined(spi_default) || !defined(PICO_DEFAULT_SPI_SCK_PIN) || !defined(PICO_DEFAULT_SPI_TX_PIN) || !defined(PICO_DEFAULT_SPI_RX_PIN) || !defined(PICO_DEFAULT_SPI_CSN_PIN)
-#warning spi/bme280_spi example requires a board with SPI pins
+#warning spi/max7219_8x7seg_spi example requires a board with SPI pins
     puts("Default SPI pins were not defined");
 #else
 
@@ -140,6 +139,8 @@ int main() {
     {
         display_num(j++);
 	    sleep_ms(1);
+        if (j > 99999999)
+            j = 0;
     }
 
     return 0;
