@@ -118,7 +118,7 @@ int main() {
         for (int j=0; j<8; j++)
 
         write_register_all(CMD_DIGIT0+j, i);
-	    sleep_ms(20);
+        sleep_ms(20);
     }
 
     int bright = 1;
@@ -135,7 +135,7 @@ int main() {
                 write_register_all(CMD_DIGIT0 + i, (170 >> 1) << (i%2));
             }       
 
-	        write_register_all(CMD_BRIGHTNESS, bright % 16);
+            write_register_all(CMD_BRIGHTNESS, bright % 16);
         }
         sleep_ms(250);
 

@@ -138,7 +138,7 @@ int main() {
     while (1)
     {
         display_num(j++);
-	    sleep_ms(1);
+        sleep_ms(1);
         if (j > 99999999)
             j = 0;
     }
