@@ -19,7 +19,7 @@ The example here uses SPI port 0. Power is supplied from the 5V pin.
 
 [NOTE]
 ======
-There are many different manufacturers who sell boards with the Max7219. Whilst they all appear slightly different, they all have, at least, the same 5 pins required to power and communicate. When wiring up a board that is different to the one in the diagram, ensure you connect up as described in the previous paragraph.
+There are many different manufacturers who sell boards with the Max7219. Whilst they all appear slightly different, they all have, at least, the same 5 pins required for power and communication.  Please ensure you connect up as described in the previous paragraph..
 ======
 
 == List of Files
