@@ -15,7 +15,7 @@
 /* Example code to talk to a SSD1306 OLED display, 128 x 64 pixels
 
    NOTE: Ensure the device is capable of being driven at 3.3v NOT 5v. The Pico
-   GPIO (and therefor I2C) cannot be used at 5v.
+   GPIO (and therefore I2C) cannot be used at 5v.
 
    Connections on Raspberry Pi Pico board, other boards may vary.
 
@@ -211,7 +211,7 @@ static void FillReversedCache() {
         reversed[i] = reverse(font[i]);
 }
 
-static void WriteChar(uint x, uint y, uint8_t ch) {
+static void WriteChar(uint x, uint y, char ch) {
     if (reversed[0] == 0)
         FillReversedCache();
 
@@ -240,7 +240,7 @@ static uint16_t ExpandByte(uint8_t b) {
     return w;
 }
 
-static void WriteBigChar(uint x, uint y, uint8_t ch) {
+static void WriteBigChar(uint x, uint y, char ch) {
     if (reversed[0] == 0)
         FillReversedCache();
 
@@ -265,7 +265,7 @@ static void WriteBigChar(uint x, uint y, uint8_t ch) {
     }
 }
 
-static void WriteString(int x, int y, uint8_t *str) {
+static void WriteString(int x, int y, char *str) {
     // Cull out any string off the screen
     if (x > SSD1306_LCDWIDTH - 8 || y > SSD1306_LCDHEIGHT - 8)
         return;
@@ -276,7 +276,7 @@ static void WriteString(int x, int y, uint8_t *str) {
     }
 }
 
-static void WriteBigString(int x, int y, uint8_t *str) {
+static void WriteBigString(int x, int y, char *str) {
     // Cull out any string off the screen
     if (x > SSD1306_LCDWIDTH - 16 || y > SSD1306_LCDHEIGHT - 16)
         return;
