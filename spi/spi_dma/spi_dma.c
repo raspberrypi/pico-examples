@@ -50,7 +50,7 @@ int main() {
     }
 
     // We set the outbound DMA to transfer from a memory buffer to the SPI transmit FIFO paced by the SPI TX FIFO DREQ
-    // The default is for the read address to increment every element (in this case 1 byte - DMA_SIZE_8)
+    // The default is for the read address to increment every element (in this case 1 byte = DMA_SIZE_8)
     // and for the write address to remain unchanged.
 
     printf("Configure TX DMA\n");
@@ -66,7 +66,7 @@ int main() {
     printf("Configure RX DMA\n");
 
     // We set the inbound DMA to transfer from the SPI receive FIFO to a memory buffer paced by the SPI RX FIFO DREQ
-    // We coinfigure the read address to remain unchanged for each element, but the write
+    // We configure the read address to remain unchanged for each element, but the write
     // address to increment (so data is written throughout the buffer)
     c = dma_channel_get_default_config(dma_rx);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
