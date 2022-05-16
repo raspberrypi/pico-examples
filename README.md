@@ -9,7 +9,7 @@ on getting up and running.
 
 App|Description | Link to prebuilt UF2
 ---|---|---
-[hello_serial](hello_world/serial) | The obligatory Hello World program for Pico (Output over serial version) | 
+[hello_serial](hello_world/serial) | The obligatory Hello World program for Pico (Output over serial version) |
 [hello_usb](hello_world/usb) | The obligatory Hello World program for Pico (Output over USB version) | https://rptl.io/pico-hello-usb
 [blink](blink) | Blink an LED on and off. | https://rptl.io/pico-blink
 
@@ -44,7 +44,6 @@ App|Description
 [control_blocks](dma/control_blocks)| Build a control block list, to program a longer sequence of DMA transfers to the UART.
 [channel_irq](dma/channel_irq)| Use an IRQ handler to reconfigure a DMA channel, in order to continuously drive data through a PIO state machine.
 
-
 ### Flash
 
 App|Description
@@ -70,7 +69,6 @@ See also: [blink](blink), blinking an LED attached to a GPIO.
 App|Description
 ---|---
 [hello_divider](divider) | Show how to directly access the hardware integer dividers, in case AEABI injection is disabled.
-
 
 ### I2C
 
@@ -99,7 +97,7 @@ App|Description
 App|Description
 ---|---
 [hello_multicore](multicore/hello_multicore) | Launch a function on the second core, printf some messages on each core, and pass data back and forth through the mailbox FIFOs.
-[multicore_fifo_irqs](multicore/multicore_fifo_irqs) | On each core, register and interrupt handler for the mailbox FIFOs. Show how the interrupt fires when that core receives a message. 
+[multicore_fifo_irqs](multicore/multicore_fifo_irqs) | On each core, register and interrupt handler for the mailbox FIFOs. Show how the interrupt fires when that core receives a message.
 [multicore_runner](multicore/multicore_runner) | Set up the second core to accept, and run, any function pointer pushed into its mailbox FIFO. Push in a few pieces of code and get answers back.
 
 ### Pico Board
@@ -162,6 +160,7 @@ App|Description
 [mpu9250_spi](spi/mpu9250_spi) | Attach a MPU9250 accelerometer/gyoscope via SPI.
 [spi_dma](spi/spi_dma) | Use DMA to transfer data both to and from the SPI simultaneously. The SPI is configured for loopback.
 [spi_flash](spi/spi_flash) | Erase, program and read a serial flash device attached to one of the SPI controllers.
+[spi_master_slave](spi/spi_master_slave) | Demonstrate SPI communication as master and slave.
 
 ### System
 
@@ -170,6 +169,7 @@ App|Description
 [hello_double_tap](system/hello_double_tap) | An LED blink with the `pico_bootsel_via_double_reset` library linked. This enters the USB bootloader when it detects the system being reset twice in quick succession, which is useful for boards with a reset button but no BOOTSEL button.
 [narrow_io_write](system/narrow_io_write) | Demonstrate the effects of 8-bit and 16-bit writes on a 32-bit IO register.
 [unique_board_id](system/unique_board_id) | Read the 64 bit unique ID from external flash, which serves as a unique identifier for the board.
+
 ### Timer
 
 App|Description
