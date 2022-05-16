@@ -2,7 +2,7 @@ add_executable(clocks_detached_clk_peri
         detached_clk_peri.c
         )
 
-# Pull in our pico_stdlib which pulls in commonly used features
+# pull in common dependencies
 target_link_libraries(clocks_detached_clk_peri pico_stdlib)
 
 # create map/bin/hex file etc.

@@ -13,13 +13,13 @@ const int PIO_I2C_NAK_LSB    = 0;
 
 
 bool pio_i2c_check_error(PIO pio, uint sm) {
-    return !!(pio->irq & (1u << sm));
+    return pio_interrupt_get(pio, sm);
 }
 
 void pio_i2c_resume_after_error(PIO pio, uint sm) {
     pio_sm_drain_tx_fifo(pio, sm);
     pio_sm_exec(pio, sm, (pio->sm[sm].execctrl & PIO_SM0_EXECCTRL_WRAP_BOTTOM_BITS) >> PIO_SM0_EXECCTRL_WRAP_BOTTOM_LSB);
-    pio->irq = 1u << sm;
+    pio_interrupt_clear(pio, sm);
 }
 
 void pio_i2c_rx_enable(PIO pio, uint sm, bool en) {
@@ -32,7 +32,11 @@ void pio_i2c_rx_enable(PIO pio, uint sm, bool en) {
 static inline void pio_i2c_put16(PIO pio, uint sm, uint16_t data) {
     while (pio_sm_is_tx_fifo_full(pio, sm))
         ;
+    // some versions of GCC dislike this
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
     *(io_rw_16 *)&pio->txf[sm] = data;
+#pragma GCC diagnostic pop
 }
 
 
@@ -43,7 +47,11 @@ void pio_i2c_put_or_err(PIO pio, uint sm, uint16_t data) {
             return;
     if (pio_i2c_check_error(pio, sm))
         return;
+    // some versions of GCC dislike this
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
     *(io_rw_16 *)&pio->txf[sm] = data;
+#pragma GCC diagnostic pop
 }
 
 uint8_t pio_i2c_get(PIO pio, uint sm) {

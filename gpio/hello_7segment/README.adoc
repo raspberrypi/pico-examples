@@ -14,10 +14,10 @@ Our 7 Segment display has pins as follows.
   --D--
 ----
 
-By default we are allocating GPIO 2 to A, 3 to B etc.
+By default we are allocating GPIO 2 to segment A, 3 to B etc.
 So, connect GPIO 2 to pin A on the 7 segment LED display and so on. You will need the appropriate resistors (68 ohm should be fine) for each segment.
-The LED device used here is common anode, so the anode pin is connected to the 3.3v supply, and the GPIO's need to pull low (to ground) to complete the circuit.
-The pull direction of the GPIO's is specified in the code itself.
+The LED device used here is common anode, so the anode pin is connected to the 3.3v supply, and the GPIOs need to pull low (to ground) to complete the circuit.
+The pull direction of the GPIOs is specified in the code itself.
 
 Connect the switch to connect on pressing. One side should be connected to ground, the other to GPIO 9.
 
@@ -40,11 +40,9 @@ hello_7segment.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | 7 segment LED module | 1 | generic part
 | 68 ohm resistor | 7 | generic part
 | DIL push to make switch | 1 | generic switch
 | M/M Jumper wires | 10 | generic part
 |===
-
-

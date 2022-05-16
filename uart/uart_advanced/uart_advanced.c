@@ -51,7 +51,7 @@ int main() {
     // Actually, we want a different speed
     // The call will return the actual baud rate selected, which will be as close as
     // possible to that requested
-    int actual = uart_set_baudrate(UART_ID, BAUD_RATE);
+    int __unused actual = uart_set_baudrate(UART_ID, BAUD_RATE);
 
     // Set UART flow control CTS/RTS, we don't want these, so turn them off
     uart_set_hw_flow(UART_ID, false, false);

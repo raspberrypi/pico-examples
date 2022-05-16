@@ -2,7 +2,7 @@ add_executable(hello_resus
         hello_resus.c
         )
 
-# Pull in our pico_stdlib which pulls in commonly used features
+# pull in common dependencies
 target_link_libraries(hello_resus pico_stdlib)
 
 # create map/bin/hex file etc.

@@ -38,7 +38,7 @@ int main() {
 #warning i2c/bus_scan example requires a board with I2C pins
     puts("Default I2C pins were not defined");
 #else
-    // This example will use I2C0 on the default SDA and SCL pins (4, 5 on a Pico)
+    // This example will use I2C0 on the default SDA and SCL pins (GP4, GP5 on a Pico)
     i2c_init(i2c_default, 100 * 1000);
     gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
@@ -66,7 +66,7 @@ int main() {
         if (reserved_addr(addr))
             ret = PICO_ERROR_GENERIC;
         else
-            ret = i2c_read_blocking(i2c0, addr, &rxdata, 1, false);
+            ret = i2c_read_blocking(i2c_default, addr, &rxdata, 1, false);
 
         printf(ret < 0 ? "." : "@");
         printf(addr % 16 == 15 ? "\n" : "  ");

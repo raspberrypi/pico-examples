@@ -3,7 +3,7 @@ if (NOT PICO_TIME_NO_ALARM_SUPPORT)
             periodic_sampler.c
             )
 
-    # Pull in our (to be renamed) simple get you started dependencies
+    # pull in common dependencies
     target_link_libraries(periodic_sampler pico_stdlib)
 
     # create map/bin/hex file etc.

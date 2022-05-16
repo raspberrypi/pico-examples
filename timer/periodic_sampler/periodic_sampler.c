@@ -66,6 +66,7 @@ int main() {
 
     queue_free(&sample_fifo);
     printf("Done\n");
+    return 0;
 }
 
 bool timer_callback(repeating_timer_t *rt) {
