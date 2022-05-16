@@ -31,5 +31,8 @@ void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
     pio_sm_set_enabled(pio, sm, true);
 
     printf("Blinking pin %d at %d Hz\n", pin, freq);
-    pio->txf[sm] = clock_get_hz(clk_sys) / (2 * freq);
+
+    // PIO counter program takes 3 more cycles in total than we pass as
+    // input (wait for n + 1; mov; jmp)
+    pio->txf[sm] = (clock_get_hz(clk_sys) / (2 * freq)) - 3;
 }
