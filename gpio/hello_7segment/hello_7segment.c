@@ -17,8 +17,8 @@
   E   C
   --D--
 
-  By default we are allocating GPIO 2 to A, 3 to B etc.
-  So, connect GOIP 2 to pin A on the 7 segment LED display etc. Don't forget
+  By default we are allocating GPIO 2 to segment A, 3 to B etc.
+  So, connect GPIO 2 to pin A on the 7 segment LED display etc. Don't forget
   the appropriate resistors, best to use one for each segment!
 
   Connect button so that pressing the switch connects the GPIO 9 (default) to
@@ -28,7 +28,7 @@
 #define FIRST_GPIO 2
 #define BUTTON_GPIO (FIRST_GPIO+7)
 
-// This array converts a number 0-9 to a bit pattern to send to the GPIO's
+// This array converts a number 0-9 to a bit pattern to send to the GPIOs
 int bits[10] = {
         0x3f,  // 0
         0x06,  // 1
@@ -83,7 +83,7 @@ int main() {
         // We are starting with GPIO 2, our bitmap starts at bit 0 so shift to start at 2.
         int32_t mask = bits[val] << FIRST_GPIO;
 
-        // Set all our GPIO's in one go!
+        // Set all our GPIOs in one go!
         // If something else is using GPIO, we might want to use gpio_put_masked()
         gpio_set_mask(mask);
         sleep_ms(250);
