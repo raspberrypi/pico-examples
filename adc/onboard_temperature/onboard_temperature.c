@@ -15,7 +15,7 @@
 /* References for this implementation:
  * raspberry-pi-pico-c-sdk.pdf, Section '4.1.1. hardware_adc'
  * pico-examples/adc/adc_console/adc_console.c */
-const float read_onboard_temperature(const char unit) {
+float read_onboard_temperature(const char unit) {
     
     /* 12-bit conversion, assume max value == ADC_VREF == 3.3 V */
     const float conversionFactor = 3.3f / (1 << 12);
