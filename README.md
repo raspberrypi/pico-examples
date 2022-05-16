@@ -20,6 +20,7 @@ App|Description
 [hello_adc](adc/hello_adc)|Display the voltage from an ADC input.
 [joystick_display](adc/joystick_display)|Display a Joystick X/Y input based on two ADC inputs.
 [adc_console](adc/adc_console)|An interactive shell for playing with the ADC. Includes example of free-running capture mode.
+[microphone_adc](adc/microphone_adc)|Read analog values from a microphone and plot the measured sound amplitude.
 
 ### Clocks
 
@@ -74,8 +75,16 @@ App|Description
 App|Description
 ---|---
 [bus_scan](i2c/bus_scan) | Scan the I2C bus for devices and display results.
+[bmp280_i2c](i2c/bmp280_i2c) | Read and convert temperature and pressure data from a BMP280 sensor, attached to an I2C bus.
 [lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C.
+[lis3dh_i2c](i2c/lis3dh_i2c) | Read acceleration and temperature value from a LIS3DH sensor via I2C
+[mcp9808_i2c](i2c/mcp9808_i2c) | Read temperature, set limits and raise alerts when limits are surpassed.
+[mma8451_i2c](i2c/mma8451_i2c) | Read acceleration from a MMA8451 accelerometer and set range and precision for the data.
+[mpl3115a2_i2c](i2c/mpl3115a2_i2c) | Interface with an MPL3115A2 altimeter, exploring interrupts and advanced board features, via I2C.
 [mpu6050_i2c](i2c/mpu6050_i2c) | Read acceleration and angular rate values from a MPU6050 accelerometer/gyro, attached to an I2C bus.
+[oled_i2c](i2c/oled_i2c) | Convert and display a bitmap on a 128x32 SSD1306-driven OLED display
+[pa1010d_i2c](i2c/pa1010d_i2c) | Read GPS location data, parse and display data via I2C.
+[pcf8523_i2c](i2c/pcf8523_i2c) | Read time and date values from a real time clock. Set current time and alarms on it.
 
 ### Interpolator
 
@@ -107,6 +116,7 @@ App|Description
 [differential_manchester](pio/differential_manchester)| Send and receive differential Manchester-encoded serial (BMC).
 [hub75](pio/hub75)| Display an image on a 128x64 HUB75 RGB LED matrix.
 [i2c](pio/i2c)| Scan an I2C bus.
+[ir_nec](pio/ir_nec)| Sending and receiving IR (infra-red) codes using the PIO.
 [logic_analyser](pio/logic_analyser)| Use PIO and DMA to capture a logic trace of some GPIOs, whilst a PWM unit is driving them.
 [manchester_encoding](pio/manchester_encoding)| Send and receive Manchester-encoded serial.
 [pio_blink](pio/pio_blink)| Set up some PIO state machines to blink LEDs at different frequencies, according to delay counts pushed into their FIFOs.
@@ -114,6 +124,7 @@ App|Description
 [spi](pio/spi)| Use PIO to erase, program and read an external SPI flash chip. A second example runs a loopback test with all four CPHA/CPOL combinations.
 [squarewave](pio/squarewave)| Drive a fast square wave onto a GPIO. This example accesses low-level PIO registers directly, instead of using the SDK functions.
 [st7789_lcd](pio/st7789_lcd)| Set up PIO for 62.5 Mbps serial output, and use this to display a spinning image on a ST7789 serial LCD.
+[quadrature_encoder](pio/quadrature_encoder)| A quadrature encoder using PIO to maintain counts independent of the CPU. 
 [uart_rx](pio/uart_rx)| Implement the receive component of a UART serial port. Attach it to the spare Arm UART to see it receive characters.
 [uart_tx](pio/uart_tx)| Implement the transmit component of a UART serial port, and print hello world.
 [ws2812](pio/ws2812)| Examples of driving WS2812 addressable RGB LEDs.
@@ -172,22 +183,65 @@ App|Description
 App|Description
 ---|---
 [hello_uart](uart/hello_uart) | Print some text from one of the UART serial ports, without going through `stdio`.
+[lcd_uart](uart/lcd_uart) | Display text and symbols on a 16x02 RGB LCD display via UART
 [uart_advanced](uart/uart_advanced) | Use some other UART features like RX interrupts, hardware control flow, and data formats other than 8n1.
 
 ### USB Device
 
+#### TinyUSB Examples 
+
+Most of the USB device examples come directly from the TinyUSB device examples directory [here](https://github.com/hathach/tinyusb/tree/master/examples/device).
+Those that are supported on RP2040 devices are automatically included as part of the pico-examples
+build as targets named `tinyusb_dev_<example_name>`, e.g. https://github.com/hathach/tinyusb/tree/master/examples/device/hid_composite
+is built as `tinyusb_dev_hid_composite`.
+
+At the time of writing, these examples are available:
+
+- tinyusb_dev_audio_4_channel_mic
+- tinyusb_dev_audio_test
+- tinyusb_dev_board_test
+- tinyusb_dev_cdc_dual_ports
+- tinyusb_dev_cdc_msc
+- tinyusb_dev_dfu
+- tinyusb_dev_dfu_runtime
+- tinyusb_dev_dynamic_configuration
+- tinyusb_dev_hid_composite
+- tinyusb_dev_hid_generic_inout
+- tinyusb_dev_hid_multiple_interface
+- tinyusb_dev_midi_test
+- tinyusb_dev_msc_dual_lun
+- tinyusb_dev_net_lwip_webserver
+- tinyusb_dev_uac2_headset
+- tinyusb_dev_usbtmc
+- tinyusb_dev_video_capture
+- tinyusb_dev_webusb_serial
+
+Whilst these examples ably demonstrate how to use TinyUSB in device mode, their `CMakeLists.txt` is set up in a way
+tailored to how TinyUSB builds their examples within their source tree.
+
+For a better example of how to configure `CMakeLists.txt` for using TinyUSB in device mode with the Raspberry Pi SDK
+see below:
+
+#### SDK build example 
 App|Description
 ---|---
-[dev_audio_headset](usb/device/dev_audio_headset) | Audio headset example from TinyUSB
-[dev_hid_composite](usb/device/dev_hid_composite) | Composite HID (mouse + keyboard) example from TinyUSB
-[dev_hid_generic_inout](usb/device/dev_hid_generic_inout) | Generic HID device example from TinyUSB
+[dev_hid_composite](usb/device/dev_hid_composite) | A copy of the TinyUSB device example with the same name, but with a CMakeLists.txt which demonstrates how to add a dependency on the TinyUSB device libraries with the Raspberry Pi Pico SDK
+
+#### Low Level example
+App|Description
+---|---
 [dev_lowlevel](usb/device/dev_lowlevel) | A USB Bulk loopback implemented with direct access to the USB hardware (no TinyUSB)
 
 ### USB Host
 
-App|Description
----|---
-[host_hid](usb/host/host_hid) | Use USB in host mode to poll an attached HID keyboard (TinyUSB example)
+All the USB host examples come directly from the TinyUSB host examples directory [here](https://github.com/hathach/tinyusb/tree/master/examples/host).
+Those that are supported on RP2040 devices are automatically included as part of the pico-examples
+build as targets named `tinyusb_host_<example_name>`, e.g. https://github.com/hathach/tinyusb/tree/master/examples/host/cdc_msc_hid
+is built as `tinyusb_host_cdc_msc_hid`.
+
+At the time of writing, there is only one host example available:
+
+- tinyusb_host_cdc_msc_hid
 
 ### Watchdog
 

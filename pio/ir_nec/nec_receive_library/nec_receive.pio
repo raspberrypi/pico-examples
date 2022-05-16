@@ -1,0 +1,96 @@
+;
+; Copyright (c) 2021 mjcross
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+
+.program nec_receive
+
+; Decode IR frames in NEC format and push 32-bit words to the input FIFO.
+;
+; The input pin should be connected to an IR detector with an 'active low' output.
+;
+; This program expects there to be 10 state machine clock ticks per 'normal' 562.5us burst period
+; in order to permit timely detection of start of a burst. The initailisation function below sets
+; the correct divisor to achive this relative to the system clock.
+;
+; Within the 'NEC' protocol frames consists of 32 bits sent least-siginificant bit first; so the
+; Input Shift Register should be configured to shift right and autopush after 32 bits, as in the
+; initialisation function below.
+;
+.define BURST_LOOP_COUNTER 30                   ; the detection threshold for a 'frame sync' burst
+.define BIT_SAMPLE_DELAY 15                     ; how long to wait after the end of the burst before sampling
+
+.wrap_target
+
+next_burst:
+    set X, BURST_LOOP_COUNTER
+    wait 0 pin 0                                ; wait for the next burst to start
+
+burst_loop:
+    jmp pin data_bit                            ; the burst ended before the counter expired
+    jmp X-- burst_loop                          ; wait for the burst to end
+
+                                                ; the counter expired - this is a sync burst
+    mov ISR, NULL                               ; reset the Input Shift Register
+    wait 1 pin 0                                ; wait for the sync burst to finish
+    jmp next_burst                              ; wait for the first data bit
+
+data_bit:
+    nop [ BIT_SAMPLE_DELAY - 1 ]                ; wait for 1.5 burst periods before sampling the bit value
+    in PINS, 1                                  ; if the next burst has started then detect a '0' (short gap)
+                                                ; otherwise detect a '1' (long gap)
+                                                ; after 32 bits the ISR will autopush to the receive FIFO
+.wrap
+
+
+% c-sdk {
+static inline void nec_receive_program_init (PIO pio, uint sm, uint offset, uint pin) {
+
+    // Set the GPIO function of the pin (connect the PIO to the pad)
+    //
+    pio_gpio_init(pio, pin);
+
+    // Set the pin direction to `input` at the PIO
+    //
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, false);
+
+    // Create a new state machine configuration
+    //
+    pio_sm_config c = nec_receive_program_get_default_config (offset);
+
+    // configure the Input Shift Register
+    //
+    sm_config_set_in_shift (&c,
+                            true,       // shift right
+                            true,       // enable autopush
+                            32);        // autopush after 32 bits
+
+    // join the FIFOs to make a single large receive FIFO
+    //
+    sm_config_set_fifo_join (&c, PIO_FIFO_JOIN_RX);
+
+    // Map the IN pin group to one pin, namely the `pin`
+    // parameter to this function.
+    //
+    sm_config_set_in_pins (&c, pin);
+
+    // Map the JMP pin to the `pin` parameter of this function.
+    //
+    sm_config_set_jmp_pin (&c, pin);
+
+    // Set the clock divider to 10 ticks per 562.5us burst period
+    //
+    float div = clock_get_hz (clk_sys) / (10.0 / 562.5e-6);
+    sm_config_set_clkdiv (&c, div);
+
+    // Apply the configuration to the state machine
+    //
+    pio_sm_init (pio, sm, offset, &c);
+
+    // Set the state machine running
+    //
+    pio_sm_set_enabled (pio, sm, true);
+}
+%}

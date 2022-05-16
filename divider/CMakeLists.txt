@@ -2,7 +2,7 @@ add_executable(hello_divider
         hello_divider.c
         )
 
-# Pull in our pico_stdlib which pulls in commonly used features
+# pull in common dependencies
 target_link_libraries(hello_divider pico_stdlib)
 
 # create map/bin/hex file etc.

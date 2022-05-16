@@ -2,7 +2,7 @@ add_executable(hello_uart
         hello_uart.c
         )
 
-# Pull in our pico_stdlib which pulls in commonly used features
+# pull in common dependencies
 target_link_libraries(hello_uart pico_stdlib)
 
 # create map/bin/hex file etc.

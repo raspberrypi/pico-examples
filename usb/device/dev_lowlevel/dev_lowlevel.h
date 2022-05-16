@@ -129,8 +129,8 @@ static const unsigned char lang_descriptor[] = {
 };
 
 static const unsigned char *descriptor_strings[] = {
-        "Raspberry Pi",    // Vendor
-        "Pico Test Device" // Product
+        (unsigned char *) "Raspberry Pi",    // Vendor
+        (unsigned char *) "Pico Test Device" // Product
 };
 
 #endif

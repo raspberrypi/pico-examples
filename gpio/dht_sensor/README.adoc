@@ -51,7 +51,7 @@ dht.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 1 | http://raspberrypi.org/
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | 10 kΩ resistor | 1 | generic part
 | M/M Jumper wires | 4 | generic part
 | DHT-22 sensor | 1 | generic part

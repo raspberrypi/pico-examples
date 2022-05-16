@@ -13,7 +13,7 @@
 /* Example code to talk to a bme280 humidity/temperature/pressure sensor.
 
    NOTE: Ensure the device is capable of being driven at 3.3v NOT 5v. The Pico
-   GPIO (and therefor SPI) cannot be used at 5v.
+   GPIO (and therefore SPI) cannot be used at 5v.
 
    You will need to use a level shifter on the SPI lines if you want to run the
    board at 5v.
@@ -52,7 +52,7 @@ int16_t dig_H2, dig_H4, dig_H5;
 /* The following compensation functions are required to convert from the raw ADC
 data from the chip to something usable. Each chip has a different set of
 compensation parameters stored on the chip at point of manufacture, which are
-read from the chip at startup and used inthese routines.
+read from the chip at startup and used in these routines.
 */
 int32_t compensate_temp(int32_t adc_T) {
     int32_t var1, var2, T;
