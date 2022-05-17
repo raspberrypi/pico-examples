@@ -70,8 +70,9 @@ static void write_register_all(uint8_t reg, uint8_t data) {
     buf[0] = reg;
     buf[1] = data;
     cs_select();
-    for (int i = 0; i< NUM_MODULES;i++)
+    for (int i = 0; i< NUM_MODULES;i++) {
         spi_write_blocking(spi_default, buf, 2);
+    }
     cs_deselect();
 }
 
@@ -112,25 +113,19 @@ int main() {
     write_register_all(CMD_SHUTDOWN, 1);
     write_register_all(CMD_BRIGHTNESS, 8);
 
-    for (int i=0; i<256; i++)
-    {
-        for (int j=0; j<8; j++)
+    for (int i=0; i<256; i++) {
+        for (int j=0; j<8; j++) {
             write_register_all(CMD_DIGIT0+j, i);
-            
+        }
         sleep_ms(20);
     }
 
     int bright = 1;
-    while (1)
-    {
-        for (int i=0; i<8; i++)
-        {
-            if (bright & 1)
-            {
+    while (true) {
+        for (int i=0; i<8; i++) {
+            if (bright & 1) {
                 write_register_all(CMD_DIGIT0 + i, 170 >> (i%2));
-            }
-            else
-            {
+            } else {
                 write_register_all(CMD_DIGIT0 + i, (170 >> 1) << (i%2));
             }       
 
