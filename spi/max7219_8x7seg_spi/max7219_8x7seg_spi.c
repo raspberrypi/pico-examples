@@ -70,8 +70,9 @@ static void write_register_all(uint8_t reg, uint8_t data) {
     buf[0] = reg;
     buf[1] = data;
     cs_select();
-    for (int i = 0; i< NUM_MODULES;i++)
+    for (int i = 0; i< NUM_MODULES;i++) {
         spi_write_blocking(spi_default, buf, 2);
+    }
     cs_deselect();
 }
 #endif
@@ -80,8 +81,7 @@ static void write_register_all(uint8_t reg, uint8_t data) {
 void display_num(int32_t num)
 {
     int digit = 0;
-    while (num && digit < 8)
-    {
+    while (num && digit < 8) {
         write_register_all(CMD_DIGIT0 + digit, num % 10);
         num /= 10;
         digit++;
@@ -90,8 +90,9 @@ void display_num(int32_t num)
 
 void clear()
 {
-    for (int i=0;i<8;i++)
+    for (int i=0;i<8;i++) {
         write_register_all(CMD_DIGIT0 + i, 0);
+    }
 }
 
 
@@ -134,12 +135,12 @@ int main() {
 
     int j = 0;
 
-    while (1)
-    {
+    while (true) {
         display_num(j++);
         sleep_ms(1);
-        if (j > 99999999)
+        if (j > 99999999) {
             j = 0;
+        }
     }
 
     return 0;
