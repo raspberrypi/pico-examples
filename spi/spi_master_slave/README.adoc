@@ -134,7 +134,7 @@ spi_master_slave_bb.png:: Breadboard wiring diagram.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico | 2 | http://raspberrypi.org/
+| Raspberry Pi Pico | 2 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | M/M Jumper wires | 8 | generic part
 |===
 
