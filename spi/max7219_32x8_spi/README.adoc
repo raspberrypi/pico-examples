@@ -1,0 +1,40 @@
+= Attaching a Max7219 driving an 32x8 LED display via SPI
+
+This example code shows how to interface the Raspberry Pi Pico to a Max7219 driving an 32x8 LED display. The particular device used is interfaced via SPI at 3.3v. This PCB uses 4 Max7219 devices, each driving an 8x8 LED matrix, giving the total of 32x8. These devices are designed to be cascaded together in this way, and SPI commands are passed down the line of devices as required.
+
+The Max7219 datasheet can be found here https://datasheets.maximintegrated.com/en/ds/MAX7219-MAX7221.pdf
+
+== Wiring information
+
+Wiring up the device requires 5 jumpers as follows:
+
+   * GPIO 17 (pin 22) Chip select -> CS on Max7219 board
+   * GPIO 18 (pin 24) SCK/spi0_sclk -> CLK on Max7219 board
+   * GPIO 19 (pin 25) MOSI/spi0_tx -> DIN on Max7219 board
+   * 5v (pin 40) -> VCC on Max7219 board
+   * GND (pin 38)  -> GND on Max7219 board
+
+The example here uses SPI port 0. Power is supplied from the 5V pin.
+
+[NOTE]
+======
+There are many different manufacturers who sell boards with the Max7219. Whilst they all appear slightly different, they all have, at least, the same 5 pins required for power and communication.  Please ensure you connect up as described in the previous paragraph.
+======
+
+== List of Files
+
+CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
+max7219_32x8_spi.c:: The example code.
+
+== Bill of Materials
+
+.A list of materials required for the example
+[[max7219-bom-table]]
+[cols=3]
+|===
+| *Item* | *Quantity* | Details
+| Breadboard | 1 | generic part
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
+| max7219 board with 4 8x8 LED matrices| 1 | generic part
+| M/M Jumper wires | 5 | generic part
+|===
