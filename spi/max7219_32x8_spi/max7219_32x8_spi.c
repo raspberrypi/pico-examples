@@ -20,7 +20,7 @@
    * GPIO 17 (pin 22) Chip select -> CS on Max7219 board
    * GPIO 18 (pin 24) SCK/spi0_sclk -> CLK on Max7219 board
    * GPIO 19 (pin 25) MOSI/spi0_tx -> DIN on Max7219 board
-   * 5v (pin 36) -> VCC on Max7219 board
+   * 5v (pin 40) -> VCC on Max7219 board
    * GND (pin 38)  -> GND on Max7219 board
 
    Note: SPI devices can have a number of different naming schemes for pins. See
