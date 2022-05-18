@@ -121,10 +121,6 @@ image::spi_master_slave_logic.png[]
 CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
 spi_master/spi_master.c:: The example code for SPI master.
 spi_slave/spi_slave.c:: The example code for SPI slave.
-spi_master_slave_logic.png:: Communication as seen by logic analyzer.
-spi_master_slave.csv:: Communication as seen by logic analyzer, exported to CSV format.
-spi_master_slave.fzz:: Fritzing file.
-spi_master_slave_bb.png:: Breadboard wiring diagram.
 
 == Bill of Materials
 
