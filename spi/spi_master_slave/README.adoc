@@ -111,7 +111,7 @@ f0 f1 f2 f3 f4 f5 f6 f7 f8 f9 fa fb fc fd fe ff
 
 If you look at the communication with a logic analyzer, you should see this:
 
-[[spi_master_slave_wiring]]
+[[spi_master_slave_logic]]
 [pdfwidth=75%]
 .Data capture as seen in Saleae Logic.
 image::spi_master_slave_logic.png[]
