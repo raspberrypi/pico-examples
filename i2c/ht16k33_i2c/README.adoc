@@ -1,0 +1,39 @@
+= Attaching a 4 digit 14 segment LED driven by the HT15k33 via I2C
+
+This example code shows how to interface the Raspberry Pi Pico to one HT16K33 driven 4 digit 14 segment LED. The device used for development
+uses VCC at 5v, but also allows the I2C voltage to be selected by connecting the vi2c pin to the appropriate voltage, in the Pico case 3v3 as the 
+GPIO pins are not 5v tolerant.
+
+NOTE: Other manufacturers make very similar devices with very similar names (e.g. Vinka VK16K33)). These may or may not work!
+
+== Wiring information
+
+Wiring up the device requires 5 jumpers, to connect VCC (3.3v), GND, vi2c (3v3), SDA and SCL. The example here uses I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the 3.3V pin.
+
+WARNING: Some displays of this type are 5v with no option to select 3v3 for the I2c. If you wish to use a 5v display you will need to use level shifters on the SDA and SCL lines to convert from the 3.3V used by the RP2040. 
+
+Connections on Raspberry Pi Pico board, other boards may vary.
+
+   GPIO 4 (pin 6)-> SDA on LED board
+   GPIO 5 (pin 7)-> SCL on LED board
+   GND (pin 38)  -> GND on LED board
+   5v (pin 40)   -> VCC on LED board
+   3.3v (pin 36) -> vi2c on LED board
+
+== List of Files
+
+CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
+ht15k33_i2c.c:: The example code.
+
+== Bill of Materials
+
+.A list of materials required for the example
+[[ht15k33_i2c-bom-table]]
+[cols=3]
+|===
+| *Item* | *Quantity* | Details
+| Breadboard | 1 | generic part
+| Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
+| ht16k33 based LCD panel | 1 | generic part
+| M/M Jumper wires | 5 | generic part
+|===
