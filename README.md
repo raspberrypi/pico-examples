@@ -121,6 +121,7 @@ App|Description
 [picow_ntp_client](pico_w/ntp_client)| Connects to an NTP server to fetch and display the current time.
 [picow_tcp_client](pico_w/tcp_client)| A simple TCP client. You can run [python_test_tcp_server.py](pico_w/python_test_tcp/python_test_tcp_server.py) for it to connect to.
 [picow_tcp_server](pico_w/tcp_server)| A simple TCP server. You can use [python_test_tcp_client.py](pico_w/python_test_tcp/python_test_tcp_client.py) to connect to it.
+[tls_client](pico_w/tls_client)| Demonstrates how to make a HTTPS request using TLS.
 [picow_wifi_scan](pico_w/wifi_scan)| Scans for WiFi networks and prints the results.
 [picow_udp_beacon](pico_w/udp_beacon)| A simple UDP transmitter.
 
