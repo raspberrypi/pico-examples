@@ -272,6 +272,17 @@ At the time of writing, there is only one host example available:
 
 - tinyusb_host_cdc_msc_hid
 
+### USB Dual Mode
+
+USB Dual Mode uses PIO as a USB host controller and the RP2040 USB device controller as a device controller. All the USB dual examples come directly from the TinyUSB dual examples directory [here](https://github.com/hathach/tinyusb/tree/master/examples/dual).
+Those that are supported on RP2040 devices are automatically included as part of the pico-examples
+build as targets named `tinyusb_dual_<example_name>`, e.g. https://github.com/hathach/tinyusb/tree/master/examples/dual/host_hid_to_device_cdc
+is built as `tinyusb_dual_host_hid_to_device_cdc`.
+
+At the time of writing, there is only one dual example available:
+
+- tinyusb_dual_host_hid_to_device_cdc
+
 ### Watchdog
 
 App|Description
