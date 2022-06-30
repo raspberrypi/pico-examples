@@ -108,6 +108,32 @@ App|Description
 [blinky](picoboard/blinky)| Blink "hello, world" in Morse code on Pico's LED
 [button](picoboard/button)| Use Pico's BOOTSEL button as a regular button input, by temporarily suspending flash access.
 
+### Pico W Networking
+
+These eaxmples are for the Pico W, and are only available for `PICO_BOARD=pico_w`
+
+App|Description
+---|---
+[picow_access_point](pico_w/picow_access_point)| Starts a WiFi access point, and fields DHCP requests.
+[picow_blink](pico_w/picow_blink)| Blinks the on-board LED (which is connected via the WiFi chip).
+[picow_iperf_server](pico_w/picow_iperf)| Runs an "iperf" server for WiFi speed testing.
+[picow_ntp_client](pico_w/picow_ntp_client)| Connects to an NTP server to fetch and display the current time.
+[picow_tcp_client](pico_w/picow_tcp_client)| A simple TCP client. You can run [python_test_tcp_server.py](pico_w/python_test_tcp/python_test_tcp_server.py) for it to connect to.
+[picow_tcp_server](pico_w/picow_tcp_server)| A simple TCP server. You can use [python_test_tcp_client.py](pico_w/python_test_tcp/python_test_tcp_client.py) to connect to it.
+[picow_wifi_scan](pico_w/picow_wifi_scan)| Scans for WiFi networks and prints the results.
+
+#### FreeRTOS examples
+
+These are examples of integrating Pico W networking under FreeRTOS, and require you to set the `FREERTOS_KERNEL_PATH`
+to point to the FreeRTOS Kernel.
+
+App|Description
+---|---
+[picow_freertos_iperf_server_nosys](pico_w/freertos/picow_iperf)| Runs an "iperf" server for WiFi speed testing under FreeRTOS in NO_SYS=1 mode. The LED is blinked in another task
+[picow_freertos_iperf_server_sys](pico_w/freertos/picow_iperf)| Runs an "iperf" server for WiFi speed testing under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode. The LED is blinked in another task
+[picow_freertos_ping_nosys](pico_w/freertos/ping)| Runs the lwip-contrib/apps/ping test app under FreeRTOS in NO_SYS=1 mode.
+[picow_freertos_iperf_server_sys](pico_w/freertos/picow_iperf)| Runs the lwip-contrib/apps/ping test app under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode. The test app uses the lwIP \em socket API in this case. 
+
 ### PIO
 
 App|Description

@@ -1,0 +1,26 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (PICO_CYW43_SUPPORTED) # set by BOARD=pico-w
+    if (NOT TARGET pico_cyw43_arch)
+        message("Skipping Pico W examples as support is not available")
+    else()
+        set(WIFI_SSID "${WIFI_SSID}" CACHE INTERNAL "WiFi SSID for examples")
+        set(WIFI_PASSWORD "${WIFI_PASSWORD}" CACHE INTERNAL "WiFi password for examples")
+
+        add_subdirectory(blink)
+        add_subdirectory(wifi_scan)
+        add_subdirectory(access_point)
+
+        if ("${WIFI_SSID}" STREQUAL "")
+            message("Skipping some Pico W examples as WIFI_SSID is not defined")
+        elseif ("${WIFI_PASSWORD}" STREQUAL "")
+            message("Skipping some Pico W examples as WIFI_PASSWORD is not defined")
+        else()
+            add_subdirectory(iperf)
+            add_subdirectory(ntp_client)
+            add_subdirectory(tcp_client)
+            add_subdirectory(tcp_server)
+            add_subdirectory(freertos)
+        endif()
+    endif()
+endif()
