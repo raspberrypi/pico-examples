@@ -78,7 +78,7 @@ int main( void )
 #if ( portSUPPORT_SMP == 1 ) && ( configNUM_CORES == 2 )
     printf("Starting %s on both cores:\n", rtos_name);
     vLaunch();
-#elif ( RUN_FREE_RTOS_ON_CORE == 1 )
+#elif ( RUN_FREERTOS_ON_CORE == 1 )
     printf("Starting %s on core 1:\n", rtos_name);
     multicore_launch_core1(vLaunch);
     while (true);
