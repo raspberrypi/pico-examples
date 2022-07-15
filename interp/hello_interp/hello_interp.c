@@ -110,7 +110,7 @@ void simple_blend2() {
     interp_config_set_blend(&cfg, true);
     interp_set_config(interp0, 0, &cfg);
 
-    interp0->base[0] = -1000;
+    interp0->base[0] = (uint32_t) -1000;
     interp0->base[1] = 1000;
 
     puts("signed:");
