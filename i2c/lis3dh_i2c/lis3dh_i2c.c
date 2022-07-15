@@ -122,7 +122,7 @@ int main() {
         sleep_ms(500);
 
         // Clear terminal 
-        printf("\e[1;1H\e[2J");
+        printf("%c[1;1H%c[2J", 27, 27);
     }
 #endif
 }
