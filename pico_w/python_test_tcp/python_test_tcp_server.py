@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import random
 import socket
 
@@ -34,11 +36,16 @@ for test_iteration in range(TEST_ITERATIONS):
 
     # Check size of data written
     if write_len != BUF_SIZE:
-        raise RuntimeError('wrong amount of data written')
+        raise RuntimeError('wrong amount of data written %d' % write_len)
 
     # Read the data back from the client
-    read_buf = con.recv(BUF_SIZE)
-    print('read %d bytes from client' % len(read_buf))
+    total_size = BUF_SIZE
+    read_buf = b''
+    while total_size > 0:
+        buf = con.recv(BUF_SIZE)
+        print('read %d bytes from client' % len(buf))
+        total_size -= len(buf)
+        read_buf += buf
 
     # Check size of data received
     if len(read_buf) != BUF_SIZE:
