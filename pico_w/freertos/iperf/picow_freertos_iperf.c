@@ -21,7 +21,7 @@
 #define TEST_TASK_PRIORITY				( tskIDLE_PRIORITY + 2UL )
 #define BLINK_TASK_PRIORITY				( tskIDLE_PRIORITY + 1UL )
 
-#if CLIENT_TEST && !defined(IPERF_SERVER_IP)
+#if IPERF_CLIENT && !defined(IPERF_SERVER_IP)
 #error IPERF_SERVER_IP not defined
 #endif
 
@@ -72,10 +72,10 @@ void main_task(__unused void *params) {
 
     xTaskCreate(blink_task, "BlinkThread", configMINIMAL_STACK_SIZE, NULL, BLINK_TASK_PRIORITY, NULL);
 
-#if CLIENT_TEST
-    printf("\nReady, running iperf client\n");
+#if IPERF_CLIENT
     ip_addr_t clientaddr;
-    ip4_addr_set_u32(&clientaddr, ipaddr_addr(xstr(IPERF_SERVER_IP)));
+    ip4_addr_set_u32(&clientaddr, ipaddr_addr(IPERF_SERVER_IP));
+    printf("\nReady, running iperf from client %s to server %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)), IPERF_SERVER_IP);
     assert(lwiperf_start_tcp_client_default(&clientaddr, &iperf_report, NULL) != NULL);
 #else
     printf("\nReady, running iperf server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));

@@ -116,7 +116,7 @@ App|Description
 ---|---
 [picow_access_point](pico_w/access_point)| Starts a WiFi access point, and fields DHCP requests.
 [picow_blink](pico_w/blink)| Blinks the on-board LED (which is connected via the WiFi chip).
-[picow_iperf_server](pico_w/iperf)| Runs an "iperf" server for WiFi speed testing.
+[picow_iperf](pico_w/iperf)| Runs an "iperf" as server or client for WiFi speed testing.
 [picow_ntp_client](pico_w/ntp_client)| Connects to an NTP server to fetch and display the current time.
 [picow_tcp_client](pico_w/tcp_client)| A simple TCP client. You can run [python_test_tcp_server.py](pico_w/python_test_tcp/python_test_tcp_server.py) for it to connect to.
 [picow_tcp_server](pico_w/tcp_server)| A simple TCP server. You can use [python_test_tcp_client.py](pico_w/python_test_tcp/python_test_tcp_client.py) to connect to it.

@@ -15,7 +15,7 @@
 #define USE_LED 1
 #endif
 
-#if CLIENT_TEST && !defined(IPERF_SERVER_IP)
+#if IPERF_CLIENT && !defined(IPERF_SERVER_IP)
 #error IPERF_SERVER_IP not defined
 #endif
 
@@ -38,7 +38,6 @@ static void iperf_report(void *arg, enum lwiperf_report_type report_type,
 
 int main() {
     stdio_init_all();
-
     if (cyw43_arch_init()) {
         printf("failed to initialise\n");
         return 1;
@@ -52,10 +51,10 @@ int main() {
         printf("Connected.\n");
     }
 
-#if CLIENT_TEST
-    printf("\nReady, running iperf client\n");
+#if IPERF_CLIENT
     ip_addr_t clientaddr;
-    ip4_addr_set_u32(&clientaddr, ipaddr_addr(xstr(IPERF_SERVER_IP)));
+    ip4_addr_set_u32(&clientaddr, ipaddr_addr(IPERF_SERVER_IP));
+    printf("\nReady, running iperf from client %s to server %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)), IPERF_SERVER_IP);
     assert(lwiperf_start_tcp_client_default(&clientaddr, &iperf_report, NULL) != NULL);
 #else
     printf("\nReady, running iperf server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
