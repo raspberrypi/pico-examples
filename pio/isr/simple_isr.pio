@@ -20,7 +20,7 @@
 ; WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 ; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-.program simply_isr
+.program simple_isr
 
 ; Stall on OSR. Wait for software to send a signal to continue
 ; by writing to the OSR
@@ -45,7 +45,7 @@ irq wait 0 rel
      * @param[in] sm state machine to use for the PIO instance
      * @param[in] offset Offset into PIO memory to place the program into
      */
-    static inline void simply_isr_program_init(PIO pio, uint sm, uint offset) {
+    static inline void simple_isr_program_init(PIO pio, uint sm, uint offset) {
         // Enable the IRQ source
         // The reason for doing interrupt0 + sm:
         // IRQ sources are enabled per irq flag. Since the irq flag being set depends on the state
@@ -57,7 +57,7 @@ irq wait 0 rel
         pio_interrupt_clear(pio, sm);
 
         // Build the configuration for the state machine
-        pio_sm_config config = simply_isr_program_get_default_config(offset);
+        pio_sm_config config = simple_isr_program_get_default_config(offset);
 
         // Set up autopull to pull the TX Fifo into the OSR
         // This is what actually makes the "out" instruction wait

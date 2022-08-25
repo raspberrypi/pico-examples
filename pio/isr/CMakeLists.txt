@@ -1,18 +1,18 @@
-add_executable(isr)
+add_executable(pio_isr)
 
-pico_generate_pio_header(isr ${CMAKE_CURRENT_LIST_DIR}/simply_isr.pio)
+pico_generate_pio_header(pio_isr ${CMAKE_CURRENT_LIST_DIR}/simple_isr.pio)
 
-target_sources(isr PRIVATE main.c)
+target_sources(pio_isr PRIVATE main.c)
 
-pico_enable_stdio_usb(isr 1)
-pico_enable_stdio_uart(isr 0)
+pico_enable_stdio_usb(pio_isr 1)
+pico_enable_stdio_uart(pio_isr 0)
 
-target_link_libraries(isr PRIVATE
+target_link_libraries(pio_isr PRIVATE
         pico_stdlib
         hardware_pio
         )
 
-pico_add_extra_outputs(isr)
+pico_add_extra_outputs(pio_isr)
 
 # add url via pico_set_program_url
-example_auto_set_url(isr)
+example_auto_set_url(pio_isr)
