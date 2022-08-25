@@ -25,27 +25,24 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 
-#include "simply_isr.pio.h"
-// the sdk doesn't give us functions for figuring out which
-// isr source we're using, so we have to do it manually.
-#include "hardware/regs/pio.h"
+#include "simple_isr.pio.h"
 
 /**
  * These defines represent each state machine.
- * The value is the bit in the IRQ register that
- * will be set by each state machine thanks to "irq wait 0 rel"
+ * I'll use these to flag which state machine fired the ISR
  */
 #define PIO_SM_0_IRQ 0b0001
 #define PIO_SM_1_IRQ 0b0010
 #define PIO_SM_2_IRQ 0b0100
 #define PIO_SM_3_IRQ 0b1000
 
+
 /**
  * This variable will shadow the IRQ flags set by the PIO state machines.
  * Typically you do not want to do work in ISRs because the main thread
  * has more important things to do. Because of that, when we get the ISR
- * I'm simply going to copy the state machine that fired the ISR into
- * this variable.
+ * I'm going to copy the state machine that fired the ISR into
+ * this variable using the above defines.
  *
  * Variable is volatile so that it doesn't get cached in a CPU register
  * in the main thread. Without this it's possible that you never see
@@ -56,53 +53,41 @@
 volatile uint32_t irq_flags = 0;
 
 /**
- * Reads a hardware register
- *
- * @note See datasheet and/or pico-sdk/src/rp2040/include/hardware/regs
- *       for base addresses and offsets
- * @param[in] bank The base address of the register set usually <MODULE>_BASE
- * @param[in] offset The register offset, usually <REG_NAME>_OFFSET
- */
-uint32_t read_register(uint32_t bank, uint32_t offset) {
-    return *((volatile io_rw_32*)(bank + offset));
-}
-
-/**
- * Writes a hardware register
- *
- * @note See datasheet and/or pico-sdk/src/rp2040/include/hardware/regs
- *       for base addresses and offsets
- * @param[in] bank The base address of the register set usually <MODULE>_BASE
- * @param[in] offset The register offset, usually <REG_NAME>_OFFSET
- * @param[in] value The value to write to the register
- */
-void write_register(uint32_t bank, uint32_t offset, uint32_t value) {
-    *((volatile io_rw_32*)(bank + offset)) = value;
-}
-
-/**
  * This function is called when the IRQ is fired by the state machine.
  * @note See enable_pio_isrs for how to register this function to be called
  */
-void simply_isr_handler() {
-    // Read the IRQ register to get the IRQ flags from the state machine
-    // This tells me which state machine sent the IRQ
-    irq_flags = read_register(PIO0_BASE, PIO_IRQ_OFFSET);
-    
-    // IRQ_OFFSET is write 1 to clear, so by writing back the
-    // value, we're acknowledging that we've serviced the interrupt.
-    write_register(PIO0_BASE, PIO_IRQ_OFFSET, irq_flags);
+void simple_isr_handler() {
+    // Check the interrupt source and set the flag accordingly
+    // Using if for each one means that if multiple interrupts came in, this
+    // ISR would flag each one. That means the ISR would execute once instead
+    // of being executed for each interrupt individually.
+    // Another alternative intead of using pio_interrupt_get would be to
+    // read the PIO0_IRQ register directly to get these flags
+    for (uint i = 0; i < 4; i++) {
+        // Check if the interrupt is set, flags 0-3 are used for system interrupts
+        // These are the ones that will be set by the isr instruction in pio
+        bool isr_set = pio_interrupt_get(pio0, i);
+
+        if (isr_set) {
+            // Set a bit flagging which state machine set the interrupt
+            irq_flags |= (1 << i);
+
+            // Clear/Acknowledge the ISR. If you use "isr wait" this is what
+            // tells the sm to continue.
+            pio_interrupt_clear(pio0, i);
+        }
+    }
 }
 
 /**
  * Lets the pico know that we want it to notify us of the PIO ISRs.
- * @note in simply_isr.pio we enable irq0. This tells the state machine
+ * @note in simple_isr.pio we enable irq0. This tells the state machine
  *       to send the ISRs to the core, we still need to tell the core
  *       to send them to our program.
  */
 void enable_pio_isrs() {
     // Set the function that will be called when the PIO IRQ comes in.
-    irq_set_exclusive_handler(PIO0_IRQ_0, simply_isr_handler);
+    irq_set_exclusive_handler(PIO0_IRQ_0, simple_isr_handler);
 
     // Once that function is set, we can go ahead and allow the interrupts
     // to come in. You want to set the function before enabling the interrupt
@@ -112,25 +97,25 @@ void enable_pio_isrs() {
 }
 
 /**
- * Loads simply_isr pio program into PIO memory
+ * Loads simple_isr pio program into PIO memory
  */
 void load_pio_programs() {
     PIO pio = pio0;
 
     // Load the program into PIO memory
-    uint offset = pio_add_program(pio, &simply_isr_program);
+    uint offset = pio_add_program(pio, &simple_isr_program);
 
     // Load the program to run in each state machine.
     // They are allowed to run the same program in memory.
-    simply_isr_program_init(pio, 0, offset);
-    simply_isr_program_init(pio, 1, offset);
-    simply_isr_program_init(pio, 2, offset);
-    simply_isr_program_init(pio, 3, offset);
+    simple_isr_program_init(pio, 0, offset);
+    simple_isr_program_init(pio, 1, offset);
+    simple_isr_program_init(pio, 2, offset);
+    simple_isr_program_init(pio, 3, offset);
 }
 
 /**
  * Writes to the tx fifo of the given state machine.
- * This will make the simply_isr program send an ISR to us!
+ * This will make the simple_isr program send an ISR to us!
  */
 void trigger_isr(int sm) {
     printf("Triggering ISR from state machine %d\n", sm);
@@ -164,13 +149,13 @@ int main() {
     // Init stdio
     stdio_init_all();
 
-    // Load simply_isr into memory
+    // Load simple_isr into memory
     load_pio_programs();
 
-    // Enable IRQs to respond to simply_isr
+    // Enable IRQs to respond to simple_isr
     enable_pio_isrs();
 
-    // simply_isr is programmed to fire an ISR when we write
+    // simple_isr is programmed to fire an ISR when we write
     // to their tx fifo. So let's do that now.
     while (true) {
         // Fire state machine 0
