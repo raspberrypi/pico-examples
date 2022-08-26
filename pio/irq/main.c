@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 
-#include "simple_isr.pio.h"
+#include "simple_irq.pio.h"
 
 /**
  * These defines represent each state machine.
@@ -41,8 +41,8 @@
  * This variable will shadow the IRQ flags set by the PIO state machines.
  * Typically you do not want to do work in ISRs because the main thread
  * has more important things to do. Because of that, when we get the ISR
- * I'm going to copy the state machine that fired the ISR into
- * this variable using the above defines.
+ * I'm going to copy the state machine that fired the ISR into this
+ * variable.
  *
  * Variable is volatile so that it doesn't get cached in a CPU register
  * in the main thread. Without this it's possible that you never see
@@ -50,44 +50,36 @@
  *
  * Of course, you can really do whatever you want in the ISR, it's up to you.
  */
-volatile uint32_t irq_flags = 0;
+volatile uint8_t irq_flags = 0;
 
 /**
  * This function is called when the IRQ is fired by the state machine.
- * @note See enable_pio_isrs for how to register this function to be called
+ * @note See enable_pio_irqs for how to register this function to be called
  */
-void simple_isr_handler() {
+void simple_irq_handler() {
     // Check the interrupt source and set the flag accordingly
-    // Using if for each one means that if multiple interrupts came in, this
-    // ISR would flag each one. That means the ISR would execute once instead
+    // This method can handle multiple simultaneous interrupts from the PIO
+    // since it checks all the irq flags. The advantage to this is that the
+    // ISR would execute only once when simultaneous interrupts happen instead
     // of being executed for each interrupt individually.
-    // Another alternative intead of using pio_interrupt_get would be to
-    // read the PIO0_IRQ register directly to get these flags
-    for (uint i = 0; i < 4; i++) {
-        // Check if the interrupt is set, flags 0-3 are used for system interrupts
-        // These are the ones that will be set by the isr instruction in pio
-        bool isr_set = pio_interrupt_get(pio0, i);
+    // For other applications, make sure to check the correct pio (pio0/pio1)
+    irq_flags = pio0_hw->irq;
+    // Clear the flags since we've saved them to check later.
+    hw_clear_bits(&pio0_hw->irq, irq_flags);
 
-        if (isr_set) {
-            // Set a bit flagging which state machine set the interrupt
-            irq_flags |= (1 << i);
-
-            // Clear/Acknowledge the ISR. If you use "isr wait" this is what
-            // tells the sm to continue.
-            pio_interrupt_clear(pio0, i);
-        }
-    }
+    // alternatively you could use pio_interrupt_get(pio0, #) to check a specific
+    // irq flag.
 }
 
 /**
  * Lets the pico know that we want it to notify us of the PIO ISRs.
- * @note in simple_isr.pio we enable irq0. This tells the state machine
+ * @note in simple_irq.pio we enable irq0. This tells the state machine
  *       to send the ISRs to the core, we still need to tell the core
  *       to send them to our program.
  */
-void enable_pio_isrs() {
+void enable_pio_irqs() {
     // Set the function that will be called when the PIO IRQ comes in.
-    irq_set_exclusive_handler(PIO0_IRQ_0, simple_isr_handler);
+    irq_set_exclusive_handler(PIO0_IRQ_0, simple_irq_handler);
 
     // Once that function is set, we can go ahead and allow the interrupts
     // to come in. You want to set the function before enabling the interrupt
@@ -97,37 +89,41 @@ void enable_pio_isrs() {
 }
 
 /**
- * Loads simple_isr pio program into PIO memory
+ * Loads simple_irq pio program into PIO memory
  */
 void load_pio_programs() {
     PIO pio = pio0;
 
     // Load the program into PIO memory
-    uint offset = pio_add_program(pio, &simple_isr_program);
+    uint offset = pio_add_program(pio, &simple_irq_program);
 
-    // Load the program to run in each state machine.
+    // Tell each state machine to run the program.
     // They are allowed to run the same program in memory.
-    simple_isr_program_init(pio, 0, offset);
-    simple_isr_program_init(pio, 1, offset);
-    simple_isr_program_init(pio, 2, offset);
-    simple_isr_program_init(pio, 3, offset);
+    simple_irq_program_init(pio, 0, offset);
+    simple_irq_program_init(pio, 1, offset);
+    simple_irq_program_init(pio, 2, offset);
+    simple_irq_program_init(pio, 3, offset);
 }
 
 /**
  * Writes to the tx fifo of the given state machine.
- * This will make the simple_isr program send an ISR to us!
+ * This will make the simple_irq program send an ISR to us!
  */
-void trigger_isr(int sm) {
+void trigger_irq(int sm) {
     printf("Triggering ISR from state machine %d\n", sm);
     pio_sm_put_blocking(pio0, sm, 1);
-    // ISR will fire from the pio right here thanks to above function.
+    // Interrupt will fire from the pio right here since they trigger
+    // whenever data goes into the TX FIFO, see simple_irq.pio
 
     // Print the irq we expect based on the given state machine
     printf("Expected IRQ flags: 0x%08X\n", (1 << sm));
     printf("Actual IRQ Flags: 0x%08X\n", irq_flags);
 
-    // Here you could do work for the isr depending on which one it is.
-    // Something like
+    // Here you could dispatch work for the irq depending one
+    // flagged it. The work should be done here rather than inside
+    // the irq function. While executing code in an irq, no other
+    // irq's can execute. By having the processing code outside of
+    // the irq, we can still be responsive to new irqs.
     if (irq_flags & PIO_SM_0_IRQ) {
         // handle_sm0_irq();
     }
@@ -149,29 +145,29 @@ int main() {
     // Init stdio
     stdio_init_all();
 
-    // Load simple_isr into memory
+    // Load simple_irq into memory
     load_pio_programs();
 
-    // Enable IRQs to respond to simple_isr
-    enable_pio_isrs();
+    // Enable IRQs to respond to simple_irq
+    enable_pio_irqs();
 
-    // simple_isr is programmed to fire an ISR when we write
+    // simple_irq is programmed to fire an ISR when we write
     // to their tx fifo. So let's do that now.
     while (true) {
         // Fire state machine 0
-        trigger_isr(0);
+        trigger_irq(0);
         sleep_ms(1000);
 
         // Fire state machine 1
-        trigger_isr(1);
+        trigger_irq(1);
         sleep_ms(1000);
 
         // Fire state machine 2
-        trigger_isr(2);
+        trigger_irq(2);
         sleep_ms(1000);
 
         // Fire state machine 3
-        trigger_isr(3);
+        trigger_irq(3);
         sleep_ms(1000);
     }
 }
