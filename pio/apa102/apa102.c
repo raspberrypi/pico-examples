@@ -20,6 +20,10 @@
 // Global brightness value 0->31
 #define BRIGHTNESS 16
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 void put_start_frame(PIO pio, uint sm) {
     pio_sm_put_blocking(pio, sm, 0u);
 }

@@ -29,6 +29,10 @@
 
 #define SERIAL_CLK_DIV 1.f
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 // Format: cmd length (including cmd byte), post delay in units of 5 ms, then cmd payload
 // Note the delays have been shortened a little
 static const uint8_t st7789_init_seq[] = {
