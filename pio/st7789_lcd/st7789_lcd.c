@@ -133,8 +133,8 @@ int main() {
         if (theta > theta_max)
             theta -= theta_max;
         int32_t rotate[4] = {
-                cosf(theta) * (1 << UNIT_LSB), -sinf(theta) * (1 << UNIT_LSB),
-                sinf(theta) * (1 << UNIT_LSB), cosf(theta) * (1 << UNIT_LSB)
+                (int32_t) (cosf(theta) * (1 << UNIT_LSB)), (int32_t) (-sinf(theta) * (1 << UNIT_LSB)),
+                (int32_t) (sinf(theta) * (1 << UNIT_LSB)), (int32_t) (cosf(theta) * (1 << UNIT_LSB))
         };
         interp0->base[0] = rotate[0];
         interp0->base[1] = rotate[2];

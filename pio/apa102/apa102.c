@@ -54,7 +54,7 @@ int main() {
     apa102_mini_program_init(pio, sm, offset, SERIAL_FREQ, PIN_CLK, PIN_DIN);
 
     for (int i = 0; i < TABLE_SIZE; ++i)
-        wave_table[i] = powf(sinf(i * M_PI / TABLE_SIZE), 5.f) * 255;
+        wave_table[i] = (uint8_t) (powf(sinf(i * M_PI / TABLE_SIZE), 5.f) * 255);
 
     uint t = 0;
     while (true) {
