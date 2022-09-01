@@ -1,0 +1,10 @@
+<html>
+<head>
+    <title>Pico post test</title>
+</head>
+<body>
+    <h1>Pico post test</h1>
+    <p>Success. Led is now <!--#ledstate--></p>
+    <p><a href="/">Go back</a></p>
+</body>
+</html>
