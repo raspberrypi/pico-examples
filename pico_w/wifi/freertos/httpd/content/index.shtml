@@ -1,0 +1,12 @@
+<html>
+<head>
+    <title>Pico httpd example</title>
+</head>
+<body>
+    <h1>Pico httpd example</h1>
+    <p><!--#welcome--></p>
+    <p>Uptime is <!--#uptime--> seconds</p>
+    <p><a href="/?test">CGI test</a></p>
+    <p>Led is <!--#ledstate--> click <a href="/?toggleled">here</a> to toggle the led
+</body>
+</html>
