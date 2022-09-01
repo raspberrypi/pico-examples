@@ -55,15 +55,6 @@ static inline void cs_deselect() {
 #endif
 
 #if defined(spi_default) && defined(PICO_DEFAULT_SPI_CSN_PIN)
-static void write_register(uint8_t reg, uint8_t data) {
-    uint8_t buf[2];
-    buf[0] = reg;
-    buf[1] = data;
-    cs_select();
-    spi_write_blocking(spi_default, buf, 2);
-    cs_deselect();
-    sleep_ms(1);
-}
 
 static void write_register_all(uint8_t reg, uint8_t data) {
     uint8_t buf[2];
