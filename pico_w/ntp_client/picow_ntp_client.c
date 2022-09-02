@@ -76,7 +76,7 @@ static void ntp_dns_found(const char *hostname, const ip_addr_t *ipaddr, void *a
     NTP_T *state = (NTP_T*)arg;
     if (ipaddr) {
         state->ntp_server_address = *ipaddr;
-        printf("ntp address %s\n", ip4addr_ntoa(ipaddr));
+        printf("ntp address %s\n", ipaddr_ntoa(ipaddr));
         ntp_request(state);
     } else {
         printf("ntp dns request failed\n");
