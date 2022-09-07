@@ -95,7 +95,7 @@ static bool tcp_server_open(void *arg) {
 
     err_t err = tcp_bind(pcb, NULL, TCP_PORT);
     if (err) {
-        DEBUG_printf("failed to bind to port %d\n");
+        DEBUG_printf("failed to bind to port %u\n", TCP_PORT);
         return false;
     }
 
