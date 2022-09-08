@@ -13,6 +13,7 @@ target_include_directories(picow_freertos_httpd_nosys PRIVATE
 target_link_libraries(picow_freertos_httpd_nosys
         pico_cyw43_arch_lwip_threadsafe_background
         pico_lwip_http
+        pico_lwip_mdns
         pico_stdlib
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
@@ -35,6 +36,7 @@ target_include_directories(picow_freertos_httpd_sys PRIVATE
 target_link_libraries(picow_freertos_httpd_sys
         pico_cyw43_arch_lwip_sys_freertos
         pico_lwip_http
+        pico_lwip_mdns
         pico_stdlib
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )

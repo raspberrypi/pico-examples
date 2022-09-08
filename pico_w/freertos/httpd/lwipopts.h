@@ -7,8 +7,14 @@
 // This example uses a common include to avoid repetition
 #include "lwipopts_examples_common.h"
 
+// The following is needed to test mDns
+#define LWIP_MDNS_RESPONDER 1
+#define LWIP_IGMP 1
+#define LWIP_NUM_NETIF_CLIENT_DATA 1
+#define MDNS_RESP_USENETIF_EXTCALLBACK  1
+
 #if !NO_SYS
-#define TCPIP_THREAD_STACKSIZE 1024
+#define TCPIP_THREAD_STACKSIZE 2048 // mDNS needs more stack
 #define DEFAULT_THREAD_STACKSIZE 1024
 #define DEFAULT_RAW_RECVMBOX_SIZE 8
 #define TCPIP_MBOX_SIZE 8
