@@ -32,7 +32,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
             add_subdirectory(tcp_client)
             add_subdirectory(tcp_server)
             add_subdirectory(freertos)
-            add_subdirectory(udp)
+            add_subdirectory(udp_beacon)
         endif()
     endif()
 endif()
