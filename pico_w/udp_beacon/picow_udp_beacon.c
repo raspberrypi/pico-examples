@@ -34,8 +34,6 @@ void run_udp_beacon() {
         err_t er = udp_sendto(pcb, p, &addr, UDP_PORT);
         pbuf_free(p);
         if (er != ERR_OK) {
-            // For some reason when I tested, the first packet returns -2
-            // But then it works (checked using wireshark on the other end)
             printf("Failed to send UDP packet! error=%d", er);
         } else {
             printf("Sent packet %d\n", counter);
