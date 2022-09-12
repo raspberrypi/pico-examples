@@ -41,7 +41,21 @@ void run_udp_beacon() {
             printf("Sent packet %d\n", counter);
             counter++;
         }
+
+        // Note in practice for this simple UDP transmitter,
+        // the end result for both background and poll is the same
+
+#if PICO_CYW43_ARCH_POLL
+        // if you are using pico_cyw43_arch_poll, then you must poll periodically from your
+        // main loop (not from a timer) to check for WiFi driver or lwIP work that needs to be done.
+        cyw43_arch_poll();
         sleep_ms(BEACON_INTERVAL_MS);
+#else
+        // if you are not using pico_cyw43_arch_poll, then WiFI driver and lwIP work
+        // is done via interrupt in the background. This sleep is just an example of some (blocking)
+        // work you might be doing.
+        sleep_ms(BEACON_INTERVAL_MS);
+#endif
     }
 }
 
