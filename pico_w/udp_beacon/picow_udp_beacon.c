@@ -14,7 +14,6 @@
 #include "lwip/udp.h"
 
 #define UDP_PORT 4444
-#define DEBUG_printf printf
 #define BEACON_MSG_LEN_MAX 127
 #define BEACON_TARGET "255.255.255.255"
 #define BEACON_INTERVAL_MS 1000
