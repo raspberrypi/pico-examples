@@ -152,11 +152,11 @@ typedef struct {
 } pixel_strand_t;
 
 // takes 8 bit color values, multiply by brightness and store in bit planes
-void transform_strings(pixel_strand_t **pixel_strands, uint num_strings, value_bits_t *values, uint value_length,
+void transform_pixel_strands(pixel_strand_t **pixel_strands, uint num_strands, value_bits_t *values, uint value_length,
                        uint frac_brightness) {
     for (uint v = 0; v < value_length; v++) {
         memset(&values[v], 0, sizeof(values[v]));
-        for (int i = 0; i < num_strings; i++) {
+        for (int i = 0; i < num_strands; i++) {
             if (v < pixel_strands[i]->data_len) {
                 // todo clamp?
                 uint32_t value = (pixel_strands[i]->data[v] * pixel_strands[i]->frac_brightness) >> 8u;
@@ -177,29 +177,29 @@ void dither_values(const value_bits_t *colors, value_bits_t *state, const value_
 
 // requested colors * 4 to allow for RGBW
 static value_bits_t colors[NUM_PIXELS * 4];
-// double buffer the state of the string, since we update next version in parallel with DMAing out old version
+// double buffer the state of the pixel strand, since we update next version in parallel with DMAing out old version
 static value_bits_t states[2][NUM_PIXELS * 4];
 
-// example - string 0 is RGB only
-static uint8_t string0_data[NUM_PIXELS * 3];
-// example - string 1 is RGBW
-static uint8_t string1_data[NUM_PIXELS * 4];
+// example - strand 0 is RGB only
+static uint8_t strand0_data[NUM_PIXELS * 3];
+// example - strand 1 is RGBW
+static uint8_t strand1_data[NUM_PIXELS * 4];
 
-pixel_strand_t string0 = {
-        .data = string0_data,
-        .data_len = sizeof(string0_data),
+pixel_strand_t strand0 = {
+        .data = strand0_data,
+        .data_len = sizeof(strand0_data),
         .frac_brightness = 0x40,
 };
 
-pixel_strand_t string1 = {
-        .data = string1_data,
-        .data_len = sizeof(string1_data),
+pixel_strand_t strand1 = {
+        .data = strand1_data,
+        .data_len = sizeof(strand1_data),
         .frac_brightness = 0x100,
 };
 
 pixel_strand_t *pixel_strands[] = {
-        &string0,
-        &string1,
+        &strand0,
+        &strand1,
 };
 
 // bit plane content dma channel
@@ -306,7 +306,7 @@ int main() {
             current_strand_4color = true;
             pattern_table[pat].pat(NUM_PIXELS, t);
 
-            transform_strings(pixel_strands, count_of(pixel_strands), colors, NUM_PIXELS * 4, brightness);
+            transform_pixel_strands(pixel_strands, count_of(pixel_strands), colors, NUM_PIXELS * 4, brightness);
             dither_values(colors, states[current], states[current ^ 1], NUM_PIXELS * 4);
             sem_acquire_blocking(&reset_delay_complete_sem);
             output_strings_dma(states[current], NUM_PIXELS * 4);
