@@ -21,13 +21,13 @@
 
 // horrible temporary hack to avoid changing pattern code
 static uint8_t *current_strand_out;
-static bool current_string_4color;
+static bool current_strand_4color;
 
 static inline void put_pixel(uint32_t pixel_grb) {
     *current_strand_out++ = pixel_grb & 0xffu;
     *current_strand_out++ = (pixel_grb >> 8u) & 0xffu;
     *current_strand_out++ = (pixel_grb >> 16u) & 0xffu;
-    if (current_string_4color) {
+    if (current_strand_4color) {
         *current_strand_out++ = 0; // todo adjust?
     }
 }
@@ -300,10 +300,10 @@ int main() {
         uint current = 0;
         for (int i = 0; i < 1000; ++i) {
             current_strand_out = string0.data;
-            current_string_4color = false;
+            current_strand_4color = false;
             pattern_table[pat].pat(NUM_PIXELS, t);
             current_strand_out = string1.data;
-            current_string_4color = true;
+            current_strand_4color = true;
             pattern_table[pat].pat(NUM_PIXELS, t);
 
             transform_strings(strings, count_of(strings), colors, NUM_PIXELS * 4, brightness);
