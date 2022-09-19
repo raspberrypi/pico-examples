@@ -83,7 +83,7 @@ void pattern_solid(uint len, uint t) {
     }
 }
 
-int level = 8;
+const int level = 8;
 
 void pattern_fade(uint len, uint t) {
     uint shift = 4;
