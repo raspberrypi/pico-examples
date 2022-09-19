@@ -121,7 +121,7 @@ const struct {
 
 #define VALUE_PLANE_COUNT (8 + FRAC_BITS)
 // we store value (8 bits + fractional bits of a single color (R/G/B/W) value) for multiple
-// strings, in bit planes. bit plane N has the Nth bit of each string.
+// strands of pixels, in bit planes. bit plane N has the Nth bit of each strand of pixels.
 typedef struct {
     // stored MSB first
     uint32_t planes[VALUE_PLANE_COUNT];
@@ -152,14 +152,14 @@ typedef struct {
 } pixel_strand_t;
 
 // takes 8 bit color values, multiply by brightness and store in bit planes
-void transform_strings(pixel_strand_t **strings, uint num_strings, value_bits_t *values, uint value_length,
+void transform_strings(pixel_strand_t **pixel_strands, uint num_strings, value_bits_t *values, uint value_length,
                        uint frac_brightness) {
     for (uint v = 0; v < value_length; v++) {
         memset(&values[v], 0, sizeof(values[v]));
         for (int i = 0; i < num_strings; i++) {
-            if (v < strings[i]->data_len) {
+            if (v < pixel_strands[i]->data_len) {
                 // todo clamp?
-                uint32_t value = (strings[i]->data[v] * strings[i]->frac_brightness) >> 8u;
+                uint32_t value = (pixel_strands[i]->data[v] * pixel_strands[i]->frac_brightness) >> 8u;
                 value = (value * frac_brightness) >> 8u;
                 for (int j = 0; j < VALUE_PLANE_COUNT && value; j++, value >>= 1u) {
                     if (value & 1u) values[v].planes[VALUE_PLANE_COUNT - 1 - j] |= 1u << i;
@@ -197,7 +197,7 @@ pixel_strand_t string1 = {
         .frac_brightness = 0x100,
 };
 
-pixel_strand_t *strings[] = {
+pixel_strand_t *pixel_strands[] = {
         &string0,
         &string1,
 };
@@ -285,7 +285,7 @@ int main() {
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_parallel_program);
 
-    ws2812_parallel_program_init(pio, sm, offset, WS2812_PIN_BASE, count_of(strings), 800000);
+    ws2812_parallel_program_init(pio, sm, offset, WS2812_PIN_BASE, count_of(pixel_strands), 800000);
 
     sem_init(&reset_delay_complete_sem, 1, 1); // initially posted so we don't block first time
     dma_init(pio, sm);
@@ -306,7 +306,7 @@ int main() {
             current_strand_4color = true;
             pattern_table[pat].pat(NUM_PIXELS, t);
 
-            transform_strings(strings, count_of(strings), colors, NUM_PIXELS * 4, brightness);
+            transform_strings(pixel_strands, count_of(pixel_strands), colors, NUM_PIXELS * 4, brightness);
             dither_values(colors, states[current], states[current ^ 1], NUM_PIXELS * 4);
             sem_acquire_blocking(&reset_delay_complete_sem);
             output_strings_dma(states[current], NUM_PIXELS * 4);
