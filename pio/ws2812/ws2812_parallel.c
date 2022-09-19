@@ -95,7 +95,7 @@ void pattern_fade(uint len, uint t) {
     slow_t = level;
     slow_t %= max;
 
-    static int error;
+    static int error = 0;
     slow_t += error;
     error = slow_t & ((1u << shift) - 1);
     slow_t >>= shift;
