@@ -20,15 +20,15 @@
 #define WS2812_PIN_BASE 2
 
 // horrible temporary hack to avoid changing pattern code
-static uint8_t *current_string_out;
+static uint8_t *current_strand_out;
 static bool current_string_4color;
 
 static inline void put_pixel(uint32_t pixel_grb) {
-    *current_string_out++ = pixel_grb & 0xffu;
-    *current_string_out++ = (pixel_grb >> 8u) & 0xffu;
-    *current_string_out++ = (pixel_grb >> 16u) & 0xffu;
+    *current_strand_out++ = pixel_grb & 0xffu;
+    *current_strand_out++ = (pixel_grb >> 8u) & 0xffu;
+    *current_strand_out++ = (pixel_grb >> 16u) & 0xffu;
     if (current_string_4color) {
-        *current_string_out++ = 0; // todo adjust?
+        *current_strand_out++ = 0; // todo adjust?
     }
 }
 
@@ -299,10 +299,10 @@ int main() {
         int brightness = 0;
         uint current = 0;
         for (int i = 0; i < 1000; ++i) {
-            current_string_out = string0.data;
+            current_strand_out = string0.data;
             current_string_4color = false;
             pattern_table[pat].pat(NUM_PIXELS, t);
-            current_string_out = string1.data;
+            current_strand_out = string1.data;
             current_string_4color = true;
             pattern_table[pat].pat(NUM_PIXELS, t);
 
