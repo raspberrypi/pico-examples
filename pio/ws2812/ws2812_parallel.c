@@ -266,7 +266,7 @@ void dma_init(PIO pio, uint sm) {
     irq_set_enabled(DMA_IRQ_0, true);
 }
 
-void output_strings_dma(value_bits_t *bits, uint value_length) {
+void output_pixel_strands_dma(value_bits_t *bits, uint value_length) {
     for (uint i = 0; i < value_length; i++) {
         fragment_start[i] = (uintptr_t) bits[i].planes; // MSB first
     }
@@ -309,7 +309,7 @@ int main() {
             transform_pixel_strands(pixel_strands, count_of(pixel_strands), colors, NUM_PIXELS * 4, brightness);
             dither_values(colors, states[current], states[current ^ 1], NUM_PIXELS * 4);
             sem_acquire_blocking(&reset_delay_complete_sem);
-            output_strings_dma(states[current], NUM_PIXELS * 4);
+            output_pixel_strands_dma(states[current], NUM_PIXELS * 4);
 
             current ^= 1;
             t += dir;
