@@ -299,10 +299,10 @@ int main() {
         int brightness = 0;
         uint current = 0;
         for (int i = 0; i < 1000; ++i) {
-            current_strand_out = string0.data;
+            current_strand_out = strand0.data;
             current_strand_4color = false;
             pattern_table[pat].pat(NUM_PIXELS, t);
-            current_strand_out = string1.data;
+            current_strand_out = strand1.data;
             current_strand_4color = true;
             pattern_table[pat].pat(NUM_PIXELS, t);
 
