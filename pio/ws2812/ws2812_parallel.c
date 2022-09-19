@@ -149,10 +149,10 @@ typedef struct {
     uint8_t *data;
     uint data_len;
     uint frac_brightness; // 256 = *1.0;
-} string_t;
+} pixel_strand_t;
 
 // takes 8 bit color values, multiply by brightness and store in bit planes
-void transform_strings(string_t **strings, uint num_strings, value_bits_t *values, uint value_length,
+void transform_strings(pixel_strand_t **strings, uint num_strings, value_bits_t *values, uint value_length,
                        uint frac_brightness) {
     for (uint v = 0; v < value_length; v++) {
         memset(&values[v], 0, sizeof(values[v]));
@@ -185,19 +185,19 @@ static uint8_t string0_data[NUM_PIXELS * 3];
 // example - string 1 is RGBW
 static uint8_t string1_data[NUM_PIXELS * 4];
 
-string_t string0 = {
+pixel_strand_t string0 = {
         .data = string0_data,
         .data_len = sizeof(string0_data),
         .frac_brightness = 0x40,
 };
 
-string_t string1 = {
+pixel_strand_t string1 = {
         .data = string1_data,
         .data_len = sizeof(string1_data),
         .frac_brightness = 0x100,
 };
 
-string_t *strings[] = {
+pixel_strand_t *strings[] = {
         &string0,
         &string1,
 };
