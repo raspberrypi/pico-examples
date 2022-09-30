@@ -1,0 +1,10 @@
+<html>
+<head>
+    <title>Pico-W httpd example</title>
+</head>
+<body>
+    <h1>Pico-W httpd example</h1>
+    <p><!--#welcome--></p>
+    <p><a href="/?test">CGI test</a></p>
+</body>
+</html>

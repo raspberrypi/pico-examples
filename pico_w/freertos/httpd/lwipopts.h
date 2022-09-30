@@ -13,6 +13,10 @@
 #define LWIP_NUM_NETIF_CLIENT_DATA 1
 #define MDNS_RESP_USENETIF_EXTCALLBACK  1
 
+// Enable cgi and ssi
+#define LWIP_HTTPD_CGI 1
+#define LWIP_HTTPD_SSI 1
+
 #if !NO_SYS
 #define TCPIP_THREAD_STACKSIZE 2048 // mDNS needs more stack
 #define DEFAULT_THREAD_STACKSIZE 1024
@@ -23,5 +27,7 @@
 // not necessary, can be done either way
 #define LWIP_TCPIP_CORE_LOCKING_INPUT 1
 #endif
+
+#define HTTPD_FSDATA_FILE "picow_fsdata.c"
 
 #endif

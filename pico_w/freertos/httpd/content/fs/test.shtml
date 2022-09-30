@@ -1,0 +1,10 @@
+<html>
+<head>
+    <title>Pico-W cgi test</title>
+</head>
+<body>
+    <h1>Pico-W cgi test</h1>
+    <p>Test result: <!--#status--></p>
+    <p><a href="/">Go back</a></p>
+</body>
+</html>

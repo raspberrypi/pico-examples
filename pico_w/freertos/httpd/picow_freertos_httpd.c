@@ -10,6 +10,7 @@
 #include "lwip/ip4_addr.h"
 #include "lwip/apps/mdns.h"
 #include "lwip/init.h"
+#include "lwip/apps/httpd.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -53,6 +54,43 @@ static size_t get_mac_ascii(int idx, size_t chr_off, size_t chr_len, char *dest_
 }
 #endif
 
+static const char *cgi_handler_test(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
+    if (!strcmp(pcParam[0], "test")) {
+        return "/test.shtml";
+    } else {
+        return "/index.shtml";
+    }
+}
+
+static tCGI cgi_handlers[] = {
+    { "/", cgi_handler_test },
+    { "/index.shtml", cgi_handler_test },
+};
+
+u16_t ssi_example_ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
+    size_t printed;
+    switch (iIndex) {
+        case 0: { /* "status" */
+            printed = snprintf(pcInsert, iInsertLen, "Pass");
+            break;
+        }
+        case 1: { /* "welcome" */
+            printed = snprintf(pcInsert, iInsertLen, "Welcome to Pico-W");
+            break;
+        }
+        default: { /* unknown tag */
+            printed = 0;
+            break;
+        }
+    }
+  return (u16_t)printed;
+}
+
+static const char * ssi_tags[] = {
+    "status",
+    "welcome"
+};
+
 void main_task(__unused void *params) {
     if (cyw43_arch_init()) {
         printf("failed to initialise\n");
@@ -89,6 +127,9 @@ void main_task(__unused void *params) {
 
     printf("\nReady, running httpd at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
     httpd_init();
+
+    http_set_cgi_handlers(cgi_handlers, LWIP_ARRAYSIZE(cgi_handlers));
+    http_set_ssi_handler(ssi_example_ssi_handler, ssi_tags, LWIP_ARRAYSIZE(ssi_tags));
 
     while(true) {
         vTaskDelay(100);

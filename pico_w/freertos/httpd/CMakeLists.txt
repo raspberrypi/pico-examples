@@ -8,6 +8,7 @@ target_compile_definitions(picow_freertos_httpd_nosys PRIVATE
 target_include_directories(picow_freertos_httpd_nosys PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/content # For the http content
         ${PICO_LWIP_CONTRIB_PATH}/apps/httpd
         )
 target_link_libraries(picow_freertos_httpd_nosys
@@ -31,6 +32,7 @@ target_compile_definitions(picow_freertos_httpd_sys PRIVATE
 target_include_directories(picow_freertos_httpd_sys PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/content # For the http content
         ${PICO_LWIP_CONTRIB_PATH}/apps/httpd
         )
 target_link_libraries(picow_freertos_httpd_sys
