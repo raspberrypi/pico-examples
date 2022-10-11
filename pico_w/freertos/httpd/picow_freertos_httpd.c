@@ -17,6 +17,8 @@
 
 void httpd_init(void);
 
+static absolute_time_t wifi_connected_time;
+
 #ifndef RUN_FREERTOS_ON_CORE
 #define RUN_FREERTOS_ON_CORE 0
 #endif
@@ -78,6 +80,11 @@ u16_t ssi_example_ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
             printed = snprintf(pcInsert, iInsertLen, "Welcome to Pico-W");
             break;
         }
+        case 2: { /* "uptime" */
+            uint64_t uptime_s = absolute_time_diff_us(wifi_connected_time, get_absolute_time()) / 1e6;
+            printed = snprintf(pcInsert, iInsertLen, "%"PRIu64, uptime_s);
+            break;
+        }
         default: { /* unknown tag */
             printed = 0;
             break;
@@ -88,7 +95,8 @@ u16_t ssi_example_ssi_handler(int iIndex, char *pcInsert, int iInsertLen) {
 
 static const char * ssi_tags[] = {
     "status",
-    "welcome"
+    "welcome",
+    "uptime",
 };
 
 void main_task(__unused void *params) {
@@ -112,6 +120,8 @@ void main_task(__unused void *params) {
     } else {
         printf("Connected.\n");
     }
+
+    wifi_connected_time = get_absolute_time();
 
 #if LWIP_MDNS_RESPONDER
     mdns_resp_init();
