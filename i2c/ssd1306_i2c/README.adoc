@@ -2,16 +2,13 @@
 
 This example code shows how to interface the Raspberry Pi Pico with an 128x32 OLED display board based on the SSD1306 display driver, datasheet https://cdn-shop.adafruit.com/datasheets/SSD1306.pdf[here].
 
-The code displays a series of tiny raspberries that scroll horizontally, in the process showing you how to initialize the display, write to the entire display, write to only a portion of the display, and configure scrolling.
+The code displays a series of small demo graphics; tiny raspberries that scroll horizontally, some text, and some line drawing, in the process showing you how to initialize the display, write to the entire display, write to only a portion of the display, configure scrolling, invert the display etc.
 
 The SSD1306 is operated via a list of versatile commands (see datasheet) that allows the user to access all the capabilities of the driver. After sending a slave address, the data that follows can be either a command, flags to follow up a command or data to be written directly into the display's RAM. A control byte is required for each write after the slave address so that the driver knows what type of data is being sent.
 
-This display is 32 pixels high by 128 pixels wide. These 32 vertical pixels are partitioned into 4 pages, each 8 pixels in height. In RAM, this looks roughly like:
+The example code supports displays of 32 pixel or 64 pixels high by 128 pixels wide by changing a define at the top of the code.
 
-[NOTE]
-======
-The SSD1306 can drive displays that are up to 64 pixels high and 128 pixels wide.
-======
+In the 32 vertical pixels case, the display is partitioned into 4 pages, each 8 pixels in height. In RAM, this looks roughly like:
 
 ----
            | COL0 | COL1 | COL2 | COL3 |  ...  | COL126 | COL127 |
@@ -42,30 +39,24 @@ The driver has 3 modes of transferring the pixels in RAM to the display (provide
 
 Horizontal addressing mode has the key advantage that we can keep one single 512 byte buffer (128 columns x 4 pages and each byte fills a page's rows) and write this in one go to the RAM (column address auto increments on writes as well as reads) instead of working with 2D matrices of pixels and adding more overhead. 
 
-[NOTE]
-======
-* The SSD1306 is able to drive 128x64 displays but as our display is 128x32, only half of the COM (common) pins are connected to the display.
-* The specific display model being used is UG-2832HSWEG02
-======
-
 == Wiring information
 
 Wiring up the device requires 4 jumpers, to connect VCC (3.3v), GND, SDA and SCL and optionally a 5th jumper for the driver RESET pin. The example here uses the default I2C port 0, which is assigned to GPIO 4 (SDA) and 5 (SCL) in software. Power is supplied from the 3.3V pin from the Pico.
 
-[[oled_i2c_wiring]]
+[[ssd1306_i2c_wiring]]
 [pdfwidth=75%]
 .Wiring Diagram for oled display via I2C.
-image::oled_i2c_bb.png[]
+image::ssd1306_i2c_bb.png[]
 
 == List of Files
 
 CMakeLists.txt:: CMake file to incorporate the example into the examples build tree.
-oled_i2c.c:: The example code.
+sd1306_i2c.c:: The example code.
 
 == Bill of Materials
 
 .A list of materials required for the example
-[[oled_i2c-bom-table]]
+[[ssd1306_i2c-bom-table]]
 [cols=3]
 |===
 | *Item* | *Quantity* | Details
