@@ -51,7 +51,11 @@ image::ssd1306_i2c_bb.png[]
 == List of Files
 
 CMakeLists.txt:: CMake file to incorporate the example into the examples build tree.
-sd1306_i2c.c:: The example code.
+ssd1306_i2c.c:: The example code.
+ssd1306_font.h:: A simple font used in the example.
+img_to_array.py:: A helper to convert an image file to an array that can be used in the example.
+raspberry26x32.bmp:: Example image file of a Raspberry.
+raspberry26x32.h:: The example image file converted to an C array.
 
 == Bill of Materials
 
