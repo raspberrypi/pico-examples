@@ -94,7 +94,7 @@ void ht16k33_init() {
 }
 
 // Send a specific binary value to the specified digit
-inline void ht16k33_display_set(int position, uint16_t bin) {
+static inline void ht16k33_display_set(int position, uint16_t bin) {
     uint8_t buf[3];
     buf[0] = position * 2;
     buf[1] = bin & 0xff;
@@ -102,7 +102,7 @@ inline void ht16k33_display_set(int position, uint16_t bin) {
     i2c_write_blocking(i2c_default, I2C_addr, buf, count_of(buf), false);
 }
 
-inline void ht16k33_display_char(int position, char ch) {
+static inline void ht16k33_display_char(int position, char ch) {
     ht16k33_display_set(position, char_to_pattern(ch));
 }
     
