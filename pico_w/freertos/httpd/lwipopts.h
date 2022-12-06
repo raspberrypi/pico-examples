@@ -12,6 +12,8 @@
 #define LWIP_IGMP 1
 #define LWIP_NUM_NETIF_CLIENT_DATA 1
 #define MDNS_RESP_USENETIF_EXTCALLBACK  1
+#define MEMP_NUM_SYS_TIMEOUT 10
+#define MEMP_NUM_TCP_PCB 12
 
 // Enable cgi and ssi
 #define LWIP_HTTPD_CGI 1
