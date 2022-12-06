@@ -93,7 +93,7 @@ static bool tcp_server_open(void *arg) {
         return false;
     }
 
-    err_t err = tcp_bind(pcb, NULL, TCP_PORT);
+    err_t err = tcp_bind(pcb, IP_ANY_TYPE, TCP_PORT);
     if (err) {
         DEBUG_printf("failed to bind to port %d\n");
         return false;
@@ -136,9 +136,9 @@ int main() {
 
     cyw43_arch_enable_ap_mode(ap_name, password, CYW43_AUTH_WPA2_AES_PSK);
 
-    ip4_addr_t gw, mask;
-    IP4_ADDR(&gw, 192, 168, 4, 1);
-    IP4_ADDR(&mask, 255, 255, 255, 0);
+    ip_addr_t gw, mask;
+    IP4_ADDR(ip_2_ip4(&gw), 192, 168, 4, 1);
+    IP4_ADDR(ip_2_ip4(&mask), 255, 255, 255, 0);
 
     // Start the dhcp server
     dhcp_server_t dhcp_server;

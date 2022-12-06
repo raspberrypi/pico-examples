@@ -37,7 +37,7 @@ void main_task(__unused void *params) {
     }
 
     ip_addr_t ping_addr;
-    ip4_addr_set_u32(&ping_addr, ipaddr_addr(PING_ADDR));
+    ipaddr_aton(PING_ADDR, &ping_addr);
     ping_init(&ping_addr);
 
     while(true) {
