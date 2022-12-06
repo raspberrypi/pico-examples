@@ -31,5 +31,5 @@ add_custom_target(pio_ws2812_datasheet DEPENDS ${CMAKE_CURRENT_LIST_DIR}/generat
 add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/ws2812.py
         DEPENDS ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio
         COMMAND Pioasm -o python ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio ${CMAKE_CURRENT_LIST_DIR}/generated/ws2812.py
-        )
+        VERBATIM)
 add_dependencies(pio_ws2812 pio_ws2812_datasheet)

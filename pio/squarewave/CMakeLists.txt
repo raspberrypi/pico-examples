@@ -22,13 +22,13 @@ add_custom_target(pio_squarewave_datasheet DEPENDS
 add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.hex
         DEPENDS ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio
         COMMAND Pioasm -o hex ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.hex
-        )
+        VERBATIM)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.pio.h
         DEPENDS ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio
         COMMAND Pioasm ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.pio.h
-        )
+        VERBATIM)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave_wrap.pio.h
         DEPENDS ${CMAKE_CURRENT_LIST_DIR}/squarewave_wrap.pio
         COMMAND Pioasm ${CMAKE_CURRENT_LIST_DIR}/squarewave_wrap.pio ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave_wrap.pio.h
-        )
+        VERBATIM)
 add_dependencies(pio_squarewave pio_squarewave_datasheet)
