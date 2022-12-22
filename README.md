@@ -122,6 +122,7 @@ App|Description
 [picow_tcp_client](pico_w/tcp_client)| A simple TCP client. You can run [python_test_tcp_server.py](pico_w/python_test_tcp/python_test_tcp_server.py) for it to connect to.
 [picow_tcp_server](pico_w/tcp_server)| A simple TCP server. You can use [python_test_tcp_client.py](pico_w/python_test_tcp/python_test_tcp_client.py) to connect to it.
 [picow_wifi_scan](pico_w/wifi_scan)| Scans for WiFi networks and prints the results.
+[picow_udp_beacon](pico_w/udp_beacon)| A simple UDP transmitter.
 
 #### FreeRTOS examples
 
