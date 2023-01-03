@@ -20,12 +20,15 @@
 #define IMAGE_SIZE 256
 #define LOG_IMAGE_SIZE 8
 
-#define PIN_DIN 0
-#define PIN_CLK 1
-#define PIN_CS 2
-#define PIN_DC 3
-#define PIN_RESET 4
-#define PIN_BL 5
+// This pinout doesn't use the pins that are needed for
+// debugging with the Pico Probe.
+
+#define PIN_DIN 19
+#define PIN_CLK 18
+#define PIN_CS 17
+#define PIN_DC 16
+#define PIN_RESET 21
+#define PIN_BL 20
 
 #define SERIAL_CLK_DIV 1.f
 
