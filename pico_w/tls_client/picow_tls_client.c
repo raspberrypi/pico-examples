@@ -182,7 +182,7 @@ static TLS_CLIENT_T* tls_client_init(void) {
     return state;
 }
 
-void run_TLS_CLIENT_Test(void) {
+void run_tls_client_test(void) {
     /* No CA certificate checking */
     tls_config = altcp_tls_create_config_client(NULL, 0);
 
@@ -225,7 +225,7 @@ int main() {
         printf("failed to connect\n");
         return 1;
     }
-    run_TLS_CLIENT_Test();
+    run_tls_client_test();
 
     /* sleep a bit to let usb stdio write out any buffer to host */
     sleep_ms(100);
