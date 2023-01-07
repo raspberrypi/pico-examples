@@ -3,17 +3,20 @@
     "configurations": [
         {
             "name": "Pico Debug",
-            "type":"cortex-debug",
             "cwd": "${workspaceRoot}",
             "executable": "${command:cmake.launchTargetPath}",
             "request": "launch",
-            "servertype": "external",
+            "type": "cortex-debug",
+            "servertype": "openocd",
             // This may need to be arm-none-eabi-gdb depending on your system
             "gdbPath" : "gdb-multiarch",
-            // Connect to an already running OpenOCD instance
-            "gdbTarget": "your-openocd:3333",
+            "device": "RP2040",
+            "configFiles": [
+                "interface/picoprobe.cfg",
+                "target/rp2040.cfg"
+            ],
             "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
-            "runToEntryPoint": "Main",
+            "runToEntryPoint": "main",
             // Work around for stopping at main on restart
             "postRestartCommands": [
                 "break main",
