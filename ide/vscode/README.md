@@ -4,7 +4,7 @@ This example provides sample debug configurations that my be useful for develope
 
 A basic setup for Visual Studio Code is described in [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started).
 
-To use the files copy them into a `.vscode` folder at the top level of your project and adapt them to your needs (see the [Visual Studio documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference)).
+To use the files copy them into a `.vscode` folder at the top level of your project and adapt them to your needs (see the [Visual Studio Code documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference)).
 
 The files with names like `launch-*.json` illustrate different debugging configurations. You should select one of these, rename it to `launch.json` and make any desired modifications. Note that VS Code will ignore the others.
 
