@@ -2,7 +2,7 @@
 
 This example provides sample debug configurations that my be useful for developers using  the Microsoft(R) Visual Studio Code integrated development environment.
 
-A basic setup for Visual Studio Code is described in [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started). More advanced configurations may need additional plug-ins such as *cortex-debug*.
+A basic setup for Visual Studio Code is described in [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started).
 
 To use the files copy them into a `.vscode` folder at the top level of your project and adapt them to your needs (see the [Visual Studio documentation](https://code.visualstudio.com/docs/cpp/launch-json-reference)).
 
