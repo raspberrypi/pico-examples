@@ -2,6 +2,8 @@ add_executable(blink
         blink.c
         )
 
+target_compile_definitions(blink PUBLIC PICO_DEFAULT_LED_PIN=0)
+
 # pull in common dependencies
 target_link_libraries(blink pico_stdlib)
 
