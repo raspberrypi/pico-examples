@@ -13,21 +13,32 @@ const uint SEGMENT_F = 6;
 const uint SEGMENT_G = 7;
 const uint SEGMENTS[] = { SEGMENT_DP, SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D, SEGMENT_E, SEGMENT_F, SEGMENT_G };
 const uint SEGMENT_COUNT = 8;
-const uint END = 9;
+const uint END = 9; // Invalid segment number for marking the end of a variable-length array
+/*
+ * Two-dimensional array indexed by the character then by the segment.
+ * The first dimension is the character index (0-9 are digits 0-9, 10 is the decimal point, 11 is all segments on).
+ * The second dimension is always 8 (total segment count).
+ * But since not all segments are lit for a given character, we have to end the segments with the marker (END),
+ * unless all eight segments are lit (as in the lamp test).
+ */
 const uint CHARACTERS[][8] = {
-    { SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D, SEGMENT_E, SEGMENT_F, END, END }, // 0
-    { SEGMENT_B, SEGMENT_C, END, END, END, END, END, END }, // 1
-    { SEGMENT_A, SEGMENT_B, SEGMENT_D, SEGMENT_E, SEGMENT_G, END, END, END }, // 2
-    { SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D, SEGMENT_G, END, END, END }, // 3
-    { SEGMENT_B, SEGMENT_C, SEGMENT_F, SEGMENT_G, END, END, END, END }, // 4
-    { SEGMENT_A, SEGMENT_C, SEGMENT_D, SEGMENT_F, SEGMENT_G, END, END, END }, // 5
-    { SEGMENT_A, SEGMENT_C, SEGMENT_D, SEGMENT_E, SEGMENT_F, SEGMENT_G, END, END }, // 6
-    { SEGMENT_A, SEGMENT_B, SEGMENT_C, END, END, END, END, END }, // 7
+    { SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D, SEGMENT_E, SEGMENT_F, END }, // 0
+    { SEGMENT_B, SEGMENT_C, END }, // 1
+    { SEGMENT_A, SEGMENT_B, SEGMENT_D, SEGMENT_E, SEGMENT_G, END }, // 2
+    { SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D, SEGMENT_G, END }, // 3
+    { SEGMENT_B, SEGMENT_C, SEGMENT_F, SEGMENT_G, END }, // 4
+    { SEGMENT_A, SEGMENT_C, SEGMENT_D, SEGMENT_F, SEGMENT_G, END }, // 5
+    { SEGMENT_A, SEGMENT_C, SEGMENT_D, SEGMENT_E, SEGMENT_F, SEGMENT_G, END }, // 6
+    { SEGMENT_A, SEGMENT_B, SEGMENT_C, END }, // 7
     { SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D, SEGMENT_E, SEGMENT_F, SEGMENT_G, END }, // 8
-    { SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D, SEGMENT_F, SEGMENT_G, END, END }, // 9
-    { SEGMENT_DP, END, END, END, END, END, END, END }, // .
+    { SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D, SEGMENT_F, SEGMENT_G, END }, // 9
+    { SEGMENT_DP, END }, // .
     { SEGMENT_A, SEGMENT_B, SEGMENT_C, SEGMENT_D, SEGMENT_E, SEGMENT_F, SEGMENT_G, SEGMENT_DP } // LAMP TEST
 };
+
+/*
+ * Index those characters with constants.
+ */
 const uint CHAR_0 = 0;
 const uint CHAR_1 = 1;
 const uint CHAR_2 = 2;
@@ -106,16 +117,19 @@ int main() {
 
         sleep_ms(2000);
 
-        variable_segments_do(CHARACTERS[1], set);
+        variable_segments_do(CHARACTERS[1], set); // Display the character index 1 (1)
         sleep_ms(250);
-        all_segments_do(reset);
+        all_segments_do(reset); // Clear the display between characters
         sleep_ms(250);
-        variable_segments_do(CHARACTERS[0], set);
+        variable_segments_do(CHARACTERS[0], set); // Display the character index 0 (0)
         sleep_ms(250);
         all_segments_do(reset);
         
         sleep_ms(2000);
 
+        /*
+         * Display all the characters in the array.
+         */
         for(int c = 0; c < 12; c++) {
             variable_segments_do(CHARACTERS[c], set);
             sleep_ms(250);
@@ -125,6 +139,9 @@ int main() {
 
         sleep_ms(2000);
 
+        /*
+         * Display "8675309"
+         */
         variable_segments_do(CHARACTERS[CHAR_8], set);
         sleep_ms(250);
         all_segments_do(reset);
