@@ -52,3 +52,6 @@ add_subdirectory(timer)
 add_subdirectory(uart)
 add_subdirectory(usb)
 add_subdirectory(watchdog)
+
+# Cynthia's examples
+add_subdirectory(cynthia)
