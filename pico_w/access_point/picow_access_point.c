@@ -6,86 +6,239 @@
 
 #include <string.h>
 
-#include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
+#include "pico/stdlib.h"
 
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 
 #include "dhcpserver.h"
-
-#ifndef USE_LED
-#define USE_LED 1
-#endif
+#include "dnsserver.h"
 
 #define TCP_PORT 80
 #define DEBUG_printf printf
+#define POLL_TIME_S 5
+#define HTTP_GET "GET"
+#define HTTP_RESPONSE_HEADERS "HTTP/1.1 %d OK\nContent-Length: %d\nContent-Type: text/html; charset=utf-8\nConnection: close\n\n"
+#define LED_TEST_BODY "<html><body><h1>Hello from Pico W.</h1><p>Led is %s</p><p><a href=\"?led=%d\">Turn led %s</a></body></html>"
+#define LED_PARAM "led=%d"
+#define LED_TEST "/ledtest"
+#define LED_GPIO 0
+#define HTTP_RESPONSE_REDIRECT "HTTP/1.1 302 Redirect\nLocation: http://%s" LED_TEST "\n\n"
 
-typedef struct TCP_ASERVER_T_ {
+typedef struct TCP_SERVER_T_ {
     struct tcp_pcb *server_pcb;
-    struct tcp_pcb *client_pcb;
     bool complete;
+    ip_addr_t gw;
 } TCP_SERVER_T;
 
-static err_t tcp_server_close(void *arg) {
-    TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
-    err_t err = ERR_OK;
-    if (state->client_pcb != NULL) {
-        tcp_arg(state->client_pcb, NULL);
-        tcp_poll(state->client_pcb, NULL, 0);
-        tcp_sent(state->client_pcb, NULL);
-        tcp_recv(state->client_pcb, NULL);
-        tcp_err(state->client_pcb, NULL);
-        err = tcp_close(state->client_pcb);
+typedef struct TCP_CONNECT_STATE_T_ {
+    struct tcp_pcb *pcb;
+    int sent_len;
+    char headers[128];
+    char result[256];
+    int header_len;
+    int result_len;
+    ip_addr_t *gw;
+} TCP_CONNECT_STATE_T;
+
+static err_t tcp_close_client_connection(TCP_CONNECT_STATE_T *con_state, struct tcp_pcb *client_pcb, err_t close_err) {
+    if (client_pcb) {
+        assert(con_state && con_state->pcb == client_pcb);
+        tcp_arg(client_pcb, NULL);
+        tcp_poll(client_pcb, NULL, 0);
+        tcp_sent(client_pcb, NULL);
+        tcp_recv(client_pcb, NULL);
+        tcp_err(client_pcb, NULL);
+        err_t err = tcp_close(client_pcb);
         if (err != ERR_OK) {
             DEBUG_printf("close failed %d, calling abort\n", err);
-            tcp_abort(state->client_pcb);
-            err = ERR_ABRT;
+            tcp_abort(client_pcb);
+            close_err = ERR_ABRT;
         }
-        state->client_pcb = NULL;
+        if (con_state) {
+            free(con_state);
+        }
     }
+    return close_err;
+}
+
+static void tcp_server_close(TCP_SERVER_T *state) {
     if (state->server_pcb) {
         tcp_arg(state->server_pcb, NULL);
         tcp_close(state->server_pcb);
         state->server_pcb = NULL;
     }
-    return err;
 }
 
-static err_t tcp_ap_result(void *arg, int status) {
-    TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
-    if (status == 0) {
-        DEBUG_printf("test success\n");
-    } else {
-        DEBUG_printf("test failed %d\n", status);
+static err_t tcp_server_sent(void *arg, struct tcp_pcb *pcb, u16_t len) {
+    TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
+    DEBUG_printf("tcp_server_sent %u\n", len);
+    con_state->sent_len += len;
+    if (con_state->sent_len >= con_state->header_len + con_state->result_len) {
+        DEBUG_printf("all done\n");
+        return tcp_close_client_connection(con_state, pcb, ERR_OK);
     }
-    state->complete = true;
-    return tcp_server_close(arg);
+    return ERR_OK;
+}
+
+static int test_server_content(const char *request, const char *params, char *result, size_t max_result_len) {
+    int len = 0;
+    if (strncmp(request, LED_TEST, sizeof(LED_TEST) - 1) == 0) {
+        // Get the state of the led
+        bool value;
+        cyw43_gpio_get(&cyw43_state, LED_GPIO, &value);
+        int led_state = value;
+
+        // See if the user changed it
+        if (params) {
+            int led_param = sscanf(params, LED_PARAM, &led_state);
+            if (led_param == 1) {
+                if (led_state) {
+                    // Turn led on
+                    cyw43_gpio_set(&cyw43_state, 0, true);
+                } else {
+                    // Turn led off
+                    cyw43_gpio_set(&cyw43_state, 0, false);
+                }
+            }
+        }
+        // Generate result
+        if (led_state) {
+            len = snprintf(result, max_result_len, LED_TEST_BODY, "ON", 0, "OFF");
+        } else {
+            len = snprintf(result, max_result_len, LED_TEST_BODY, "OFF", 1, "ON");
+        }
+    }
+    return len;
+}
+
+err_t tcp_server_recv(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err) {
+    TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
+    if (!p) {
+        DEBUG_printf("connection closed\n");
+        return tcp_close_client_connection(con_state, pcb, ERR_OK);
+    }
+    assert(con_state && con_state->pcb == pcb);
+    if (p->tot_len > 0) {
+        DEBUG_printf("tcp_server_recv %d err %d\n", p->tot_len, err);
+#if 0
+        for (struct pbuf *q = p; q != NULL; q = q->next) {
+            DEBUG_printf("in: %.*s\n", q->len, q->payload);
+        }
+#endif
+        // Copy the request into the buffer
+        pbuf_copy_partial(p, con_state->headers, p->tot_len > sizeof(con_state->headers) - 1 ? sizeof(con_state->headers) - 1 : p->tot_len, 0);
+
+        // Handle GET request
+        if (strncmp(HTTP_GET, con_state->headers, sizeof(HTTP_GET) - 1) == 0) {
+            char *request = con_state->headers + sizeof(HTTP_GET); // + space
+            char *params = strchr(request, '?');
+            if (params) {
+                if (*params) {
+                    char *space = strchr(request, ' ');
+                    *params++ = 0;
+                    if (space) {
+                        *space = 0;
+                    }
+                } else {
+                    params = NULL;
+                }
+            }
+
+            // Generate content
+            con_state->result_len = test_server_content(request, params, con_state->result, sizeof(con_state->result));
+            DEBUG_printf("Request: %s?%s\n", request, params);
+            DEBUG_printf("Result: %d\n", con_state->result_len);
+
+            // Check we had enough buffer space
+            if (con_state->result_len > sizeof(con_state->result) - 1) {
+                DEBUG_printf("Too much result data %d\n", con_state->result_len);
+                return tcp_close_client_connection(con_state, pcb, ERR_CLSD);
+            }
+
+            // Generate web page
+            if (con_state->result_len > 0) {
+                con_state->header_len = snprintf(con_state->headers, sizeof(con_state->headers), HTTP_RESPONSE_HEADERS,
+                    200, con_state->result_len);
+                if (con_state->header_len > sizeof(con_state->headers) - 1) {
+                    DEBUG_printf("Too much header data %d\n", con_state->header_len);
+                    return tcp_close_client_connection(con_state, pcb, ERR_CLSD);
+                }
+            } else {
+                // Send redirect
+                con_state->header_len = snprintf(con_state->headers, sizeof(con_state->headers), HTTP_RESPONSE_REDIRECT,
+                    ipaddr_ntoa(con_state->gw));
+                DEBUG_printf("Sending redirect %s", con_state->headers);
+            }
+
+            // Send the headers to the client
+            con_state->sent_len = 0;
+            err_t err = tcp_write(pcb, con_state->headers, con_state->header_len, 0);
+            if (err != ERR_OK) {
+                DEBUG_printf("failed to write header data %d\n", err);
+                return tcp_close_client_connection(con_state, pcb, err);
+            }
+
+            // Send the body to the client
+            if (con_state->result_len) {
+                err = tcp_write(pcb, con_state->result, con_state->result_len, 0);
+                if (err != ERR_OK) {
+                    DEBUG_printf("failed to write result data %d\n", err);
+                    return tcp_close_client_connection(con_state, pcb, err);
+                }
+            }
+        }
+        tcp_recved(pcb, p->tot_len);
+    }
+    pbuf_free(p);
+    return ERR_OK;
+}
+
+static err_t tcp_server_poll(void *arg, struct tcp_pcb *pcb) {
+    TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
+    DEBUG_printf("tcp_server_poll_fn\n");
+    return tcp_close_client_connection(con_state, pcb, ERR_OK); // Just disconnect clent?
+}
+
+static void tcp_server_err(void *arg, err_t err) {
+    TCP_CONNECT_STATE_T *con_state = (TCP_CONNECT_STATE_T*)arg;
+    if (err != ERR_ABRT) {
+        DEBUG_printf("tcp_client_err_fn %d\n", err);
+        tcp_close_client_connection(con_state, con_state->pcb, err);
+    }
 }
 
 static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err) {
-//    TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
+    TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
     if (err != ERR_OK || client_pcb == NULL) {
-        DEBUG_printf("Failure in accept\n");
-        tcp_ap_result(arg, err);
+        DEBUG_printf("failure in accept\n");
         return ERR_VAL;
     }
-    DEBUG_printf("Client connected\n");
+    DEBUG_printf("client connected\n");
 
-    /*state->client_pcb = client_pcb;
-    tcp_arg(client_pcb, state);
+    // Create the state for the connection
+    TCP_CONNECT_STATE_T *con_state = calloc(1, sizeof(TCP_CONNECT_STATE_T));
+    if (!con_state) {
+        DEBUG_printf("failed to allocate connect state\n");
+        return ERR_MEM;
+    }
+    con_state->pcb = client_pcb; // for checking
+    con_state->gw = &state->gw;
+
+    // setup connection to client
+    tcp_arg(client_pcb, con_state);
     tcp_sent(client_pcb, tcp_server_sent);
     tcp_recv(client_pcb, tcp_server_recv);
     tcp_poll(client_pcb, tcp_server_poll, POLL_TIME_S * 2);
     tcp_err(client_pcb, tcp_server_err);
 
-    return tcp_server_send_data(arg, state->client_pcb);*/
     return ERR_OK;
 }
 
 static bool tcp_server_open(void *arg) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
-    DEBUG_printf("Starting server on port %u\n", TCP_PORT);
+    DEBUG_printf("starting server on port %u\n", TCP_PORT);
 
     struct tcp_pcb *pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
     if (!pcb) {
@@ -124,7 +277,7 @@ int main() {
     }
 
     if (cyw43_arch_init()) {
-        printf("failed to initialise\n");
+        DEBUG_printf("failed to initialise\n");
         return 1;
     }
     const char *ap_name = "picow_test";
@@ -136,30 +289,24 @@ int main() {
 
     cyw43_arch_enable_ap_mode(ap_name, password, CYW43_AUTH_WPA2_AES_PSK);
 
-    ip_addr_t gw, mask;
-    IP4_ADDR(ip_2_ip4(&gw), 192, 168, 4, 1);
+    ip4_addr_t mask;
+    IP4_ADDR(ip_2_ip4(&state->gw), 192, 168, 4, 1);
     IP4_ADDR(ip_2_ip4(&mask), 255, 255, 255, 0);
 
     // Start the dhcp server
     dhcp_server_t dhcp_server;
-    dhcp_server_init(&dhcp_server, &gw, &mask);
+    dhcp_server_init(&dhcp_server, &state->gw, &mask);
+
+    // Start the dns server
+    dns_server_t dns_server;
+    dns_server_init(&dns_server, &state->gw);
 
     if (!tcp_server_open(state)) {
-        tcp_ap_result(state, -1);
+        DEBUG_printf("failed to open server\n");
+        return 1;
     }
 
     while(!state->complete) {
-        #if USE_LED
-        static absolute_time_t led_time;
-        static int led_on = true;
-
-        // Invert the led
-        if (absolute_time_diff_us(get_absolute_time(), led_time) < 0) {
-            led_on = !led_on;
-            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
-            led_time = make_timeout_time_ms(1000);
-        }
-        #endif
         // the following #ifdef is only here so this same example can be used in multiple modes;
         // you do not need it in your code
 #if PICO_CYW43_ARCH_POLL
@@ -174,6 +321,7 @@ int main() {
         sleep_ms(1000);
 #endif
     }
+    dns_server_deinit(&dns_server);
     dhcp_server_deinit(&dhcp_server);
     cyw43_arch_deinit();
     return 0;
