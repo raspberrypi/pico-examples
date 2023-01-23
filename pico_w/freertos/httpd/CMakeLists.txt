@@ -35,6 +35,7 @@ target_compile_definitions(picow_freertos_httpd_sys PRIVATE
         WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
         NO_SYS=0            # don't want NO_SYS (generally this would be in your lwipopts.h)
         LWIP_SOCKET=1       # we need the socket API (generally this would be in your lwipopts.h)
+        CYW43_TASK_STACK_SIZE=512
         )
 target_include_directories(picow_freertos_httpd_sys PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
