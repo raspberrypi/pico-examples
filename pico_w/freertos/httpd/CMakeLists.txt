@@ -1,5 +1,5 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR})
-find_package(makefsdata REQUIRED)
+find_package(Makefsdata REQUIRED)
 
 set(PICO_HTTP_CONTENT_IN_DIR ${CMAKE_CURRENT_LIST_DIR}/content)
 set(PICO_HTTP_CONTENT_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/content)
@@ -58,7 +58,12 @@ add_custom_target(picow_freertos_httpd_content DEPENDS
         ${PICO_HTTP_CONTENT_OUT_DIR}/picow_fsdata.c
         )
 add_custom_command(OUTPUT ${PICO_HTTP_CONTENT_OUT_DIR}/picow_fsdata.c
-        DEPENDS makefsdata ${PICO_HTTP_CONTENT_IN_DIR}/*.html ${PICO_HTTP_CONTENT_IN_DIR}/*.shtml
-        COMMAND mkdir -p ${PICO_HTTP_CONTENT_OUT_DIR} &&
-                ${CMAKE_CURRENT_BINARY_DIR}/makefsdata/makefsdata ${PICO_HTTP_CONTENT_IN_DIR} -f:${PICO_HTTP_CONTENT_OUT_DIR}/picow_fsdata.c
+        DEPENDS picow_freertos_httpd_content_dir
+        COMMAND Makefsdata ${PICO_HTTP_CONTENT_IN_DIR} -f:${PICO_HTTP_CONTENT_OUT_DIR}/picow_fsdata.c
+        VERBATIM)
+add_custom_target(picow_freertos_httpd_content_dir DEPENDS
+        ${PICO_HTTP_CONTENT_OUT_DIR}
         )
+add_custom_command(OUTPUT ${PICO_HTTP_CONTENT_OUT_DIR}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${PICO_HTTP_CONTENT_OUT_DIR}
+        VERBATIM)
