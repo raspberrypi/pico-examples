@@ -20,15 +20,15 @@
 #define WS2812_PIN_BASE 2
 
 // horrible temporary hack to avoid changing pattern code
-static uint8_t *current_string_out;
-static bool current_string_4color;
+static uint8_t *current_strip_out;
+static bool current_strip_4color;
 
 static inline void put_pixel(uint32_t pixel_grb) {
-    *current_string_out++ = pixel_grb & 0xffu;
-    *current_string_out++ = (pixel_grb >> 8u) & 0xffu;
-    *current_string_out++ = (pixel_grb >> 16u) & 0xffu;
-    if (current_string_4color) {
-        *current_string_out++ = 0; // todo adjust?
+    *current_strip_out++ = pixel_grb & 0xffu;
+    *current_strip_out++ = (pixel_grb >> 8u) & 0xffu;
+    *current_strip_out++ = (pixel_grb >> 16u) & 0xffu;
+    if (current_strip_4color) {
+        *current_strip_out++ = 0; // todo adjust?
     }
 }
 
@@ -83,9 +83,9 @@ void pattern_solid(uint len, uint t) {
     }
 }
 
-int level = 8;
 
 void pattern_fade(uint len, uint t) {
+    const int level = 8;
     uint shift = 4;
 
     uint max = 16; // let's not draw too much current!
@@ -95,7 +95,7 @@ void pattern_fade(uint len, uint t) {
     slow_t = level;
     slow_t %= max;
 
-    static int error;
+    static int error = 0;
     slow_t += error;
     error = slow_t & ((1u << shift) - 1);
     slow_t >>= shift;
@@ -121,7 +121,7 @@ const struct {
 
 #define VALUE_PLANE_COUNT (8 + FRAC_BITS)
 // we store value (8 bits + fractional bits of a single color (R/G/B/W) value) for multiple
-// strings, in bit planes. bit plane N has the Nth bit of each string.
+// strips of pixels, in bit planes. bit plane N has the Nth bit of each strip of pixels.
 typedef struct {
     // stored MSB first
     uint32_t planes[VALUE_PLANE_COUNT];
@@ -149,17 +149,17 @@ typedef struct {
     uint8_t *data;
     uint data_len;
     uint frac_brightness; // 256 = *1.0;
-} string_t;
+} strip_t;
 
 // takes 8 bit color values, multiply by brightness and store in bit planes
-void transform_strings(string_t **strings, uint num_strings, value_bits_t *values, uint value_length,
+void transform_strips(strip_t **strips, uint num_strips, value_bits_t *values, uint value_length,
                        uint frac_brightness) {
     for (uint v = 0; v < value_length; v++) {
         memset(&values[v], 0, sizeof(values[v]));
-        for (int i = 0; i < num_strings; i++) {
-            if (v < strings[i]->data_len) {
+        for (int i = 0; i < num_strips; i++) {
+            if (v < strips[i]->data_len) {
                 // todo clamp?
-                uint32_t value = (strings[i]->data[v] * strings[i]->frac_brightness) >> 8u;
+                uint32_t value = (strips[i]->data[v] * strips[i]->frac_brightness) >> 8u;
                 value = (value * frac_brightness) >> 8u;
                 for (int j = 0; j < VALUE_PLANE_COUNT && value; j++, value >>= 1u) {
                     if (value & 1u) values[v].planes[VALUE_PLANE_COUNT - 1 - j] |= 1u << i;
@@ -177,29 +177,29 @@ void dither_values(const value_bits_t *colors, value_bits_t *state, const value_
 
 // requested colors * 4 to allow for RGBW
 static value_bits_t colors[NUM_PIXELS * 4];
-// double buffer the state of the string, since we update next version in parallel with DMAing out old version
+// double buffer the state of the pixel strip, since we update next version in parallel with DMAing out old version
 static value_bits_t states[2][NUM_PIXELS * 4];
 
-// example - string 0 is RGB only
-static uint8_t string0_data[NUM_PIXELS * 3];
-// example - string 1 is RGBW
-static uint8_t string1_data[NUM_PIXELS * 4];
+// example - strip 0 is RGB only
+static uint8_t strip0_data[NUM_PIXELS * 3];
+// example - strip 1 is RGBW
+static uint8_t strip1_data[NUM_PIXELS * 4];
 
-string_t string0 = {
-        .data = string0_data,
-        .data_len = sizeof(string0_data),
+strip_t strip0 = {
+        .data = strip0_data,
+        .data_len = sizeof(strip0_data),
         .frac_brightness = 0x40,
 };
 
-string_t string1 = {
-        .data = string1_data,
-        .data_len = sizeof(string1_data),
+strip_t strip1 = {
+        .data = strip1_data,
+        .data_len = sizeof(strip1_data),
         .frac_brightness = 0x100,
 };
 
-string_t *strings[] = {
-        &string0,
-        &string1,
+strip_t *strips[] = {
+        &strip0,
+        &strip1,
 };
 
 // bit plane content dma channel
@@ -266,7 +266,7 @@ void dma_init(PIO pio, uint sm) {
     irq_set_enabled(DMA_IRQ_0, true);
 }
 
-void output_strings_dma(value_bits_t *bits, uint value_length) {
+void output_strips_dma(value_bits_t *bits, uint value_length) {
     for (uint i = 0; i < value_length; i++) {
         fragment_start[i] = (uintptr_t) bits[i].planes; // MSB first
     }
@@ -285,7 +285,7 @@ int main() {
     int sm = 0;
     uint offset = pio_add_program(pio, &ws2812_parallel_program);
 
-    ws2812_parallel_program_init(pio, sm, offset, WS2812_PIN_BASE, count_of(strings), 800000);
+    ws2812_parallel_program_init(pio, sm, offset, WS2812_PIN_BASE, count_of(strips), 800000);
 
     sem_init(&reset_delay_complete_sem, 1, 1); // initially posted so we don't block first time
     dma_init(pio, sm);
@@ -299,17 +299,17 @@ int main() {
         int brightness = 0;
         uint current = 0;
         for (int i = 0; i < 1000; ++i) {
-            current_string_out = string0.data;
-            current_string_4color = false;
+            current_strip_out = strip0.data;
+            current_strip_4color = false;
             pattern_table[pat].pat(NUM_PIXELS, t);
-            current_string_out = string1.data;
-            current_string_4color = true;
+            current_strip_out = strip1.data;
+            current_strip_4color = true;
             pattern_table[pat].pat(NUM_PIXELS, t);
 
-            transform_strings(strings, count_of(strings), colors, NUM_PIXELS * 4, brightness);
+            transform_strips(strips, count_of(strips), colors, NUM_PIXELS * 4, brightness);
             dither_values(colors, states[current], states[current ^ 1], NUM_PIXELS * 4);
             sem_acquire_blocking(&reset_delay_complete_sem);
-            output_strings_dma(states[current], NUM_PIXELS * 4);
+            output_strips_dma(states[current], NUM_PIXELS * 4);
 
             current ^= 1;
             t += dir;
