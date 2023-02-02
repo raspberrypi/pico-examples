@@ -110,7 +110,7 @@ App|Description
 
 ### Pico W Networking
 
-These eaxmples are for the Pico W, and are only available for `PICO_BOARD=pico_w`
+These examples are for the Pico W, and are only available for `PICO_BOARD=pico_w`
 
 App|Description
 ---|---
