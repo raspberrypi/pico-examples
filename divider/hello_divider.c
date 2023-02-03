@@ -37,7 +37,7 @@ int main() {
     printf("Working backwards! Result %d should equal %d!\n\n",
            to_quotient_u32(result) * divisor + to_remainder_u32(result), dividend);
 
-    // You can also do divides asynchronously. Divides will be complete after 8 cyles.
+    // You can also do divides asynchronously. Divides will be complete after 8 cycles.
 
     hw_divider_divmod_s32_start(dividend, divisor);
 
