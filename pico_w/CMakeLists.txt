@@ -33,6 +33,12 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
             add_subdirectory(tcp_server)
             add_subdirectory(freertos)
             add_subdirectory(udp_beacon)
+
+            if (NOT PICO_MBEDTLS_PATH)
+                message("Skipping tls examples as PICO_MBEDTLS_PATH is not defined")
+            else()
+                add_subdirectory(tls_client)
+            endif()
         endif()
     endif()
 endif()
