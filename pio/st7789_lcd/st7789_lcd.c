@@ -15,6 +15,7 @@
 #include "st7789_lcd.pio.h"
 #include "raspberry_256x256_rgb565.h"
 
+// Tested with the parts that have the height of 240 and 320
 #define SCREEN_WIDTH 240
 #define SCREEN_HEIGHT 240
 #define IMAGE_SIZE 256
@@ -32,16 +33,16 @@
 // Format: cmd length (including cmd byte), post delay in units of 5 ms, then cmd payload
 // Note the delays have been shortened a little
 static const uint8_t st7789_init_seq[] = {
-        1, 20, 0x01,                         // Software reset
-        1, 10, 0x11,                         // Exit sleep mode
+        1, 20, 0x01,                        // Software reset
+        1, 10, 0x11,                        // Exit sleep mode
         2, 2, 0x3a, 0x55,                   // Set colour mode to 16 bit
         2, 0, 0x36, 0x00,                   // Set MADCTL: row then column, refresh is bottom to top ????
-        5, 0, 0x2a, 0x00, 0x00, 0x00, 0xf0, // CASET: column addresses from 0 to 240 (f0)
-        5, 0, 0x2b, 0x00, 0x00, 0x00, 0xf0, // RASET: row addresses from 0 to 240 (f0)
+        5, 0, 0x2a, 0x00, 0x00, SCREEN_WIDTH >> 8, SCREEN_WIDTH & 0xff,   // CASET: column addresses
+        5, 0, 0x2b, 0x00, 0x00, SCREEN_HEIGHT >> 8, SCREEN_HEIGHT & 0xff, // RASET: row addresses
         1, 2, 0x21,                         // Inversion on, then 10 ms delay (supposedly a hack?)
         1, 2, 0x13,                         // Normal display on, then 10 ms delay
         1, 2, 0x29,                         // Main screen turn on, then wait 500 ms
-        0                                     // Terminate list
+        0                                   // Terminate list
 };
 
 static inline void lcd_set_dc_cs(bool dc, bool cs) {
