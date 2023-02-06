@@ -7,6 +7,7 @@ target_sources(host_cdc_msc_hid PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/hid_app.c
         ${CMAKE_CURRENT_LIST_DIR}/main.c
         ${CMAKE_CURRENT_LIST_DIR}/msc_app.c
+        ${CMAKE_CURRENT_LIST_DIR}/cdc_app.c
         )
 
 # Make sure TinyUSB can find tusb_config.h
