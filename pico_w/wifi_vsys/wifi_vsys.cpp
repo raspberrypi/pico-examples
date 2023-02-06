@@ -24,14 +24,12 @@ char apicall[64];
 
 
 //handler for HTTP client result
-void httpresult(void *arg, httpc_result_t httpc_result, u32_t rx_content_len, u32_t srv_res, err_t err)
-{
+void httpresult(void *arg, httpc_result_t httpc_result, u32_t rx_content_len, u32_t srv_res, err_t err){
     printf("[1] local result=%d  http result=%d\n", httpc_result, srv_res);
 }
 
 //handler for HTTP client headers
-err_t headers(httpc_state_t *connection, void *arg, struct pbuf *hdr, u16_t hdr_len, u32_t content_len)
-{
+err_t headers(httpc_state_t *connection, void *arg, struct pbuf *hdr, u16_t hdr_len, u32_t content_len){
     pbuf_copy_partial(hdr, httpBuff, hdr->tot_len, 0);
     printf("[1] content length=%d,  header length %d, headers: %s\n", content_len, hdr_len, httpBuff);
     //free memory
@@ -40,8 +38,7 @@ err_t headers(httpc_state_t *connection, void *arg, struct pbuf *hdr, u16_t hdr_
 }
 
 //handler for HTTP client body
-err_t body(void *arg, struct altcp_pcb *conn, struct pbuf *p, err_t err)
-{
+err_t body(void *arg, struct altcp_pcb *conn, struct pbuf *p, err_t err){
     pbuf_copy_partial(p, httpBuff, p->tot_len, 0);
     printf("[1] body: %s", httpBuff);
     httpBusy = false;
@@ -51,8 +48,7 @@ err_t body(void *arg, struct altcp_pcb *conn, struct pbuf *p, err_t err)
 }
 
 //Set GPIO29 back to settings for wifi usage (shared pin with ADC3, so settings are changed when activating ADC3)
-void SetGPIO29WifiStatus()
-{
+void SetGPIO29WifiStatus(){
     gpio_set_function(29, GPIO_FUNC_PIO1); //7
     gpio_pull_down(29);
     gpio_set_slew_rate(29, GPIO_SLEW_RATE_FAST); //1
@@ -108,8 +104,8 @@ int main() {
             uint vbus = cyw43_arch_gpio_get(CYW43_WL_GPIO2); 
 
             //we could decide to only check the voltage if not powered by USB port/VBUS and perhaps not check it every cycle.
-            //if (vbus==0)            
-            //{
+            //if (vbus==0)   {         
+
             //initialize and select ADC3/GPIO29                
             adc_gpio_init(29);
             adc_select_input(3);
