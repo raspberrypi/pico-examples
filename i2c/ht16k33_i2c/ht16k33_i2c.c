@@ -80,7 +80,7 @@ int16_t num[] = {
 }
 
 /* Quick helper function for single byte transfers */
-inline void i2c_write_byte(uint8_t val) {
+void i2c_write_byte(uint8_t val) {
 #ifdef i2c_default
     i2c_write_blocking(i2c_default, I2C_addr, &val, 1, false);
 #endif
@@ -99,7 +99,9 @@ static inline void ht16k33_display_set(int position, uint16_t bin) {
     buf[0] = position * 2;
     buf[1] = bin & 0xff;
     buf[2] = bin >> 8;
+#ifdef i2c_default
     i2c_write_blocking(i2c_default, I2C_addr, buf, count_of(buf), false);
+#endif
 }
 
 static inline void ht16k33_display_char(int position, char ch) {

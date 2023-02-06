@@ -101,7 +101,7 @@ void calc_render_area_buflen(struct render_area *area) {
 
 #ifdef i2c_default
 
-inline void SSD1306_send_cmd(uint8_t cmd) {
+void SSD1306_send_cmd(uint8_t cmd) {
     // I2C write process expects a control byte followed by data
     // this "data" can be a command or data to follow up a command
     // Co = 1, D/C = 0 => the driver expects a command
