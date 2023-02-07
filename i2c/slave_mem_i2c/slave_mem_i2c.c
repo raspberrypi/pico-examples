@@ -1,7 +1,8 @@
 /*
  * Copyright (c) 2021 Valentin Milea <valentin.milea@gmail.com>
+ * Copyright (c) 2023 Raspberry Pi (Trading) Ltd.
  *
- * SPDX-License-Identifier: MIT
+ * SPDX-License-Identifier: BSD-3-Clause
  */
 
 #include <hardware/i2c.h>
