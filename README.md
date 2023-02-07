@@ -87,6 +87,7 @@ App|Description
 [pa1010d_i2c](i2c/pa1010d_i2c) | Read GPS location data, parse and display data via I2C.
 [pcf8523_i2c](i2c/pcf8523_i2c) | Read time and date values from a real time clock. Set current time and alarms on it.
 [ht16k33_i2c](i2c/ht16k33_i2c) | Drive a 4 digit 14 segment LED with an HT16K33.
+[slave_mem_i2c](i2c/slave_mem_i2c) | i2c slave example where the slave implements a 256 byte memory
 
 ### Interpolator
 
