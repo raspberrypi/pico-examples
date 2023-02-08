@@ -12,11 +12,11 @@ Configuring VSCode to use these tools enables it to upload code transparently an
 
 The example assumes:
 
-1. A functioning development environment with C/C++ SDK, ARM Toolchain, VSCode and `OpenOCD` all built and installed according to the instructions in the [Getting Started Guide](https://rptl.io/pico-get-started).
+1. A functioning development environment with [pico-sdk](https://github.com/raspberrypi/pico-sdk), ARM Toolchain, VSCode and `OpenOCD` all built and installed according to the instructions in the [Getting Started Guide](https://rptl.io/pico-get-started).
 2. A target connected via another Pico running [picoprobe](https://www.raspberrypi.com/documentation/microcontrollers/raspberry-pi-pico.html#debugging-using-another-raspberry-pi-pico).
-3. A reasonable familiarity with the C/C++ SDK and CMAKE, and with VSCode workspaces (see the [VSCode documentation](https://code.visualstudio.com/docs/editor/workspaces)).
+3. A reasonable familiarity with the `pico-sdk`, CMake and VSCode workspaces (see the [VSCode documentation](https://code.visualstudio.com/docs/editor/workspaces)).
 
-> Note: The provided files just illustrate working configurations but you will almost certainly need to customise them to meet your needs.
+> Note: The provided files just illustrate working configurations but you will almost certainly want to further customise them to meet your needs.
 
 
 ---
