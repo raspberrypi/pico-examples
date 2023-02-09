@@ -17,7 +17,7 @@
 #define CRC32_LEN                   4
 #define TOTAL_LEN                   (DATA_TO_CHECK_LEN + CRC32_LEN)
 
-// commonly used crc test data and also space for the crc
+// commonly used crc test data and also space for the crc value
 static uint8_t src[TOTAL_LEN] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x00, 0x00, 0x00, 0x00 };
 static uint8_t dst[TOTAL_LEN];
 
@@ -38,18 +38,18 @@ int main() {
 
     stdio_init_all();
 
-    printf("\n");
-    printf("\n");
-
-    // cacluate and append the crc
+    // calcuate and append the crc
     crc_res = soft_crc32_block(CRC32_INIT, src, DATA_TO_CHECK_LEN);
     *((uint32_t *)&src[DATA_TO_CHECK_LEN]) = crc_res;
 
-    printf("Buffer to DMA: ");
-    for (int i = 0; i < 12; i++) {
+    printf("\nBuffer to DMA: ");
+    for (int i = 0; i < TOTAL_LEN; i++) {
         printf("0x%02x ", src[i]);
     }
     printf("\n");
+
+    // UNcomment the next line to deliberately corrupt the buffer
+    //src[0]++;  // modify any byte, in any way, to break the CRC32 check
 
     // Get a free channel, panic() if there are none
     int chan = dma_claim_unused_channel(true);
@@ -74,7 +74,7 @@ int main() {
         &c,            // The configuration we just created
         dst,           // The initial write address
         src,           // The initial read address
-        TOTAL_LEN,     // Total number of transfers inc. appended CRC; each is 1 byte
+        TOTAL_LEN,     // Total number of transfers inc. appended crc; each is 1 byte
         true           // Start immediately.
     );
 
@@ -84,5 +84,12 @@ int main() {
     dma_channel_wait_for_finish_blocking(chan);
 
     uint32_t sniffed_crc = dma_sniffer_get_data_accumulator();
-    printf("Completed DMA copy of %d byte buffer, sniffed crc: 0x%08lx\n", TOTAL_LEN, sniffed_crc);
+    printf("Completed DMA copy of %d byte buffer, DMA sniff accumulator value: 0x%lx\n", TOTAL_LEN, sniffed_crc);
+
+    if (0ul == sniffed_crc) {
+        printf("CRC32 check is good\n");
+    }
+    else {
+        printf("ERROR - CRC32 check FAILED!\n");
+    }
 }

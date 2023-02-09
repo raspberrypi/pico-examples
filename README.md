@@ -44,6 +44,7 @@ App|Description
 [hello_dma](dma/hello_dma)| Use the DMA to copy data in memory.
 [control_blocks](dma/control_blocks)| Build a control block list, to program a longer sequence of DMA transfers to the UART.
 [channel_irq](dma/channel_irq)| Use an IRQ handler to reconfigure a DMA channel, in order to continuously drive data through a PIO state machine.
+[sniff_crc](dma/sniff_crc)| Use the DMA engine's 'sniff' capability to calculate a CRC32 on data copied by DMA.
 
 ### Flash
 
