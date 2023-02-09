@@ -200,7 +200,13 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
     uint8_t *opt = (uint8_t *)&dhcp_msg.options;
     opt += 4; // assume magic cookie: 99, 130, 83, 99
 
-    switch (opt[2]) {
+    uint8_t *msgtype = opt_find(opt, DHCP_OPT_MSG_TYPE);
+    if (msgtype == NULL) {
+        // A DHCP package without MSG_TYPE?
+        goto ignore_request;
+    }
+
+    switch (msgtype[2]) {
         case DHCPDISCOVER: {
             int yi = DHCPS_MAX_IP;
             for (int i = 0; i < DHCPS_MAX_IP; ++i) {
