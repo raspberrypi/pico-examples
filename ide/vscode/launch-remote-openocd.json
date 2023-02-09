@@ -8,7 +8,7 @@
             "executable": "${command:cmake.launchTargetPath}",
             "request": "launch",
             "servertype": "external",
-            // This may need to be arm-none-eabi-gdb if VSCode is not running on a Raspberry Pi
+            // This may need to be "arm-none-eabi-gdb" for older builds
             "gdbPath" : "gdb-multiarch",
             // Connect to an already running OpenOCD instance
             "gdbTarget": "your-openocd:3333",

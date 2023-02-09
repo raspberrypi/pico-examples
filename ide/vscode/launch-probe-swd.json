@@ -8,12 +8,12 @@
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
-            // This may need to be gdb-multiarch if VSCode is running on a Raspberry Pi
-            "gdbPath" : "arm-none-eabi-gdb",
+            // This may need to be "arm-none-eabi-gdb" for some previous builds
+            "gdbPath" : "gdb-multiarch",
             "device": "RP2040",
             "configFiles": [
-                // This may need to be interface/picoprobe.cfg depending on how OpenOCD was built
-                "interface/cmsis-dap",
+                // This may need to be "interface/picoprobe.cfg" for some previous builds
+                "interface/cmsis-dap.cfg",
                 "target/rp2040.cfg"
             ],
             "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",

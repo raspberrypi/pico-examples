@@ -8,7 +8,7 @@
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
-            // This may need to be arm-none-eabi-gdb if VSCode is not running on a Raspberry Pi
+            // This may need to be "arm-none-eabi-gdb" for some previous builds
             "gdbPath" : "gdb-multiarch",
             "device": "RP2040",
             "configFiles": [
