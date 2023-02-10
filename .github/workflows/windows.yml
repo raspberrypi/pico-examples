@@ -13,8 +13,8 @@ jobs:
         shell: bash
         run: |
           echo "Cleaning up previous run"
-          rm -rf "${{ github.workspace }}"
-          mkdir -p "${{ github.workspace }}"
+          rm -rf "${{ github.workspace }}/pico-sdk"
+          rm -rf "${{ github.workspace }}/pico-examples"
       - name: Checkout pico-examples
         uses: actions/checkout@v2
         with:
