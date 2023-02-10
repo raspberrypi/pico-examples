@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-// Use the DMA engine's 'sniff' capability to calculate a CRC32 on data copied between two buffers in memory.
+// Use the DMA engine's 'sniff' capability to calculate a CRC32 on data in a buffer.
+// Note:  This does NOT do an actual data copy, it 'transfers' all the data to a single
+// dummy destination byte so as to be able to crawl over the input data using a 'DMA'.
+// If a data copy *with* a CRC32 sniff is required, the start address of the suitably sized
+// destination buffer must be supplied and the 'write_increment' set to true (see below).
 
 #include <stdio.h>
 #include <string.h>
@@ -19,9 +23,9 @@
 
 // commonly used crc test data and also space for the crc value
 static uint8_t src[TOTAL_LEN] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x00, 0x00, 0x00, 0x00 };
-static uint8_t dst[TOTAL_LEN];
+static uint8_t dummy_dst[1];
 
-// This uses a standard polynomial with the alternate "reversed" shift direction.
+// This uses a standard polynomial with the alternate 'reversed' shift direction.
 // It is possible to use a non-reversed algorithm here but the DMA sniff set-up
 // below would need to be modified to remain consistent and allow the check to pass.
 static uint32_t soft_crc32_block(uint32_t crc, uint8_t *bytp, uint32_t length) {
@@ -56,14 +60,13 @@ int main() {
     // Get a free channel, panic() if there are none
     int chan = dma_claim_unused_channel(true);
 
-    // 8 bit transfers. Both read and write address increment after each
-    // transfer (each pointing to a location in src or dst respectively).
+    // 8 bit transfers. The read address increments after each transfer but
+    // the write address remains unchanged pointing to the dummy destination.
     // No DREQ is selected, so the DMA transfers as fast as it can.
-
     dma_channel_config c = dma_channel_get_default_config(chan);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
     channel_config_set_read_increment(&c, true);
-    channel_config_set_write_increment(&c, true);
+    channel_config_set_write_increment(&c, false);
 
     // (bit-reverse) CRC32 specific sniff set-up
     channel_config_set_sniff_enable(&c, true);
@@ -74,7 +77,7 @@ int main() {
     dma_channel_configure(
         chan,          // Channel to be configured
         &c,            // The configuration we just created
-        dst,           // The initial write address
+        dummy_dst,     // The (unchanging) write address
         src,           // The initial read address
         TOTAL_LEN,     // Total number of transfers inc. appended crc; each is 1 byte
         true           // Start immediately.
@@ -86,7 +89,7 @@ int main() {
     dma_channel_wait_for_finish_blocking(chan);
 
     uint32_t sniffed_crc = dma_sniffer_get_data_accumulator();
-    printf("Completed DMA copy of %d byte buffer, DMA sniff accumulator value: 0x%lx\n", TOTAL_LEN, sniffed_crc);
+    printf("Completed DMA sniff of %d byte buffer, DMA sniff accumulator value: 0x%lx\n", TOTAL_LEN, sniffed_crc);
 
     if (0ul == sniffed_crc) {
         printf("CRC32 check is good\n");
