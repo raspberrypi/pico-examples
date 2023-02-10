@@ -1,0 +1,1 @@
+picow_bt_example(gatt_streamer_server)

@@ -12,6 +12,7 @@ pico_add_extra_outputs(pio_squarewave)
 # add url via pico_set_program_url
 example_auto_set_url(pio_squarewave)
 
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/generated)
 # generate .hex file and .pio.h file for the RP2040 datasheet (to make sure
 # the datasheet always shows the output of the latest pioasm version)
 add_custom_target(pio_squarewave_datasheet DEPENDS

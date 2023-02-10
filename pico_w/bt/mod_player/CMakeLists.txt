@@ -1,0 +1,1 @@
+picow_bt_example(mod_player pico_btstack_hxcmod_player)

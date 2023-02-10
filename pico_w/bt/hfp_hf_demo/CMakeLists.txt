@@ -1,0 +1,1 @@
+picow_bt_example(hfp_hf_demo pico_btstack_sco_demo_util pico_btstack_sbc_encoder)

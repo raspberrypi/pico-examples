@@ -1,0 +1,1 @@
+picow_bt_example(gatt_heart_rate_client)
