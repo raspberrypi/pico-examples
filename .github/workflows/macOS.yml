@@ -37,6 +37,7 @@ jobs:
           brew install arm-none-eabi-gcc
 
       - name: Build Project
+        working-directory: ${{github.workspace}}/pico-examples
         # bash required otherwise this mysteriously (no error) fails at "Generating cyw43_bus_pio_spi.pio.h"
         shell: bash
         run: |
