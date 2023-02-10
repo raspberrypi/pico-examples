@@ -10,6 +10,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Clean workspace
+        shell: bash
         run: |
           echo "Cleaning up previous run"
           rm -rf "${{ github.workspace }}"
