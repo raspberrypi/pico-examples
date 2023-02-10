@@ -1,0 +1,13 @@
+add_library(pan_lwip_dhserver INTERFACE)
+target_sources(pan_lwip_dhserver INTERFACE
+    ${BTSTACK_3RD_PARTY_PATH}/lwip/dhcp-server/dhserver.c
+)
+target_include_directories(pan_lwip_dhserver INTERFACE
+    ${BTSTACK_3RD_PARTY_PATH}/lwip/dhcp-server
+)
+
+picow_bt_example_target_name(pan_lwip_http_server TARGET_NAME)
+
+picow_bt_example_poll(pan_lwip_http_server ${TARGET_NAME} picow_bt_example_btstack_lwip_poll pan_lwip_dhserver pico_lwip_http)
+picow_bt_example_background(pan_lwip_http_server ${TARGET_NAME} picow_bt_example_btstack_lwip_background pan_lwip_dhserver pico_lwip_http)
+picow_bt_example_freertos(pan_lwip_http_server ${TARGET_NAME} picow_bt_example_btstack_lwip_freertos pan_lwip_dhserver pico_lwip_http)
