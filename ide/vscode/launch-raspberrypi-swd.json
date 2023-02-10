@@ -8,7 +8,7 @@
             "request": "launch",
             "type": "cortex-debug",
             "servertype": "openocd",
-            // This may need to be arm-none-eabi-gdb depending on your system
+            // This may need to be "arm-none-eabi-gdb" for some previous builds
             "gdbPath" : "gdb-multiarch",
             "device": "RP2040",
             "configFiles": [
@@ -16,7 +16,7 @@
                 "target/rp2040.cfg"
             ],
             "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
-            "runToMain": true,
+            "runToEntryPoint": "main",
             // Work around for stopping at main on restart
             "postRestartCommands": [
                 "break main",
