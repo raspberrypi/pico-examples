@@ -174,3 +174,13 @@ jobs:
       if: always()
       shell: bash
       run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi -DPICO_BOARD=pico_w; make -j ${{steps.core_count.outputs.output}}
+
+    - name: Native Debug
+      if: always()
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=host; make -j ${{steps.core_count.outputs.output}}
+
+    - name: Native Release
+      if: always()
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=host; make -j ${{steps.core_count.outputs.output}}
