@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - 'test_workflow'
+      - 'develop'
+      - 'master'
 
 jobs:
   build:
