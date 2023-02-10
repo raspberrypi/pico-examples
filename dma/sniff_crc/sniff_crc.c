@@ -21,7 +21,9 @@
 static uint8_t src[TOTAL_LEN] = { 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x00, 0x00, 0x00, 0x00 };
 static uint8_t dst[TOTAL_LEN];
 
-// This uses the "reversed" polynomial and shift direction
+// This uses a standard polynomial with the alternate "reversed" shift direction.
+// It is possible to use a non-reversed algorithm here but the DMA sniff set-up
+// below would need to be modified to remain consistent and allow the check to pass.
 static uint32_t soft_crc32_block(uint32_t crc, uint8_t *bytp, uint32_t length) {
     while(length--) {
         uint32_t byte32 = (uint32_t)*bytp++;
@@ -38,11 +40,11 @@ int main() {
 
     stdio_init_all();
 
-    // calcuate and append the crc
+    // calculate and append the crc
     crc_res = soft_crc32_block(CRC32_INIT, src, DATA_TO_CHECK_LEN);
     *((uint32_t *)&src[DATA_TO_CHECK_LEN]) = crc_res;
 
-    printf("\nBuffer to DMA: ");
+    printf("Buffer to DMA: ");
     for (int i = 0; i < TOTAL_LEN; i++) {
         printf("0x%02x ", src[i]);
     }
@@ -63,7 +65,7 @@ int main() {
     channel_config_set_read_increment(&c, true);
     channel_config_set_write_increment(&c, true);
 
-    // Sniff specific set-up
+    // (bit-reverse) CRC32 specific sniff set-up
     channel_config_set_sniff_enable(&c, true);
     dma_sniffer_set_data_accumulator(CRC32_INIT);
     dma_sniffer_set_output_reverse_enabled(true);
