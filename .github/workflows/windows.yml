@@ -30,7 +30,9 @@ jobs:
       - name: Checkout pico-sdk submodules
         working-directory: ${{github.workspace}}/pico-sdk
         run: git submodule update --init
+
       - name: Install dependencies
+        working-directory: ${{github.workspace}}/pico-examples
         run: choco install .github/workflows/choco_packages.config
 
       - name: Build Project
