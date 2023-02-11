@@ -206,7 +206,7 @@ App|Description
 ---|---
 [picow_ble_temp_sensor](pico_w/bt/standalone)|Reads from the on board temperature sensor and sends notifications via BLE
 [picow_ble_temp_sensor_with_wifi](pico_w/bt/standalone)|Same as above but also connects to Wi-Fi and starts an "iperf" server
-[picow_ble_temp_reader](pico_w/bt/standalone)|Connects to on of the above "sensors" and reads the temperature
+[picow_ble_temp_reader](pico_w/bt/standalone)|Connects to one of the above "sensors" and reads the temperature
 
 ### PIO
 
