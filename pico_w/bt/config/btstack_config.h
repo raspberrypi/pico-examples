@@ -2,9 +2,11 @@
 #define _PICO_BTSTACK_BTSTACK_CONFIG_H
 
 // BTstack features that can be enabled
+#ifdef ENABLE_BLE
 #define ENABLE_LE_PERIPHERAL
 #define ENABLE_LE_CENTRAL
 #define ENABLE_L2CAP_LE_CREDIT_BASED_FLOW_CONTROL_MODE
+#endif
 #define ENABLE_LOG_INFO
 #define ENABLE_LOG_ERROR
 #define ENABLE_PRINTF_HEXDUMP
