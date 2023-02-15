@@ -11,6 +11,7 @@
 #include "hal_led.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
+#include "btstack.h"
 
 #if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
 #define TEST_BTWIFI 1
@@ -28,9 +29,7 @@ int btstack_main(int argc, const char * argv[]);
 const btstack_audio_sink_t * btstack_audio_pico_sink_get_instance(void);
 #endif
 
-#ifdef ENABLE_BLE
 static btstack_packet_callback_registration_t hci_event_callback_registration;
-#endif
 static int led_state = 0;
 
 void hal_led_toggle(void){
@@ -38,8 +37,7 @@ void hal_led_toggle(void){
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
 }
 
-#ifdef ENABLE_BLE
-static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size){
+static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size){
     UNUSED(size);
     UNUSED(channel);
     bd_addr_t local_addr;
@@ -54,7 +52,6 @@ static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *pack
             break;
     }
 }
-#endif
 
 #if TEST_BTWIFI
 static void iperf_report(void *arg, enum lwiperf_report_type report_type,
@@ -76,11 +73,9 @@ int picow_bt_example_init(void) {
         return -1;
     }
 
-#ifdef ENABLE_BLE
     // inform about BTstack state
     hci_event_callback_registration.callback = &packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
-#endif
 
     // setup i2s audio for sink
 #if TEST_AUDIO
