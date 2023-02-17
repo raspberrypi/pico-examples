@@ -1,0 +1,72 @@
+; Copyright (c) 2022 Daniel Garcia-Briseno
+;
+; Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+; following conditions are met:
+; 
+; 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+;    disclaimer.
+; 
+; 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following
+;    disclaimer in the documentation and/or other materials provided with the distribution.
+; 
+; 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products
+;    derived from this software without specific prior written permission.
+; 
+; THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+; INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+; DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+; SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+; SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+; WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+; THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+.program simple_irq
+
+; Stall on OSR. Wait for software to send a signal to continue
+; by writing to the OSR
+out x, 1
+
+; Do work here
+nop
+
+; Notify the software via irq that some work has been done
+; irq wait means to wait for software to acknowledge the irq before
+; continuing. rel means let the irq be relative to the state machine.
+; by using "0 rel" on all state machines, software will see a different
+; interrupt source for each state machine. Technically state machines
+; can set any irq source, so in order to know where the irq is coming from
+; it's best to set 0 rel
+irq wait 0 rel
+
+% c-sdk {
+    /**
+     * Initializer for the fake irq program program
+     * @param[in] pio the PIO instance to use
+     * @param[in] sm state machine to use for the PIO instance
+     * @param[in] offset Offset into PIO memory to place the program into
+     */
+    static inline void simple_irq_program_init(PIO pio, uint sm, uint offset) {
+        // Enable the IRQ source
+        // The reason for doing interrupt0 + sm:
+        // IRQ sources are enabled per irq flag. Since the irq flag being set depends on the state
+        // machine because of the "0 rel", we want to make sure we're enabling the correct interrupt
+        // source for the state machine the program is loaded into. 
+        pio_set_irq0_source_enabled(pio, (pis_interrupt0 + sm), true);
+        // Make sure the interrupt starts cleared. It should already be cleared, so this should
+        // basically be a no-op. I call it defensive programming.
+        pio_interrupt_clear(pio, sm);
+
+        // Build the configuration for the state machine
+        pio_sm_config config = simple_irq_program_get_default_config(offset);
+
+        // Set up autopull to pull the TX Fifo into the OSR
+        // This is what actually makes the "out" instruction wait
+        // for input from software.
+        // params are (config, shift_right (ignored here), autopull (true), pull threshold (1 bit))
+        sm_config_set_out_shift(&config, true, true, 1);
+
+        // Load the config and execute the state machine
+        pio_sm_init(pio, sm, offset, &config);
+        pio_sm_set_enabled(pio, sm, true);
+    }
+%}
