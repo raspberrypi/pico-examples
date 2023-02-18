@@ -220,6 +220,7 @@ App|Description
 [ir_nec](pio/ir_nec)| Sending and receiving IR (infra-red) codes using the PIO.
 [logic_analyser](pio/logic_analyser)| Use PIO and DMA to capture a logic trace of some GPIOs, whilst a PWM unit is driving them.
 [manchester_encoding](pio/manchester_encoding)| Send and receive Manchester-encoded serial.
+[onewire](pio/onewire)| A library for interfacing to 1-Wire devices, with an example for the DS18B20 temperature sensor.
 [pio_blink](pio/pio_blink)| Set up some PIO state machines to blink LEDs at different frequencies, according to delay counts pushed into their FIFOs.
 [pwm](pio/pwm)| Pulse width modulation on PIO. Use it to gradually fade the brightness of an LED.
 [spi](pio/spi)| Use PIO to erase, program and read an external SPI flash chip. A second example runs a loopback test with all four CPHA/CPOL combinations.
