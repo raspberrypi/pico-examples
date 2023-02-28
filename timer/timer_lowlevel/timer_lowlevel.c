@@ -9,18 +9,6 @@
 #include "hardware/timer.h"
 #include "hardware/irq.h"
 
-/// \tag::get_time[]
-// Simplest form of getting 64 bit time from the timer.
-// It isn't safe when called from 2 cores because of the latching
-// so isn't implemented this way in the sdk
-static uint64_t get_time(void) {
-    // Reading low latches the high value
-    uint32_t lo = timer_hw->timelr;
-    uint32_t hi = timer_hw->timehr;
-    return ((uint64_t) hi << 32u) | lo;
-}
-/// \end::get_time[]
-
 /// \tag::alarm_standalone[]
 // Use alarm 0
 #define ALARM_NUM 0

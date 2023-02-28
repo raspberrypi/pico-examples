@@ -214,6 +214,7 @@ int main() {
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
     #warning i2c / bmp280_i2c example requires a board with I2C pins
         puts("Default I2C pins were not defined");
+    return 0;
 #else
     // useful information for picotool
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
@@ -248,7 +249,5 @@ int main() {
         // poll every 500ms
         sleep_ms(500);
     }
-
 #endif
-    return 0;
 }

@@ -13,7 +13,7 @@
 
 typedef struct
 {
-    void *func;
+    int32_t (*func)(int32_t);
     int32_t data;
 } queue_entry_t;
 
@@ -31,8 +31,7 @@ void core1_entry() {
 
         queue_remove_blocking(&call_queue, &entry);
 
-        int32_t (*func)() = (int32_t(*)())(entry.func);
-        int32_t result = (*func)(entry.data);
+        int32_t result = entry.func(entry.data);
 
         queue_add_blocking(&results_queue, &result);
     }
@@ -78,7 +77,7 @@ int main() {
 
     multicore_launch_core1(core1_entry);
 
-    queue_entry_t entry = {&factorial, TEST_NUM};
+    queue_entry_t entry = {factorial, TEST_NUM};
     queue_add_blocking(&call_queue, &entry);
 
     // We could now do a load of stuff on core 0 and get our result later
@@ -88,7 +87,7 @@ int main() {
     printf("Factorial %d is %d\n", TEST_NUM, res);
 
     // Now try a different function
-    entry.func = &fibonacci;
+    entry.func = fibonacci;
     queue_add_blocking(&call_queue, &entry);
 
     queue_remove_blocking(&results_queue, &res);

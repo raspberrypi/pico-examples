@@ -150,6 +150,4 @@ int main() {
 
         sleep_ms(100);
     }
-
-    return 0;
 }

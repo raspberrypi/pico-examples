@@ -166,7 +166,7 @@ int main() {
         red = sin(frequency * i + 0) * 127 + 128;
         green = sin(frequency * i + 2) * 127 + 128;
         blue = sin(frequency * i + 4) * 127 + 128;
-        lcd_set_backlight_color(red, green, blue);
+        lcd_set_backlight_color((uint8_t) red, (uint8_t) green, (uint8_t) blue);
         i++;
 #endif
     }
