@@ -24,7 +24,7 @@
 */
 
 const int addr = 0x10;
-const int max_read = 250;
+#define MAX_READ 250
 
 #ifdef i2c_default
 
@@ -44,24 +44,24 @@ void pa1010d_parse_string(char output[], char protocol[]) {
     int p = com_index - output;
 
     // Splits components of output sentence into array
-    int no_of_fields = 14;
-    int max_len = 15;
+#define NO_OF_FIELDS 14
+#define MAX_LEN 15
 
     int n = 0;
     int m = 0;
 
-    char gps_data[no_of_fields][max_len];
+    char gps_data[NO_OF_FIELDS][MAX_LEN];
     memset(gps_data, 0, sizeof(gps_data));
 
     bool complete = false;
-    while (output[p] != '$' && n < max_len && complete == false) {
+    while (output[p] != '$' && n < MAX_LEN && complete == false) {
         if (output[p] == ',' || output[p] == '*') {
             n += 1;
             m = 0;
         } else {
             gps_data[n][m] = output[p];
             // Checks if sentence is complete
-            if (m < no_of_fields) {
+            if (m < NO_OF_FIELDS) {
                 m++;
             } else {
                 complete = true;
@@ -92,15 +92,15 @@ void pa1010d_parse_string(char output[], char protocol[]) {
 }
 
 void pa1010d_read_raw(char numcommand[]) {
-    uint8_t buffer[max_read];
+    uint8_t buffer[MAX_READ];
 
     int i = 0;
     bool complete = false;
 
-    i2c_read_blocking(i2c_default, addr, buffer, max_read, false);
+    i2c_read_blocking(i2c_default, addr, buffer, MAX_READ, false);
 
     // Convert bytes to characters
-    while (i < max_read && complete == false) {
+    while (i < MAX_READ && complete == false) {
         numcommand[i] = buffer[i];
         // Stop converting at end of message 
         if (buffer[i] == 10 && buffer[i + 1] == 10) {
@@ -119,7 +119,7 @@ int main() {
     puts("Default I2C pins were not defined");
 #else
 
-    char numcommand[max_read];
+    char numcommand[MAX_READ];
 
     // Decide which protocols you would like to retrieve data from
     char init_command[] = "$PMTK314,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0*29\r\n";
@@ -140,7 +140,7 @@ int main() {
 
     while (1) {
         // Clear array
-        memset(numcommand, 0, max_read);
+        memset(numcommand, 0, MAX_READ);
         // Read and re-format
         pa1010d_read_raw(numcommand);
         pa1010d_parse_string(numcommand, "GNRMC");
@@ -149,8 +149,7 @@ int main() {
         sleep_ms(1000);
 
         // Clear terminal 
-        printf("\e[1;1H\e[2J");
+        printf("\033[1;1H\033[2J");
     }
 #endif
-    return 0;
 }

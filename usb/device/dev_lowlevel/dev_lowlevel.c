@@ -26,8 +26,8 @@
 // Device descriptors
 #include "dev_lowlevel.h"
 
-#define usb_hw_set hw_set_alias(usb_hw)
-#define usb_hw_clear hw_clear_alias(usb_hw)
+#define usb_hw_set ((usb_hw_t *)hw_set_alias_untyped(usb_hw))
+#define usb_hw_clear ((usb_hw_t *)hw_clear_alias_untyped(usb_hw))
 
 // Function prototypes for our device specific endpoint handlers defined
 // later on
@@ -575,6 +575,4 @@ int main(void) {
     while (1) {
         tight_loop_contents();
     }
-
-    return 0;
 }

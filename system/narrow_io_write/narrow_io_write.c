@@ -37,8 +37,10 @@ int main() {
     // on transfer size and address LSBs
     printf("\nReading back 1 byte at a time\n");
     // Little-endian!
-    printf("Should be ef be ad de: %02x %02x %02x %02x\n",
-           scratch8[0], scratch8[1], scratch8[2], scratch8[3]);
+    printf("Should be ef be ad de: %02x ", scratch8[0]);
+    printf("%02x ", scratch8[1]);
+    printf("%02x ", scratch8[2]);
+    printf("%02x\n", scratch8[3]);
 
     // The Cortex-M0+ and the RP2040 DMA replicate byte writes across the bus,
     // and IO registers will sample the entire write bus always.
