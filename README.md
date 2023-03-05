@@ -22,6 +22,7 @@ App|Description
 [adc_console](adc/adc_console) | An interactive shell for playing with the ADC. Includes example of free-running capture mode.
 [onboard_temperature](adc/onboard_temperature) | Display the value of the onboard temperature sensor.
 [microphone_adc](adc/microphone_adc) | Read analog values from a microphone and plot the measured sound amplitude.
+[dma_capture](adc/dma_capture) | Use the DMA to capture many samples from the ADC.
 
 ### Clocks
 
@@ -30,6 +31,7 @@ App|Description
 [hello_48MHz](clocks/hello_48MHz) | Change the system clock frequency to 48 MHz while running.
 [hello_gpout](clocks/hello_gpout) | Use the general purpose clock outputs (GPOUT) to drive divisions of internal clocks onto GPIO outputs.
 [hello_resus](clocks/hello_resus) | Enable the clock resuscitate feature, "accidentally" stop the system clock, and show how we recover.
+[detached_clk_peri](clocks/detached_clk_peri) | Detach peripheral clock and vary system clock.
 
 ### CMake
 
@@ -230,6 +232,7 @@ App|Description
 [uart_tx](pio/uart_tx) | Implement the transmit component of a UART serial port, and print hello world.
 [ws2812](pio/ws2812) | Examples of driving WS2812 addressable RGB LEDs.
 [addition](pio/addition) | Add two integers together using PIO. Only around 8 billion times slower than Cortex-M0+.
+[clocked_input](pio/clocked_input) | Shift in serial data, sampling with an external clock.
 
 ### PWM
 
