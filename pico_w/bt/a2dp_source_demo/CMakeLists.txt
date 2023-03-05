@@ -1,1 +1,5 @@
 picow_bt_example(a2dp_source_demo pico_btstack_hxcmod_player pico_btstack_sbc_encoder)
+
+# enable usb output, disable uart output
+pico_enable_stdio_usb(picow_bt_example_a2dp_source_demo_background 1)
+pico_enable_stdio_uart(picow_bt_example_a2dp_source_demo_background 0)
