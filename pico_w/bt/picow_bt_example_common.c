@@ -59,8 +59,8 @@ static void iperf_report(void *arg, enum lwiperf_report_type report_type,
     uint32_t mbytes = bytes_transferred / 1024 / 1024;
     float mbits = bandwidth_kbitpsec / 1000.0;
     total_iperf_megabytes += mbytes;
-    printf("Completed iperf transfer of %d MBytes @ %.1f Mbits/sec\n", mbytes, mbits);
-    printf("Total iperf megabytes since start %d Mbytes\n", total_iperf_megabytes);
+    printf("Completed iperf transfer of %u MBytes @ %.1f Mbits/sec\n", mbytes, mbits);
+    printf("Total iperf megabytes since start %u Mbytes\n", total_iperf_megabytes);
 }
 #endif
 
