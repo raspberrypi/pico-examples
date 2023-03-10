@@ -72,7 +72,7 @@ int main(void) {
                     printf("%03x\n", sample_buf[i]);
                 break;
             }
-            case 'w':
+            case 'w': {
                 printf("\nPress any key to stop wiggling\n");
                 int i = 1;
                 gpio_set_dir_all_bits(-1);
@@ -85,6 +85,7 @@ int main(void) {
                 gpio_set_dir_all_bits(0);
                 printf("Wiggling halted.\n");
                 break;
+            }
             case '\n':
             case '\r':
                 break;

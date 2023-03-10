@@ -43,7 +43,5 @@ int main() {
         printf("\r%s      ", datetime_str);
         sleep_ms(100);
     }
-
-    return 0;
 }
 /// \end::hello_rtc_main[]

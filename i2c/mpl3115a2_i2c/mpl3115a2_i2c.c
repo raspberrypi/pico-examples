@@ -148,12 +148,15 @@ void mpl3115a2_convert_fifo_batch(uint8_t start, volatile uint8_t buf[], struct 
 
     // 3 altitude registers: MSB (8 bits), CSB (8 bits) and LSB (4 bits, starting from MSB)
     // first two are integer bits (2's complement) and LSB is fractional bits -> makes 20 bit signed integer
-    int32_t h = (int32_t) ((uint32_t) buf[start] << 24 | buf[start + 1] << 16 | buf[start + 2] << 8);
+    int32_t h = (int32_t) buf[start] << 24;
+    h |= (int32_t) buf[start + 1] << 16;
+    h |= (int32_t) buf[start + 2] << 8;
     data->altitude = ((float)h) / 65536.f;
 
     // 2 temperature registers: MSB (8 bits) and LSB (4 bits, starting from MSB)
     // first 8 are integer bits with sign and LSB is fractional bits -> 12 bit signed integer
-    int16_t t = (int16_t) (((uint16_t) buf[start + 3]) << 8 | buf[start + 4]);
+    int16_t t = (int16_t) buf[start + 3] << 8;
+    t |= (int16_t) buf[start + 4];
     data->temperature = ((float)t) / 256.f;
 }
 
@@ -162,6 +165,7 @@ int main() {
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
 #warning i2c / mpl3115a2_i2c example requires a board with I2C pins
     puts("Default I2C pins were not defined");
+    return 0;
 #else
     printf("Hello, MPL3115A2. Waiting for something to interrupt me!...\n");
 
@@ -202,5 +206,4 @@ int main() {
     };
 
 #endif
-    return 0;
 }

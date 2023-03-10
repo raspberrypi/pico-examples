@@ -151,7 +151,7 @@ int main() {
 #if LCD_IS_RGB
     uint8_t i = 0; // it's ok if this overflows and wraps, we're using sin
     const float frequency = 0.1f;
-    float red, green, blue;
+    uint8_t red, green, blue;
 #endif
 
     while (1) {
@@ -163,9 +163,9 @@ int main() {
         if (c < 128) uart_putc_raw(UART_ID, c); // skip extra non-ASCII chars
 #if LCD_IS_RGB
         // change the display color on keypress, rainbow style!
-        red = sin(frequency * i + 0) * 127 + 128;
-        green = sin(frequency * i + 2) * 127 + 128;
-        blue = sin(frequency * i + 4) * 127 + 128;
+        red = (uint8_t)(sin(frequency * i + 0) * 127 + 128);
+        green = (uint8_t)(sin(frequency * i + 2) * 127 + 128);
+        blue = (uint8_t)(sin(frequency * i + 4) * 127 + 128);
         lcd_set_backlight_color(red, green, blue);
         i++;
 #endif

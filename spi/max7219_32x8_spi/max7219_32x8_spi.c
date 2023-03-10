@@ -135,7 +135,5 @@ int main() {
 
         bright++;
     }
-
-    return 0;
 #endif
 }

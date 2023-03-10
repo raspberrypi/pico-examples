@@ -79,7 +79,9 @@ int main() {
     printf("Hit rate so far: %.1f%%\n", hit * 100.f / access);
 
     printf("Calculate 25th fibonacci number: %d\n", recursive_fibonacci(25));
-    printf("New hit rate after printf and fibonacci: %.1f%%\n", xip_ctrl_hw->ctr_hit * 100.f / xip_ctrl_hw->ctr_acc);
+    uint32_t ctr_hit = xip_ctrl_hw->ctr_hit;
+    uint32_t ctr_acc = xip_ctrl_hw->ctr_acc;
+    printf("New hit rate after printf and fibonacci: %.1f%%\n", ctr_hit * 100.f / ctr_acc);
 
     check_hit_miss_invalidate();
 

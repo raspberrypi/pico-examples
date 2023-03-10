@@ -110,8 +110,8 @@ static inline void i2c_program_init(PIO pio, uint sm, uint offset, uint pin_sda,
 
     // Clear IRQ flag before starting, and make sure flag doesn't actually
     // assert a system-level interrupt (we're using it as a status flag)
-    pio_set_irq0_source_enabled(pio, pis_interrupt0 + sm, false);
-    pio_set_irq1_source_enabled(pio, pis_interrupt0 + sm, false);
+    pio_set_irq0_source_enabled(pio, (enum pio_interrupt_source) ((uint) pis_interrupt0 + sm), false);
+    pio_set_irq1_source_enabled(pio, (enum pio_interrupt_source) ((uint) pis_interrupt0 + sm), false);
     pio_interrupt_clear(pio, sm);
 
     // Configure and start SM

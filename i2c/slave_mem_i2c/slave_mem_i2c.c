@@ -14,6 +14,7 @@
 static const uint I2C_SLAVE_ADDRESS = 0x17;
 static const uint I2C_BAUDRATE = 100000; // 100 kHz
 
+#ifdef i2c_default
 // For this example, we run both the master and slave from the same board.
 // You'll need to wire pin GP4 to GP6 (SDA), and pin GP5 to GP7 (SCL).
 static const uint I2C_SLAVE_SDA_PIN = PICO_DEFAULT_I2C_SDA_PIN; // 4
@@ -124,11 +125,18 @@ static void run_master() {
         sleep_ms(2000);
     }
 }
+#endif
 
 int main() {
     stdio_init_all();
+#if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
+#warning i2c / slave_mem_i2c example requires a board with I2C pins
+    puts("Default I2C pins were not defined");
+    return 0;
+#else
     puts("\nI2C slave example");
 
     setup_slave();
     run_master();
+#endif
 }
