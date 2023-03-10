@@ -110,7 +110,7 @@ int main() {
 // ----------------------------------------------------------------------------
 // Code for driving the "DAC" output for us to measure
 
-// Core 1 is just going to sit and drive samples out continously. PIO provides
+// Core 1 is just going to sit and drive samples out continuously. PIO provides
 // consistent sample frequency.
 
 #define OUTPUT_FREQ_KHZ 5
