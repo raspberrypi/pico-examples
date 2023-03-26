@@ -17,7 +17,7 @@
 //
 // To the CMakeLists.txt app for this file. Just to be sure, we can check the
 // define:
-#if !PICO_NO_FLASH
+#if !PICO_NO_FLASH && !PICO_COPY_TO_RAM
 #error "This example must be built to run from SRAM!"
 #endif
 

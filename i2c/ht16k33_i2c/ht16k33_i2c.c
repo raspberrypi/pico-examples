@@ -224,7 +224,5 @@ again:
     ht16k33_set_blink(0);
 
     goto again;
-
-    return 0;
 #endif
 }

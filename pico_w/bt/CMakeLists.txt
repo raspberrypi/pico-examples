@@ -42,8 +42,6 @@ target_sources(picow_bt_example_common INTERFACE
         )
 target_link_libraries(picow_bt_example_common INTERFACE
         pico_stdlib
-        pico_btstack_ble
-        pico_btstack_classic
         pico_btstack_cyw43
         )
 target_include_directories(picow_bt_example_common INTERFACE
@@ -301,9 +299,9 @@ endfunction()
 # Extra parameters indicate extra libraries to link to
 function(picow_bt_example NAME)
         picow_bt_example_target_name(${NAME} TARGET_NAME)
-        picow_bt_example_poll(${NAME} ${TARGET_NAME} picow_bt_example_no_cyw43_lwip_poll ${ARGN})
-        picow_bt_example_background(${NAME} ${TARGET_NAME} picow_bt_example_no_cyw43_lwip_background ${ARGN})
-        picow_bt_example_freertos(${NAME} ${TARGET_NAME} picow_bt_example_no_cyw43_lwip_freertos ${ARGN})
+        picow_bt_example_poll(${NAME} ${TARGET_NAME} picow_bt_example_no_cyw43_lwip_poll pico_btstack_ble pico_btstack_classic ${ARGN})
+        picow_bt_example_background(${NAME} ${TARGET_NAME} picow_bt_example_no_cyw43_lwip_background pico_btstack_ble pico_btstack_classic ${ARGN})
+        picow_bt_example_freertos(${NAME} ${TARGET_NAME} picow_bt_example_no_cyw43_lwip_freertos pico_btstack_ble pico_btstack_classic ${ARGN})
 endfunction()
 
 # List of examples from btstack

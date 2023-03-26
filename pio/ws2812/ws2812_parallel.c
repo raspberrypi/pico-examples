@@ -83,9 +83,9 @@ void pattern_solid(uint len, uint t) {
     }
 }
 
+int level = 8;
 
 void pattern_fade(uint len, uint t) {
-    const int level = 8;
     uint shift = 4;
 
     uint max = 16; // let's not draw too much current!

@@ -238,7 +238,7 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
 
 static bool tcp_server_open(void *arg) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
-    DEBUG_printf("starting server on port %u\n", TCP_PORT);
+    DEBUG_printf("starting server on port %d\n", TCP_PORT);
 
     struct tcp_pcb *pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
     if (!pcb) {
@@ -248,7 +248,7 @@ static bool tcp_server_open(void *arg) {
 
     err_t err = tcp_bind(pcb, IP_ANY_TYPE, TCP_PORT);
     if (err) {
-        DEBUG_printf("failed to bind to port %d\n");
+        DEBUG_printf("failed to bind to port %d\n",TCP_PORT);
         return false;
     }
 

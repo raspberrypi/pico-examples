@@ -156,9 +156,8 @@ int main() {
         sleep_ms(500);
 
         // Clear terminal 
-        printf("\e[1;1H\e[2J");
+        printf("\033[1;1H\033[2J");
     }
 #endif
-    return 0;
 }
 

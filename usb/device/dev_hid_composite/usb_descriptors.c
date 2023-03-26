@@ -23,6 +23,7 @@
  *
  */
 
+#include "pico/unique_id.h"
 #include "tusb.h"
 #include "usb_descriptors.h"
 
@@ -177,13 +178,16 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 // String Descriptors
 //--------------------------------------------------------------------+
 
+// buffer to hold flash ID
+char serial[2 * PICO_UNIQUE_BOARD_ID_SIZE_BYTES + 1];
+
 // array of pointer to string descriptors
 char const* string_desc_arr [] =
 {
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
   "TinyUSB",                     // 1: Manufacturer
   "TinyUSB Device",              // 2: Product
-  "123456",                      // 3: Serials, should use chip ID
+  serial,                        // 3: Serials, uses the flash ID
 };
 
 static uint16_t _desc_str[32];
@@ -205,6 +209,8 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.
     // https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/microsoft-defined-usb-descriptors
 
+    if (index == 3) pico_get_unique_board_id_string(serial, sizeof(serial));
+    
     if ( !(index < sizeof(string_desc_arr)/sizeof(string_desc_arr[0])) ) return NULL;
 
     const char* str = string_desc_arr[index];
