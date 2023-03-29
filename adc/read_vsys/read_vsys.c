@@ -30,13 +30,15 @@ int main() {
 
     bool old_battery_status;
     float old_voltage;
+    bool battery_status = true;
+    char *power_str = "UNKNOWN";
+
     while(true) {
         // Get battery status
-        bool battery_status = false;
-        char *power_str = "UNKNOWN";
         if (power_source(&battery_status) == PICO_OK) {
             power_str = battery_status ? "BATTERY" : "POWERED";
         }
+
         // Get voltage
         float voltage = 0;
         int voltage_return = power_voltage(&voltage);
@@ -63,7 +65,7 @@ int main() {
             old_battery_status = battery_status;
             old_voltage = voltage;
         }
-        sleep_ms(3000);
+        sleep_ms(1000);
     }
 
 #if CYW43_USES_VSYS_PIN
