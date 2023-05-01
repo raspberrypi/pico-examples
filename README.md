@@ -215,6 +215,7 @@ App|Description
 App|Description
 ---|---
 [hello_pio](pio/hello_pio) | Absolutely minimal example showing how to control an LED by pushing values into a PIO FIFO.
+[7_segment](pio/7_segment/) | use PIO to control a four digit 7-segment multiplexed LED display
 [apa102](pio/apa102) | Rainbow pattern on on a string of APA102 addressable RGB LEDs.
 [clocked_input](pio/clocked_input) | Shift in serial data, sampling with an external clock.
 [differential_manchester](pio/differential_manchester) | Send and receive differential Manchester-encoded serial (BMC).
