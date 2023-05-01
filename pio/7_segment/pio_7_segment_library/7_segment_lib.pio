@@ -1,0 +1,50 @@
+;;
+;; Copyright (c) 2023 mjcross
+;;
+;; SPDX-License-Identifier: BSD-3-Clause
+;;
+
+.program seven_segment
+
+;; SIDE pins:   digit enable lines
+;; OUT pins:    segments (multiplexed)
+
+.side_set 4                             ; leaves one `delay` bit
+
+                                        ; note: for the digits to look the same brightness it's
+                                        ; important to show them for the same amount of time
+.wrap_target
+    pull noblock    side 0b0001         ; TX FIFO (or X) -> OSR     keep showing 1000's for 1 tick
+                                        ; if the FIFO is empty then the OSR is loaded from X
+public entry_point:
+    mov x, osr      side 0b0000         ; save the segments in X    and show no digits for 1 tick
+                                        
+    out pins, 8     side 0b1000  [1]    ; OSR[07..00] -> segments   and show 1's digit for 2 ticks
+    out pins, 8     side 0b0100  [1]    ; OSR[15..08] -> segments   and show 10's digit for 2 ticks
+    out pins, 8     side 0b0010  [1]    ; OSR[23..16] -> segments   and show 100's digit for 2 ticks
+    out pins, 8     side 0b0001         ; OSR[31..24] -> segments   and show 1000's digit for 1 tick
+.wrap
+;; 6 instructions
+
+
+% c-sdk {
+static inline void seven_segment_sm_init (PIO pio, uint sm, uint offset, 
+                                          uint segment_pinbase, uint digit_pinbase) {
+    // create new sm config
+    pio_sm_config config = seven_segment_program_get_default_config (offset);
+
+    // configure the common cathodes and segment pin groups
+    sm_config_set_out_pins (&config, segment_pinbase, 8);
+    sm_config_set_sideset_pins (&config, digit_pinbase);
+
+    // configure the clock divider
+    float div = clock_get_hz (clk_sys) * 10e-3;
+    sm_config_set_clkdiv (&config, div);
+
+    // apply the configuration to the state machine initialise the program counter
+    pio_sm_init (pio, sm, offset + seven_segment_offset_entry_point, &config);
+
+    // enable the state machine
+    pio_sm_set_enabled (pio, sm, true);
+}
+%}
