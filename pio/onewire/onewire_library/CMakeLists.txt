@@ -1,5 +1,5 @@
 add_library(onewire_library INTERFACE)
-target_sources(onewire_library onewire_library.c)
+target_sources(onewire_library INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/onewire_library.c)
 
 # invoke pio_asm to assemble the state machine programs
 #
