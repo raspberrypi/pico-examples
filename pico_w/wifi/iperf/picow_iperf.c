@@ -36,6 +36,24 @@ static void iperf_report(void *arg, enum lwiperf_report_type report_type,
 #endif
 }
 
+// This "worker" function is called to safely perform work when instructed by key_pressed_func
+void key_pressed_worker_func(async_context_t *context, async_when_pending_worker_t *worker) {
+    printf("Disabling wifi\n");
+    cyw43_arch_disable_sta_mode();
+}
+
+static async_when_pending_worker_t key_pressed_worker = {
+        .do_work = key_pressed_worker_func
+};
+
+void key_pressed_func(void *param) {
+    int key = getchar_timeout_us(0); // get any pending key press but don't wait
+    if (key == 'd' || key == 'D') {
+        // We are probably in irq context so call wifi in a "worker"
+        async_context_set_work_pending((async_context_t*)param, &key_pressed_worker);
+    }
+}
+
 int main() {
     stdio_init_all();
 
@@ -43,8 +61,13 @@ int main() {
         printf("failed to initialise\n");
         return 1;
     }
+
+    // Get notified if the user presses a key
+    async_context_add_when_pending_worker(cyw43_arch_async_context(), &key_pressed_worker);
+    stdio_set_chars_available_callback(key_pressed_func, cyw43_arch_async_context());
+
     cyw43_arch_enable_sta_mode();
-    printf("Connecting to Wi-Fi...\n");
+    printf("Connecting to Wi-Fi... (press 'd' to disconnect)\n");
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
         printf("failed to connect.\n");
         return 1;
@@ -64,7 +87,7 @@ int main() {
 #endif
     cyw43_arch_lwip_end();
 
-    while(true) {
+    while(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != CYW43_LINK_DOWN) {
 #if USE_LED
         static absolute_time_t led_time;
         static int led_on = true;
