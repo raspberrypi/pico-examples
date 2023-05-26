@@ -74,6 +74,15 @@ int main() {
     // turn on bluetooth!
     hci_power_control(HCI_POWER_ON);
 
+    // We're using threadsafe background where poll does nothing and work is performed in a low priority IRQ
+    // So btstack_run_loop_execute effectively does nothing and you're free to just loop and do your own stuff
+    // You would have to call btstack_run_loop_execute if you were using pico_cyw43_arch_poll
+#if 0
     btstack_run_loop_execute();
+#else
+    while(true) {
+        sleep_ms(1000);
+    }
+#endif
     return 0;
 }

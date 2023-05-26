@@ -85,7 +85,7 @@ int main() {
     // register for ATT event
     att_server_register_packet_handler(packet_handler);
 
-    // set one-shot btstack timer
+    // use an async worker for for the led
     async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &heartbeat_worker, HEARTBEAT_PERIOD_MS);
 
     // Connect to Wi-Fi
