@@ -78,14 +78,9 @@ static inline void onewire_sm_init (PIO pio, uint sm, uint offset, uint pin_num,
     sm_config_set_in_pins (&c, pin_num);
     sm_config_set_sideset_pins (&c, pin_num);
 
-    // configure the clock divider to refresh the display at 2kHz - about
-    // as slow as we can get with a 125MHz system clock and a 16bit divider
-    float div = clock_get_hz (clk_sys) * 5e-4;
-    // limit to 16 integer bits of SM clock divisor
-    if (div > 65535.0) {
-        div = 65535.0;
-    }
-    sm_config_set_clkdiv (&config, div);
+    // configure the clock divider for 1 usec per instruction
+    float div = clock_get_hz (clk_sys) * 1e-6;
+    sm_config_set_clkdiv (&c, div);
 
     // apply the configuration and initialise the program counter
     pio_sm_init (pio, sm, offset + onewire_offset_fetch_bit, &c);
