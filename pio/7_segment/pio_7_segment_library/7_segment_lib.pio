@@ -37,8 +37,13 @@ static inline void seven_segment_sm_init (PIO pio, uint sm, uint offset,
     sm_config_set_out_pins (&config, segment_pinbase, 8);
     sm_config_set_sideset_pins (&config, digit_pinbase);
 
-    // configure the clock divider
-    float div = clock_get_hz (clk_sys) * 10e-3;
+    // configure the clock divider to refresh the display at 2kHz - about
+    // as slow as we can expect with a 16bit divider
+    float div = clock_get_hz (clk_sys) * 5e-4;
+    // limit to 16 integer bits of SM clock divisor
+    if (div > 65535.0) {
+        div = 65535.0;
+    }
     sm_config_set_clkdiv (&config, div);
 
     // apply the configuration to the state machine initialise the program counter
