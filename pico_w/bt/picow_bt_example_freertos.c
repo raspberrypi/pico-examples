@@ -6,7 +6,6 @@
 
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "pico/btstack_init.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -62,8 +61,6 @@ void main_task(__unused void *params) {
     while(true) {
         vTaskDelay(1000);
     }
-
-    pico_btstack_deinit();
 
 #if HAVE_LWIP && !CYW43_LWIP
     lwip_freertos_deinit(cyw43_arch_async_context());
