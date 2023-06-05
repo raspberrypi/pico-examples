@@ -73,14 +73,19 @@ int main() {
 
     // turn on bluetooth!
     hci_power_control(HCI_POWER_ON);
+    
+    // btstack_run_loop_execute is only required when using the 'polling' method (e.g. using pico_cyw43_arch_poll library).
+    // This example uses the 'threadsafe background` method, where BT work is handled in a low priority IRQ, so it
+    // is fine to call bt_stack_run_loop_execute() but equally you can continue executing user code.
 
-    // We're using threadsafe background where poll does nothing and work is performed in a low priority IRQ
-    // So btstack_run_loop_execute effectively does nothing and you're free to just loop and do your own stuff
-    // You would have to call btstack_run_loop_execute if you were using pico_cyw43_arch_poll
-#if 0
+#if 0 // btstack_run_loop_execute() is not required, so lets not use it
     btstack_run_loop_execute();
 #else
-    while(true) {
+    // this core is free to do it's own stuff except when using 'polling' method (in which case you should use 
+    // btstacK_run_loop_ methods to add work to the run loop.
+    
+    // this is a forever loop in place of where user code would go.
+    while(true) {      
         sleep_ms(1000);
     }
 #endif
