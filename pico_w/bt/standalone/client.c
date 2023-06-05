@@ -255,6 +255,10 @@ int main() {
     l2cap_init();
     sm_init();
     sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
+
+    // setup empty ATT server - only needed if LE Peripheral does ATT queries on its own, e.g. Android and iOS
+    att_server_init(NULL, NULL, NULL);
+
     gatt_client_init();
 
     hci_event_callback_registration.callback = &hci_event_handler;
