@@ -277,6 +277,8 @@ int main() {
 #else
     // this core is free to do it's own stuff except when using 'polling' method (in which case you should use 
     // btstacK_run_loop_ methods to add work to the run loop.
+
+    // this is a forever loop in place of where user code would go.
     while(true) {      
         sleep_ms(1000);
     }
