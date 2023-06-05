@@ -19,7 +19,7 @@
 // This program
 // - Uses UART1 (the spare UART, by default) to transmit some text
 // - Uses a PIO state machine to receive that text
-// - Use an interrupt to determine when the PIO FIFI has some data
+// - Use an interrupt to determine when the PIO FIFO has some data
 // - Saves characters in a queue
 // - Uses an async context to perform work when notified by the irq
 // - Prints out the received text to the default console (UART0)
@@ -144,7 +144,7 @@ int main() {
     irq_add_shared_handler(pio_irq, pio_irq_func, PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY); // Add a shared IRQ handler
     irq_set_enabled(pio_irq, true); // Enable the IRQ
     const uint irq_index = pio_irq - ((pio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0); // Get index of the IRQ
-    pio_set_irqn_source_enabled(pio, irq_index, pis_sm0_rx_fifo_not_empty + sm, true); // Set pio to tell us when the fifi is NOT empty
+    pio_set_irqn_source_enabled(pio, irq_index, pis_sm0_rx_fifo_not_empty + sm, true); // Set pio to tell us when the FIFO is NOT empty
 
     // Tell core 1 to print text to uart1
     multicore_launch_core1(core1_main);
