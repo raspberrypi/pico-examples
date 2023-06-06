@@ -22,6 +22,7 @@ App|Description
 [adc_console](adc/adc_console)|An interactive shell for playing with the ADC. Includes example of free-running capture mode.
 [onboard_temperature](adc/onboard_temperature)|Display the value of the onboard temperature sensor.
 [microphone_adc](adc/microphone_adc)|Read analog values from a microphone and plot the measured sound amplitude.
+[read_vsys](adc/read_vsys)|Demonstrates how to read VSYS to get the voltage of the power supply.
 
 ### Clocks
 
