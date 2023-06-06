@@ -57,4 +57,4 @@ jobs:
       working-directory: ${{github.workspace}}/pico-examples/build
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
-      run: cmake --build . --config $BUILD_TYPE --parallel ${{steps.core_count.outputs.output}}
+      run: cmake --build . --config $BUILD_TYPE --parallel $(nproc)

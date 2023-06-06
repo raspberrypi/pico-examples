@@ -58,8 +58,11 @@ void cross_lanes() {
     interp0->base[0] = 1;
     interp0->base[1] = 0;
     puts("Lane result crossover:");
-    for (int i = 0; i < 10; ++i)
-        printf("PEEK0, POP1: %d, %d\n", interp0->peek[0], interp0->pop[1]);
+    for (int i = 0; i < 10; ++i) {
+        uint32_t peek0 = interp0->peek[0];
+        uint32_t pop1 = interp0->pop[1];
+        printf("PEEK0, POP1: %d, %d\n", peek0, pop1);
+    }
 }
 
 void simple_blend1() {
@@ -107,7 +110,7 @@ void simple_blend2() {
     interp_config_set_blend(&cfg, true);
     interp_set_config(interp0, 0, &cfg);
 
-    interp0->base[0] = -1000;
+    interp0->base[0] = (uint32_t) -1000;
     interp0->base[1] = 1000;
 
     puts("signed:");
@@ -178,8 +181,10 @@ void linear_interpolation() {
         int16_t *sample_pair = (int16_t *) interp0->peek[2];
         interp0->base[0] = sample_pair[0];
         interp0->base[1] = sample_pair[1];
-        printf("%d\t(%d%% between %d and %d)\n", (int) interp0->peek[1],
-               100 * (interp0->add_raw[1] & 0xff) / 0xff,
+        uint32_t peek1 = interp0->peek[1];
+        uint32_t add_raw1 = interp0->add_raw[1];
+        printf("%d\t(%d%% between %d and %d)\n", (int) peek1,
+               100 * (add_raw1 & 0xff) / 0xff,
                sample_pair[0], sample_pair[1]);
         interp0->add_raw[0] = step;
     }

@@ -4,11 +4,14 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#if TEST_AUDIO
 #include "btstack_audio.h"
+#endif
 #include "btstack_event.h"
 #include "hal_led.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
+#include "btstack.h"
 
 #if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
 #define TEST_BTWIFI 1
@@ -27,7 +30,6 @@ const btstack_audio_sink_t * btstack_audio_pico_sink_get_instance(void);
 #endif
 
 static btstack_packet_callback_registration_t hci_event_callback_registration;
-
 static int led_state = 0;
 
 void hal_led_toggle(void){
@@ -35,7 +37,7 @@ void hal_led_toggle(void){
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
 }
 
-static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size){
+static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size){
     UNUSED(size);
     UNUSED(channel);
     bd_addr_t local_addr;
@@ -59,8 +61,8 @@ static void iperf_report(void *arg, enum lwiperf_report_type report_type,
     uint32_t mbytes = bytes_transferred / 1024 / 1024;
     float mbits = bandwidth_kbitpsec / 1000.0;
     total_iperf_megabytes += mbytes;
-    printf("Completed iperf transfer of %d MBytes @ %.1f Mbits/sec\n", mbytes, mbits);
-    printf("Total iperf megabytes since start %d Mbytes\n", total_iperf_megabytes);
+    printf("Completed iperf transfer of %u MBytes @ %.1f Mbits/sec\n", mbytes, mbits);
+    printf("Total iperf megabytes since start %u Mbytes\n", total_iperf_megabytes);
 }
 #endif
 

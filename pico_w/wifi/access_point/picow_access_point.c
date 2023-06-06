@@ -30,6 +30,7 @@ typedef struct TCP_SERVER_T_ {
     struct tcp_pcb *server_pcb;
     bool complete;
     ip_addr_t gw;
+    async_context_t *context;
 } TCP_SERVER_T;
 
 typedef struct TCP_CONNECT_STATE_T_ {
@@ -236,9 +237,9 @@ static err_t tcp_server_accept(void *arg, struct tcp_pcb *client_pcb, err_t err)
     return ERR_OK;
 }
 
-static bool tcp_server_open(void *arg) {
+static bool tcp_server_open(void *arg, const char *ap_name) {
     TCP_SERVER_T *state = (TCP_SERVER_T*)arg;
-    DEBUG_printf("starting server on port %u\n", TCP_PORT);
+    DEBUG_printf("starting server on port %d\n", TCP_PORT);
 
     struct tcp_pcb *pcb = tcp_new_ip_type(IPADDR_TYPE_ANY);
     if (!pcb) {
@@ -248,7 +249,7 @@ static bool tcp_server_open(void *arg) {
 
     err_t err = tcp_bind(pcb, IP_ANY_TYPE, TCP_PORT);
     if (err) {
-        DEBUG_printf("failed to bind to port %d\n");
+        DEBUG_printf("failed to bind to port %d\n",TCP_PORT);
         return false;
     }
 
@@ -264,7 +265,29 @@ static bool tcp_server_open(void *arg) {
     tcp_arg(state->server_pcb, state);
     tcp_accept(state->server_pcb, tcp_server_accept);
 
+    printf("Try connecting to '%s' (press 'd' to disable access point)\n", ap_name);
     return true;
+}
+
+// This "worker" function is called to safely perform work when instructed by key_pressed_func
+void key_pressed_worker_func(async_context_t *context, async_when_pending_worker_t *worker) {
+    assert(worker->user_data);
+    printf("Disabling wifi\n");
+    cyw43_arch_disable_ap_mode();
+    ((TCP_SERVER_T*)(worker->user_data))->complete = true;
+}
+
+static async_when_pending_worker_t key_pressed_worker = {
+        .do_work = key_pressed_worker_func
+};
+
+void key_pressed_func(void *param) {
+    assert(param);
+    int key = getchar_timeout_us(0); // get any pending key press but don't wait
+    if (key == 'd' || key == 'D') {
+        // We are probably in irq context so call wifi in a "worker"
+        async_context_set_work_pending(((TCP_SERVER_T*)param)->context, &key_pressed_worker);
+    }
 }
 
 int main() {
@@ -280,6 +303,13 @@ int main() {
         DEBUG_printf("failed to initialise\n");
         return 1;
     }
+
+    // Get notified if the user presses a key
+    state->context = cyw43_arch_async_context();
+    key_pressed_worker.user_data = state;
+    async_context_add_when_pending_worker(cyw43_arch_async_context(), &key_pressed_worker);
+    stdio_set_chars_available_callback(key_pressed_func, state);
+
     const char *ap_name = "picow_test";
 #if 1
     const char *password = "password";
@@ -301,11 +331,12 @@ int main() {
     dns_server_t dns_server;
     dns_server_init(&dns_server, &state->gw);
 
-    if (!tcp_server_open(state)) {
+    if (!tcp_server_open(state, ap_name)) {
         DEBUG_printf("failed to open server\n");
         return 1;
     }
 
+    state->complete = false;
     while(!state->complete) {
         // the following #ifdef is only here so this same example can be used in multiple modes;
         // you do not need it in your code
@@ -323,6 +354,7 @@ int main() {
         sleep_ms(1000);
 #endif
     }
+    tcp_server_close(state);
     dns_server_deinit(&dns_server);
     dhcp_server_deinit(&dhcp_server);
     cyw43_arch_deinit();

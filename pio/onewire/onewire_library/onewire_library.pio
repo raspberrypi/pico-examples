@@ -1,0 +1,96 @@
+;
+; Copyright (c) 2023 mjcross
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+; Implements a Maxim 1-Wire bus with a GPIO pin.
+;
+; Place data words to be transmitted in the TX FIFO and read the results from the
+; RX FIFO. To reset the bus execute a jump to 'reset_bus' using the opcode from
+; the provided function.
+;
+; At 1us per cycle as initialised below the timings are those recommended by:
+; https://www.analog.com/en/technical-articles/1wire-communication-through-software.html
+;
+; Notes:
+;   (1) The code will stall with the bus in a safe state if the FIFOs are empty/full.
+;   (2) The bus must be pulled up with an external pull-up resistor of about 4k.
+;       The internal GPIO resistors are too high (~50k) to work reliably for this.
+;   (3) Do not connect the GPIO pin directly to a bus powered at more than 3.3V.
+
+.program onewire
+.side_set 1 pindirs
+
+PUBLIC reset_bus:
+        set x, 28       side 1  [15]    ; pull bus low                          16
+loop_a: jmp x-- loop_a  side 1  [15]    ;                                  29 x 16
+        set x, 8        side 0  [6]     ; release bus                            7
+loop_b: jmp x-- loop_b  side 0  [6]     ;                                    9 x 7
+
+        mov isr, pins   side 0          ; read all pins to ISR (avoids autopush) 1
+        push            side 0          ; push result manually                   1
+        set x, 24       side 0  [7]     ;                                        8
+loop_c: jmp x-- loop_c  side 0  [15]    ;                                  25 x 16
+
+.wrap_target
+PUBLIC fetch_bit:
+        out x, 1        side 0          ; shift next bit from OSR (autopull)     1
+        jmp !x  send_0  side 1  [5]     ; pull bus low, branch if sending '0'    6
+
+send_1: ; send a '1' bit
+        set x, 2        side 0  [8]     ; release bus, wait for slave response   9
+        in pins, 1      side 0  [4]     ; read bus, shift bit to ISR (autopush)  5
+loop_e: jmp x-- loop_e  side 0  [15]    ;                                   3 x 16
+        jmp fetch_bit   side 0          ;                                        1
+
+send_0: ; send a '0' bit
+        set x, 2        side 1  [5]     ; continue pulling bus low               6
+loop_d: jmp x-- loop_d  side 1  [15]    ;                                   3 x 16
+        in null, 1      side 0  [8]     ; release bus, shift 0 to ISR (autopush) 9
+.wrap
+;; (17 instructions)
+
+
+% c-sdk {
+static inline void onewire_sm_init (PIO pio, uint sm, uint offset, uint pin_num, uint bits_per_word) {
+
+    // create a new state machine configuration
+    pio_sm_config c = onewire_program_get_default_config (offset);
+
+    // Input Shift Register configuration settings
+    sm_config_set_in_shift (
+        &c,
+        true,           // shift direction: right
+        true,           // autopush: enabled
+        bits_per_word   // autopush threshold
+    );
+
+    // Output Shift Register configuration settings
+    sm_config_set_out_shift (
+        &c,
+        true,           // shift direction: right
+        true,           // autopull: enabled
+        bits_per_word   // autopull threshold
+    );
+
+    // configure the input and sideset pin groups to start at `pin_num`
+    sm_config_set_in_pins (&c, pin_num);
+    sm_config_set_sideset_pins (&c, pin_num);
+
+    // configure the clock divider for 1 usec per instruction
+    float div = clock_get_hz (clk_sys) * 1e-6;
+    sm_config_set_clkdiv (&c, div);
+
+    // apply the configuration and initialise the program counter
+    pio_sm_init (pio, sm, offset + onewire_offset_fetch_bit, &c);
+
+    // enable the state machine
+    pio_sm_set_enabled (pio, sm, true);
+}
+
+static inline uint onewire_reset_instr (uint offset) {
+    // encode a "jmp reset_bus side 0" instruction for the state machine
+    return pio_encode_jmp (offset + onewire_offset_reset_bus) | pio_encode_sideset (1, 0);
+}
+%}

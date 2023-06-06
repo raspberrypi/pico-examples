@@ -33,10 +33,14 @@ static inline void pio_i2c_put16(PIO pio, uint sm, uint16_t data) {
     while (pio_sm_is_tx_fifo_full(pio, sm))
         ;
     // some versions of GCC dislike this
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
     *(io_rw_16 *)&pio->txf[sm] = data;
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 }
 
 
@@ -48,10 +52,14 @@ void pio_i2c_put_or_err(PIO pio, uint sm, uint16_t data) {
     if (pio_i2c_check_error(pio, sm))
         return;
     // some versions of GCC dislike this
+#ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
     *(io_rw_16 *)&pio->txf[sm] = data;
+#ifdef __GNUC__
 #pragma GCC diagnostic pop
+#endif
 }
 
 uint8_t pio_i2c_get(PIO pio, uint sm) {

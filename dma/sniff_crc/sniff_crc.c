@@ -89,7 +89,7 @@ int main() {
     dma_channel_wait_for_finish_blocking(chan);
 
     uint32_t sniffed_crc = dma_sniffer_get_data_accumulator();
-    printf("Completed DMA sniff of %d byte buffer, DMA sniff accumulator value: 0x%lx\n", TOTAL_LEN, sniffed_crc);
+    printf("Completed DMA sniff of %d byte buffer, DMA sniff accumulator value: 0x%x\n", TOTAL_LEN, sniffed_crc);
 
     if (0ul == sniffed_crc) {
         printf("CRC32 check is good\n");

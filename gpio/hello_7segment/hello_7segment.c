@@ -89,7 +89,5 @@ int main() {
         sleep_ms(250);
         gpio_clr_mask(mask);
     }
-
-    return 0;
 }
 /// \end::hello_gpio[]

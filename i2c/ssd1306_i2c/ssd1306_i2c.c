@@ -106,7 +106,7 @@ void SSD1306_send_cmd(uint8_t cmd) {
     // this "data" can be a command or data to follow up a command
     // Co = 1, D/C = 0 => the driver expects a command
     uint8_t buf[2] = {0x80, cmd};
-    i2c_write_blocking(i2c_default, (SSD1306_I2C_ADDR & SSD1306_WRITE_MODE), buf, 2, false);
+    i2c_write_blocking(i2c_default, SSD1306_I2C_ADDR, buf, 2, false);
 }
 
 void SSD1306_send_cmd_list(uint8_t *buf, int num) {
@@ -127,7 +127,7 @@ void SSD1306_send_buf(uint8_t buf[], int buflen) {
     temp_buf[0] = 0x40;
     memcpy(temp_buf+1, buf, buflen);
 
-    i2c_write_blocking(i2c_default, (SSD1306_I2C_ADDR & SSD1306_WRITE_MODE), temp_buf, buflen + 1, false);
+    i2c_write_blocking(i2c_default, SSD1306_I2C_ADDR, temp_buf, buflen + 1, false);
 
     free(temp_buf);
 }

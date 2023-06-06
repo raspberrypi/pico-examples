@@ -1,4 +1,4 @@
-= Attaching a 4 digit 14 segment LED driven by the HT15k33 via I2C
+= Attaching a 4 digit 14 segment LED driven by the HT16k33 via I2C
 
 This example code shows how to interface the Raspberry Pi Pico to one HT16K33 driven 4 digit 14 segment LED. The device used for development
 uses VCC at 5v, but also allows the I2C voltage to be selected by connecting the vi2c pin to the appropriate voltage, in the Pico case 3v3 as the 
@@ -23,17 +23,17 @@ Connections on Raspberry Pi Pico board, other boards may vary.
 == List of Files
 
 CMakeLists.txt:: CMake file to incorporate the example in to the examples build tree.
-ht15k33_i2c.c:: The example code.
+ht16k33_i2c.c:: The example code.
 
 == Bill of Materials
 
 .A list of materials required for the example
-[[ht15k33_i2c-bom-table]]
+[[ht16k33_i2c-bom-table]]
 [cols=3]
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
 | Raspberry Pi Pico | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
-| ht16k33 based LCD panel | 1 | generic part
+| ht16k33 based LED panel | 1 | generic part
 | M/M Jumper wires | 5 | generic part
 |===

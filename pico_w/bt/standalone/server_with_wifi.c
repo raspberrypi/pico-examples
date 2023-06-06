@@ -54,8 +54,8 @@ static void iperf_report(void *arg, enum lwiperf_report_type report_type,
 
     total_iperf_megabytes += mbytes;
 
-    printf("Completed iperf transfer of %d MBytes @ %.1f Mbits/sec\n", mbytes, mbits);
-    printf("Total iperf megabytes since start %d Mbytes\n", total_iperf_megabytes);
+    printf("Completed iperf transfer of %u MBytes @ %.1f Mbits/sec\n", mbytes, mbits);
+    printf("Total iperf megabytes since start %u Mbytes\n", total_iperf_megabytes);
 }
 
 int main() {
@@ -85,7 +85,7 @@ int main() {
     // register for ATT event
     att_server_register_packet_handler(packet_handler);
 
-    // set one-shot btstack timer
+    // use an async worker for for the led
     async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &heartbeat_worker, HEARTBEAT_PERIOD_MS);
 
     // Connect to Wi-Fi
