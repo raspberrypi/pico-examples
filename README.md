@@ -23,6 +23,7 @@ App|Description
 [onboard_temperature](adc/onboard_temperature) | Display the value of the onboard temperature sensor.
 [microphone_adc](adc/microphone_adc) | Read analog values from a microphone and plot the measured sound amplitude.
 [dma_capture](adc/dma_capture) | Use the DMA to capture many samples from the ADC.
+[read_vsys](adc/read_vsys) | Demonstrates how to read VSYS to get the voltage of the power supply.
 
 ### Clocks
 
