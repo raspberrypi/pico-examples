@@ -130,8 +130,7 @@ static int dhcp_socket_sendto(struct udp_pcb **udp, struct netif *nif, const voi
     err_t err;
     if (nif != NULL) {
         err = udp_sendto_if(*udp, p, &dest, port, nif);
-    }
-    else {
+    } else {
         err = udp_sendto(*udp, p, &dest, port);
     }
 
