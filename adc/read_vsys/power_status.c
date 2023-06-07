@@ -23,9 +23,9 @@ int power_source(bool *battery_powered) {
 #if defined CYW43_WL_GPIO_VBUS_PIN
     *battery_powered = !cyw43_arch_gpio_get(CYW43_WL_GPIO_VBUS_PIN);
     return PICO_OK;
-#elif defined PICO_VBUS_GPIO_PIN
-    gpio_set_function(PICO_VBUS_GPIO_PIN, GPIO_FUNC_SIO);
-    *battery_powered = !gpio_get(PICO_VBUS_GPIO_PIN);
+#elif defined PICO_VBUS_PIN
+    gpio_set_function(PICO_VBUS_PIN, GPIO_FUNC_SIO);
+    *battery_powered = !gpio_get(PICO_VBUS_PIN);
     return PICO_OK;
 #else
     return PICO_ERROR_NO_DATA;
