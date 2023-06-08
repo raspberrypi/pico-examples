@@ -113,7 +113,7 @@ static int dhcp_socket_bind(struct udp_pcb **udp, uint16_t port) {
     return udp_bind(*udp, IP_ANY_TYPE, port);
 }
 
-static int dhcp_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len, uint32_t ip, uint16_t port) {
+static int dhcp_socket_sendto(struct udp_pcb **udp, struct netif *nif, const void *buf, size_t len, uint32_t ip, uint16_t port) {
     if (len > 0xffff) {
         len = 0xffff;
     }
@@ -127,7 +127,12 @@ static int dhcp_socket_sendto(struct udp_pcb **udp, const void *buf, size_t len,
 
     ip_addr_t dest;
     IP4_ADDR(ip_2_ip4(&dest), ip >> 24 & 0xff, ip >> 16 & 0xff, ip >> 8 & 0xff, ip & 0xff);
-    err_t err = udp_sendto(*udp, p, &dest, port);
+    err_t err;
+    if (nif != NULL) {
+        err = udp_sendto_if(*udp, p, &dest, port, nif);
+    } else {
+        err = udp_sendto(*udp, p, &dest, port);
+    }
 
     pbuf_free(p);
 
@@ -282,7 +287,8 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
     opt_write_n(&opt, DHCP_OPT_DNS, 4, &ip4_addr_get_u32(ip_2_ip4(&d->ip))); // this server is the dns
     opt_write_u32(&opt, DHCP_OPT_IP_LEASE_TIME, DEFAULT_LEASE_TIME_S);
     *opt++ = DHCP_OPT_END;
-    dhcp_socket_sendto(&d->udp, &dhcp_msg, opt - (uint8_t *)&dhcp_msg, 0xffffffff, PORT_DHCP_CLIENT);
+    struct netif *nif = ip_current_input_netif();
+    dhcp_socket_sendto(&d->udp, nif, &dhcp_msg, opt - (uint8_t *)&dhcp_msg, 0xffffffff, PORT_DHCP_CLIENT);
 
 ignore_request:
     pbuf_free(p);
