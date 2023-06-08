@@ -35,7 +35,7 @@ int power_source(bool *battery_powered) {
 int power_voltage(float *voltage_result) {
 #ifndef PICO_VSYS_PIN
     return PICO_ERROR_NO_DATA;
-#endif
+#else
 #if CYW43_USES_VSYS_PIN
     cyw43_thread_enter();
     // Make sure cyw43 is awake
@@ -73,4 +73,5 @@ int power_voltage(float *voltage_result) {
     const float conversion_factor = 3.3f / (1 << 12);
     *voltage_result = vsys * 3 * conversion_factor;
     return PICO_OK;
+#endif
 }
