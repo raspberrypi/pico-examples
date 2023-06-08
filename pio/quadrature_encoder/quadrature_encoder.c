@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021-2023 pmarques-dev @ github
+ * Copyright (c) 2023 Raspberry Pi (Trading) Ltd.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
