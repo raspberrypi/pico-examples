@@ -49,13 +49,11 @@ int power_voltage(float *voltage_result) {
     adc_fifo_setup(true, false, 0, false, false);
     adc_run(true);
 
-#if CYW43_USES_VSYS_PIN
-    // We seem to read low values from cyw43 sometimes - this seems to fix it
+    // We seem to read low values initially - this seems to fix it
     int ignore_count = PICO_POWER_SAMPLE_COUNT;
     while (!adc_fifo_is_empty() || ignore_count-- > 0) {
         (void)adc_fifo_get_blocking();
     }
-#endif
 
     // read vsys
     uint32_t vsys = 0;
