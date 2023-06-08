@@ -108,7 +108,7 @@ static void ntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
 
 // Perform initialisation
 static NTP_T* ntp_init(void) {
-    NTP_T *state = calloc(1, sizeof(NTP_T));
+    NTP_T *state = (NTP_T*)calloc(1, sizeof(NTP_T));
     if (!state) {
         printf("failed to allocate state\n");
         return NULL;

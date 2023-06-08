@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2021 pmarques-dev @ github
+ * Copyright (c) 2023 Raspberry Pi (Trading) Ltd.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -44,8 +44,10 @@ int main() {
     PIO pio = pio0;
     const uint sm = 0;
 
-    uint offset = pio_add_program(pio, &quadrature_encoder_program);
-    quadrature_encoder_program_init(pio, sm, offset, PIN_AB, 0);
+    // we don't really need to keep the offset, as this program must be loaded
+    // at offset 0
+    pio_add_program(pio, &quadrature_encoder_program);
+    quadrature_encoder_program_init(pio, sm, PIN_AB, 0);
 
     while (1) {
         // note: thanks to two's complement arithmetic delta will always
