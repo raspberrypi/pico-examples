@@ -202,7 +202,7 @@ App|Description
 [picow_bt_example_spp_flowcontrol](https://github.com/bluekitchen/btstack/tree/master/example/spp_flowcontrol.c) | SPP Server - RFCOMM Flow Control.
 [picow_bt_example_spp_streamer_client](https://github.com/bluekitchen/btstack/tree/master/example/spp_streamer_client.c) | Performance - Stream Data over SPP (Client.c).
 [picow_bt_example_spp_streamer](https://github.com/bluekitchen/btstack/tree/master/example/spp_streamer.c) | Performance - Stream Data over SPP (Server.c).
-[picow_bt_example_ublox_spp_le_counter](pico_w/bt/ublox_spp_le_counter.c) | LE u-blox SPP-like Heartbeat Server.
+[picow_bt_example_ublox_spp_le_counter](https://github.com/bluekitchen/btstack/blob/master/example/ublox_spp_le_counter.c) | LE u-blox SPP-like Heartbeat Server.
 
 Some Standalone Bluetooth examples (without all the common example build infrastructure) are also available:
 
