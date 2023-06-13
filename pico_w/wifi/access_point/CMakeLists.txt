@@ -15,7 +15,10 @@ target_link_libraries(picow_access_point_background
         pico_cyw43_arch_lwip_threadsafe_background
         pico_stdlib
         )
-
+# You can change the address below to change the address of the access point
+target_set_ip_address(picow_access_point_background PRIVATE
+        CYW43_DEFAULT_IP_AP_ADDRESS 192.168.4.1
+        )
 pico_add_extra_outputs(picow_access_point_background)
 
 add_executable(picow_access_point_poll
@@ -32,5 +35,9 @@ target_include_directories(picow_access_point_poll PRIVATE
 target_link_libraries(picow_access_point_poll
         pico_cyw43_arch_lwip_poll
         pico_stdlib
+        )
+# You can change the address below to change the address of the access point
+target_set_ip_address(picow_access_point_poll PRIVATE
+        CYW43_DEFAULT_IP_AP_ADDRESS 192.168.4.1
         )
 pico_add_extra_outputs(picow_access_point_poll)
