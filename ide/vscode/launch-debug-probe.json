@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Pico Debug",
+            "name": "Pico Debug Probe",
             "cwd": "${workspaceRoot}",
             "executable": "${command:cmake.launchTargetPath}",
             "request": "launch",
@@ -10,6 +10,9 @@
             "servertype": "openocd",
             // This may need to be "arm-none-eabi-gdb" for some previous builds
             "gdbPath" : "gdb-multiarch",
+            "serverArgs": [
+                "-c", "adapter speed 5000"
+            ],
             "device": "RP2040",
             "configFiles": [
                 // This may need to be "interface/picoprobe.cfg" for some previous builds
