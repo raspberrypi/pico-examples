@@ -151,10 +151,10 @@ void SSD1306_init() {
         SSD1306_SET_COM_OUT_DIR | 0x08, // set COM (common) output scan direction. Scan from bottom up, COM[N-1] to COM0
         SSD1306_SET_DISP_OFFSET,        // set display offset
         0x00,                           // no offset
-        SSD1306_SET_COM_PIN_CFG,        // set COM (common) pins hardware configuration. Board specific magic number. 
+        SSD1306_SET_COM_PIN_CFG,        // set COM (common) pins hardware configuration. Board specific magic number.
                                         // 0x02 Works for 128x32, 0x12 Possibly works for 128x64. Other options 0x22, 0x32
 #if ((SSD1306_WIDTH == 128) && (SSD1306_HEIGHT == 32))
-        0x02,                           
+        0x02,
 #elif ((SSD1306_WIDTH == 128) && (SSD1306_HEIGHT == 64))
         0x12,
 #else
@@ -207,7 +207,7 @@ void render(uint8_t *buf, struct render_area *area) {
         area->start_page,
         area->end_page
     };
-    
+
     SSD1306_send_cmd_list(cmds, count_of(cmds));
     SSD1306_send_buf(buf, area->buflen);
 }
@@ -274,24 +274,7 @@ static inline int GetFontIndex(uint8_t ch) {
     else return  0; // Not got that char so space.
 }
 
-static uint8_t reversed[sizeof(font)] = {0};
-
-static uint8_t reverse(uint8_t b) {
-   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
-   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
-   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
-   return b;
-}
-static void FillReversedCache() {
-    // calculate and cache a reversed version of fhe font, because I defined it upside down...doh!
-    for (int i=0;i<sizeof(font);i++)
-        reversed[i] = reverse(font[i]);
-}
-
 static void WriteChar(uint8_t *buf, int16_t x, int16_t y, uint8_t ch) {
-    if (reversed[0] == 0) 
-        FillReversedCache();
-
     if (x > SSD1306_WIDTH - 8 || y > SSD1306_HEIGHT - 8)
         return;
 
@@ -303,7 +286,7 @@ static void WriteChar(uint8_t *buf, int16_t x, int16_t y, uint8_t ch) {
     int fb_idx = y * 128 + x;
 
     for (int i=0;i<8;i++) {
-        buf[fb_idx++] = reversed[idx * 8 + i];
+        buf[fb_idx++] = font[idx * 8 + i];
     }
 }
 
@@ -381,7 +364,7 @@ restart:
     area.end_col = IMG_WIDTH - 1;
 
     calc_render_area_buflen(&area);
-    
+
     uint8_t offset = 5 + IMG_WIDTH; // 5px padding
 
     for (int i = 0; i < 3; i++) {
