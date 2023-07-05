@@ -232,6 +232,7 @@ App|Description
 [squarewave](pio/squarewave) | Drive a fast square wave onto a GPIO. This example accesses low-level PIO registers directly, instead of using the SDK functions.
 [st7789_lcd](pio/st7789_lcd) | Set up PIO for 62.5 Mbps serial output, and use this to display a spinning image on a ST7789 serial LCD.
 [quadrature_encoder](pio/quadrature_encoder) | A quadrature encoder using PIO to maintain counts independent of the CPU. 
+[quadrature_encoder_substep](pio/quadrature_encoder_substep) | High resolution speed measurement using a standard quadrature encoder
 [uart_rx](pio/uart_rx) | Implement the receive component of a UART serial port. Attach it to the spare Arm UART to see it receive characters.
 [uart_tx](pio/uart_tx) | Implement the transmit component of a UART serial port, and print hello world.
 [ws2812](pio/ws2812) | Examples of driving WS2812 addressable RGB LEDs.

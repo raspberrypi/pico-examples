@@ -1,0 +1,205 @@
+;
+; Copyright (c) 2023 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+; quadrature_encoder_substep: reads a quadrature encoder with no CPU
+; intervention and provides the current position on request.
+;
+; the "substep" version uses not only the step counts, but also the timing of 
+; the steps to compute the current speed. See README.md for details
+
+
+.program quadrature_encoder_substep
+
+.origin 0
+
+; the PIO code counts steps like the standard quadrature encoder code, but also
+; keeps track of the time passed since the last transition. That allows the C
+; code to build a good estimate of a fractional step position based on the
+; lastest speed and time passed
+;
+; since it needs to push two values, it only pushes new data when the FIFO has
+; enough space to hold both values. Otherwise it could either stall or go out
+; of sync
+;
+; because we need to count the time passed, all loops must take the same number
+; of cycles and there are delays added to the fastest branches to make sure it
+; always takes 13 cycles per loop (e.g., sysclk 133MHz, max step rate = ~10.2
+; Msteps/sec)
+
+	; push the step count and transition clock count to the RX FIFO (using
+	; auto push). This is reached by the "MOV PC, ~STATUS" instruction when
+	; status is all 1 (meaning fifo has space for this push). It also may
+	; execute once at program start, but that has little effect
+	IN X, 32
+	IN Y, 32
+
+update_state:
+	; build the state by using 2 bits from the negated previous state of the
+	; pins and the new 2 bit state of the pins
+	OUT ISR, 2
+	IN PINS, 2
+	MOV OSR, ~ISR
+	; use the jump table to update the step count accordingly
+	MOV PC, OSR
+
+decrement:
+	; decrement the step count
+	JMP Y--, decrement_cont
+decrement_cont:
+	; when decrementing, X is set to 2^31, when incrementing it is set to
+	; zero. That way the C code can infer in which direction the last
+	; transition was taken and how long ago
+	SET X, 1
+	MOV X, ::X
+	; after incrementing or decrementing, continue to "check_fifo"
+check_fifo:
+.wrap_target
+	; on each iteration we decrement X to count the number of loops since
+	; the last transition
+	JMP X--, check_fifo_cont
+check_fifo_cont:
+	; push data or continue, depending on the state of the fifo
+	MOV PC, ~STATUS
+
+increment:
+	; the PIO does not have a increment instruction, so to do that we do a
+	; negate, decrement, negate sequence
+	MOV Y, ~Y
+	JMP Y--, increment_cont
+increment_cont:
+	MOV Y, ~Y
+	; reset X to zero when incrementing
+	SET X, 0
+	; wrap above to check the fifo state
+	.wrap
+
+invalid:
+	; this is just a placeholder to document what the code does on invalid
+	; transitions, where the two phases change at the same time. We don't do
+	; anything special, but the encoder should note generate these invalid
+	; transitions anyway
+	JMP update_state
+
+	; this jump table starts at address 16 and is accessed by the
+	; "MOV PC, OSR" instruction above, that loads the PC with the state on
+	; the lower 4 bits and the 5th bit on. The delays here extend the faster
+	; branches to take the same time as the slower branches
+	JMP invalid
+	JMP increment		[0]
+	JMP decrement		[1]
+	JMP check_fifo		[4]
+
+	JMP decrement		[1]
+	JMP invalid
+	JMP check_fifo		[4]
+	JMP increment		[0]
+
+	JMP increment		[0]
+	JMP check_fifo		[4]
+	JMP invalid
+	JMP decrement		[1]
+
+	JMP check_fifo		[4]
+	JMP decrement		[1]
+	JMP increment		[0]
+	; this instruction should be usually reached by the "MOV PC, ~STATUS"
+	; instruction above when the status is zero, which means that the fifo
+	; has data and we don't want to push more data. This can also be reached
+	; on an invalid state transition, which should not happen. Even if it 
+	; happens, it should be a transient state and the only side effect is
+	; that we'll call update_state twice in a row
+	JMP update_state	[1]
+
+
+
+
+
+% c-sdk {
+
+#include "hardware/clocks.h"
+#include "hardware/gpio.h"
+#include "hardware/sync.h"
+
+
+// "substep" version low-level interface
+//
+// note: user code should use the high level functions in quadrature_encoder.c
+// and not call these directly
+
+// initialize the PIO state and the substep_state_t structure that keeps track
+// of the encoder state
+static inline void quadrature_encoder_substep_program_init(PIO pio, uint sm, uint pin_A)
+{
+	uint pin_state, position, ints;
+
+	pio_sm_set_consecutive_pindirs(pio, sm, pin_A, 2, false);
+	gpio_pull_up(pin_A);
+	gpio_pull_up(pin_A + 1);
+
+	pio_sm_config c = quadrature_encoder_substep_program_get_default_config(0);
+	sm_config_set_in_pins(&c, pin_A); // for WAIT, IN
+	// shift to left, auto-push at 32 bits
+	sm_config_set_in_shift(&c, false, true, 32);
+	sm_config_set_out_shift(&c, true, false, 32);
+	// don't join FIFO's
+	sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_NONE);
+
+	// always run at sysclk, to have the maximum possible time resolution
+	sm_config_set_clkdiv(&c, 1.0);
+
+	pio_sm_init(pio, sm, 0, &c);
+
+	// set up status to be rx_fifo < 1
+	pio->sm[sm].execctrl = ((pio->sm[sm].execctrl & 0xFFFFFF80) | 0x12);
+
+	// init the state machine according to the current phase. Since we are
+	// setting the state running PIO instructions from C state, the encoder may
+	// step during this initialization. This should not be a problem though,
+	// because as long as it is just one step, the state machine will update
+	// correctly when it starts. We disable interrupts anyway, to be safe
+	ints = save_and_disable_interrupts();
+
+	pin_state = (gpio_get_all() >> pin_A) & 3;
+
+	// to setup the state machine, we need to set the lower 2 bits of OSR to be
+	// the negated pin state
+	pio_sm_exec(pio, sm, pio_encode_set(pio_y, ~pin_state));
+	pio_sm_exec(pio, sm, pio_encode_mov(pio_osr, pio_y));
+
+	// also set the Y (current step) so that the lower 2 bits of Y have a 1:1
+	// mapping to the current phase (input pin state). That simplifies the code
+	// to compensate for differences in encoder phase sizes:
+	switch (pin_state) {
+		case 0: position = 0; break;
+		case 1: position = 3; break;
+		case 2: position = 1; break;
+		case 3: position = 2; break;
+	} 
+	pio_sm_exec(pio, sm, pio_encode_set(pio_y, position));
+
+	pio_sm_set_enabled(pio, sm, true);
+	
+	restore_interrupts(ints);
+}
+
+static inline void quadrature_encoder_substep_get_counts(PIO pio, uint sm, uint *step, int *cycles, uint *us)
+{
+	int i, pairs;
+	uint ints;
+	
+	pairs = pio_sm_get_rx_fifo_level(pio, sm) >> 1;
+
+	// read all data with interrupts disabled, so that there can not be a
+	// big time gap between reading the PIO data and the current us
+	ints = save_and_disable_interrupts();
+	for (i = 0; i < pairs + 1; i++) {
+		*cycles = pio_sm_get_blocking(pio, sm);
+		*step = pio_sm_get_blocking(pio, sm);
+	}
+	*us = time_us_32();
+	restore_interrupts(ints);
+}
+
+%}
