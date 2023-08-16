@@ -13,7 +13,7 @@ target_link_libraries(picow_tcpip_server_background
         pico_cyw43_arch_lwip_threadsafe_background
         pico_stdlib
         )
-
+pico_enable_stdio_usb(picow_tcpip_server_background 1)
 pico_add_extra_outputs(picow_tcpip_server_background)
 
 add_executable(picow_tcpip_server_poll
@@ -31,4 +31,5 @@ target_link_libraries(picow_tcpip_server_poll
         pico_cyw43_arch_lwip_poll
         pico_stdlib
         )
+pico_enable_stdio_usb(picow_tcpip_server_poll 1)
 pico_add_extra_outputs(picow_tcpip_server_poll)
