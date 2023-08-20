@@ -1,0 +1,79 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+.program ppm
+.side_set 1
+
+    set pindirs, 1  side 0; Set pin to output
+.wrap_target
+    out x, 16 side 0
+delay0:
+    jmp x-- delay0 side 0
+    out x, 16 side 1
+delay1:
+    jmp x-- delay1 side 1
+    .wrap
+
+% c-sdk {
+#include "hardware/pio.h"
+#include "hardware/clocks.h"
+#include "ppm.pio.h"
+
+
+#define PPM_CHANNELS (8)
+struct {
+    volatile PIO pio;
+    // 16 MSB - strobe length in microsec
+    // 16 LSB - gap length in microsec
+    volatile uint32_t ch_values[PPM_CHANNELS + 1];
+    volatile uint value_idx;
+} ppm_data;
+
+void ppm_handler() {
+    while (!pio_sm_is_tx_fifo_full(ppm_data.pio, 0)) {
+        pio_sm_put(ppm_data.pio, 0, ppm_data.ch_values[ppm_data.value_idx]);
+        ppm_data.value_idx = (ppm_data.value_idx + 1) % (PPM_CHANNELS + 1);
+    }
+}
+
+static inline void ppm_program_init(PIO pio, uint pin) {
+    ppm_data.pio = pio == NULL ? pio0 : pio;
+    ppm_data.ch_values[0] = 500 * 0x10000 +  5000;
+    for (int i = 1; i <= PPM_CHANNELS; ++i)
+        ppm_data.ch_values[i] = 500 * 0x10000 + 1500;
+    ppm_data.value_idx = 0;
+    uint offset = pio_add_program(ppm_data.pio, &ppm_program);
+    pio_gpio_init(ppm_data.pio, pin);
+    pio_sm_set_consecutive_pindirs(pio, 0, pin, 1, true);
+    pio_sm_config pio_conf = ppm_program_get_default_config(offset);
+    sm_config_set_sideset_pins(&pio_conf, pin);
+    sm_config_set_set_pins(&pio_conf, 0, 1);
+    sm_config_set_out_shift(&pio_conf, true, true, 0);
+    sm_config_set_fifo_join(&pio_conf, PIO_FIFO_JOIN_TX);
+    pio_sm_init(ppm_data.pio, 0, offset, &pio_conf);
+    pio_sm_set_clkdiv(ppm_data.pio, 0, (float) clock_get_hz(clk_sys) / 1000000); //1MHz
+    pio_sm_clear_fifos(ppm_data.pio, 0);
+    pio_sm_restart(ppm_data.pio, 0);
+
+    pio_set_irq0_source_enabled(ppm_data.pio, PIO_INTR_SM0_TXNFULL_LSB, true);
+    irq_set_exclusive_handler(PIO0_IRQ_0, ppm_handler);
+    irq_set_enabled(PIO0_IRQ_0, true);
+    pio_sm_set_enabled(ppm_data.pio, 0, true);
+}
+
+/** Sets channel value
+ *
+ * @channel_number RC channel number [1..PPM_CHANNELS]
+ * @value_usec channel vaue [1000, 2000]
+ */
+static inline void ppm_set_value(uint channel_number, uint value_usec) {
+    valid_params_if(PIO, channel_number <= PPM_CHANNELS);
+    valid_params_if(PIO, channel_number >= 1);
+    valid_params_if(PIO, value_usec <= 2000);
+    valid_params_if(PIO, value_usec >= 1000);
+    ppm_data.ch_values[channel_number] = 500 * 0x10000 + value_usec;
+}
+%}
