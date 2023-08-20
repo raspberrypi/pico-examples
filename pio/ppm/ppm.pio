@@ -41,9 +41,9 @@ void ppm_handler() {
 
 static inline void ppm_program_init(PIO pio, uint pin) {
     ppm_data.pio = pio == NULL ? pio0 : pio;
-    ppm_data.ch_values[0] = 500 * 0x10000 +  5000;
+    ppm_data.ch_values[0] = 499 * 0x10000 +  4999;
     for (int i = 1; i <= PPM_CHANNELS; ++i)
-        ppm_data.ch_values[i] = 500 * 0x10000 + 1500;
+        ppm_data.ch_values[i] = 499 * 0x10000 + 1499;
     ppm_data.value_idx = 0;
     uint offset = pio_add_program(ppm_data.pio, &ppm_program);
     pio_gpio_init(ppm_data.pio, pin);
@@ -74,6 +74,6 @@ static inline void ppm_set_value(uint channel_number, uint value_usec) {
     valid_params_if(PIO, channel_number >= 1);
     valid_params_if(PIO, value_usec <= 2000);
     valid_params_if(PIO, value_usec >= 1000);
-    ppm_data.ch_values[channel_number] = 500 * 0x10000 + value_usec;
+    ppm_data.ch_values[channel_number] = 499 * 0x10000 + value_usec - 1;
 }
 %}
