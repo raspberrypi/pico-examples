@@ -39,8 +39,8 @@ void ppm_handler() {
     }
 }
 
-// 500 microseconds strobe and gap microseconds
-#define BUILD_CH_VALUE(gap_us) (((500 - 1) << 16) + (gap_us - 1))
+// 500 microseconds strobe + gap = value (microseconds)
+#define BUILD_CH_VALUE(value_us) (((500 - 1) << 16) + (value_us - 500 - 1))
 
 static inline void ppm_program_init(PIO pio, uint pin) {
     ppm_data.pio = pio == NULL ? pio0 : pio;
