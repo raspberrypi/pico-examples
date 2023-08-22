@@ -8,10 +8,10 @@
  * 8-channel Radio Control PPM example
  * Output on GPIO3
  *
- * 0.5ms   5ms         0.5ms      1-2mc      0.5ms      1-2mc
- * strobe  synchro    strobe     ch0 value  strobe     ch1 value
- * ______              _______               _______
- *       |_______...__|       |_____________|       |___________...
+ *  >=5ms       0.5ms    1-2ms       0.5ms     1-2ms         0.5ms    1-2ms       0.5ms
+ *  synchro     strobe   ch0 value   strobe    ch1 value     strobe   ch8 value   strobe
+ *              _______               _______                _______              _______
+ * _______...__|       |_____________|       |___________...|       |____________|       |_
  */
 #include <stdio.h>
 
