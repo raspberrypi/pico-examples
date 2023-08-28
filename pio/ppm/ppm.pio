@@ -44,7 +44,7 @@ void ppm_handler() {
 
 static inline void ppm_program_init(PIO pio, uint pin) {
     ppm_data.pio = pio == NULL ? pio0 : pio;
-    ppm_data.ch_values[0] = BUILD_CH_VALUE(5000);
+    ppm_data.ch_values[0] = BUILD_CH_VALUE(5500);
     // Neutral position (1500us) by default
     for (int i = 1; i <= PPM_CHANNELS; ++i)
         ppm_data.ch_values[i] = BUILD_CH_VALUE(1500);
