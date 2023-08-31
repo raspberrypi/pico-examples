@@ -22,7 +22,7 @@
 // but we are using a threshold of 8 here (consume 1 byte from each FIFO entry
 // and discard the remainder) to make things easier for software on the other side
 
-static inline void st7789_lcd_program_init(PIO pio, uint sm, uint offset, uint data_pin, uint clk_pin, float clk_div) {
+static inline void st7789_lcd_program_init(PIO pio, uint sm, uint offset, bool cpol, uint data_pin, uint clk_pin, float clk_div) {
     pio_gpio_init(pio, data_pin);
     pio_gpio_init(pio, clk_pin);
     pio_sm_set_consecutive_pindirs(pio, sm, data_pin, 1, true);
@@ -33,6 +33,11 @@ static inline void st7789_lcd_program_init(PIO pio, uint sm, uint offset, uint d
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_out_shift(&c, false, true, 8);
+	
+	// The pin muxes can be configured to invert the output (among other things
+    // and this is a cheesy way to get CPOL=1
+    gpio_set_outover(clk_pin, cpol ? GPIO_OVERRIDE_INVERT : GPIO_OVERRIDE_NORMAL);
+	
     pio_sm_init(pio, sm, offset, &c);
     pio_sm_set_enabled(pio, sm, true);
 }
