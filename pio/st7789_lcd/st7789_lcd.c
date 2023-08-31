@@ -28,7 +28,7 @@
 #define PIN_RESET 4
 #define PIN_BL 5
 
-#define SPI_POLARITY 0 // default to 0, displays require polarity 1
+#define SPI_POLARITY 0 // default to 0, some displays require polarity 1
 
 #define SERIAL_CLK_DIV 1.f
 
