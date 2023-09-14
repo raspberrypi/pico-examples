@@ -42,7 +42,7 @@ The example assumes:
 
 3. Copy the `settings.json` file into the `.vscode` folder. This illustrates how to configure the *CMake* plugin so that you debug using *cortex-debug* instead of trying to launch the executable on the host.
 
-Lauching a debug session in the workspace (e.g. with *f5*) should now build the project and if successful upload it to the target, open a debug session and pause at the start of `main()`.
+Launching a debug session in the workspace (e.g. with *f5*) should now build the project and if successful upload it to the target, open a debug session and pause at the start of `main()`.
 
 > VSCode has some background work to do the first time through. If appears to have stalled then leave it alone for at least a minute.
 

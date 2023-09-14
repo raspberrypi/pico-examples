@@ -2,7 +2,7 @@
 
 This example shows how to use the Raspberry Pi Pico (RP2040) to send and receive infra-red frames in the 'NEC' format that is used by many consumer remote control applications.
 
-It performs a loopback test by transmitting IR codes via an IR LED and receiving them on an IR detector. The results are sent to the default serial terminal connnected via UART or USB as configured in the SDK.
+It performs a loopback test by transmitting IR codes via an IR LED and receiving them on an IR detector. The results are sent to the default serial terminal connected via UART or USB as configured in the SDK.
 
 The tasks of encoding and decoding the data are offloaded to the RP2040 PIO state machines. This releases the main processor cores to concentrate on other tasks.
 

@@ -73,7 +73,7 @@ void pa1010d_parse_string(char output[], char protocol[]) {
     // Displays GNRMC data
     // Similarly, additional if statements can be used to add more protocols 
     if (strcmp(protocol, "GNRMC") == 0) {
-        printf("Protcol:%s\n", gps_data[0]);
+        printf("Protocol:%s\n", gps_data[0]);
         printf("UTC Time: %s\n", gps_data[1]);
         printf("Status: %s\n", gps_data[2][0] == 'V' ? "Data invalid. GPS fix not found." : "Data Valid");
         printf("Latitude: %s\n", gps_data[3]);
