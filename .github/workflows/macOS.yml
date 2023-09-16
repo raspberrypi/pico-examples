@@ -35,8 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew install cmake
-          brew tap ArmMbed/homebrew-formulae
-          brew install arm-none-eabi-gcc
+          brew install --cask gcc-arm-embedded
 
       - name: Build Project
         working-directory: ${{github.workspace}}/pico-examples
