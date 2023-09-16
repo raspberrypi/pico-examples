@@ -33,7 +33,7 @@ int main() {
     rtc_set_datetime(&t);
 
     // clk_sys is >2000x faster than clk_rtc, so datetime is not updated immediately when rtc_get_datetime() is called.
-    // tbe delay is up to 3 RTC clock cycles (which is 64us with the default clock settings)
+    // The delay is up to 3 RTC clock cycles (which is 64us with the default clock settings)
     sleep_us(64);
 
     // Print the time

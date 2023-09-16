@@ -17,7 +17,7 @@
    Connections on Raspberry Pi Pico board, other boards may vary.
 
    GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is GP4 (physical pin 6)) -> SDA on MMA8451 board
-   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is GP5 (physcial pin 7)) -> SCL on MMA8451 board
+   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is GP5 (physical pin 7)) -> SCL on MMA8451 board
    VSYS (physical pin 39) -> VDD on MMA8451 board
    GND (physical pin 38)  -> GND on MMA8451 board
 

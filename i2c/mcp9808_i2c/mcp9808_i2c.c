@@ -17,7 +17,7 @@
    Connections on Raspberry Pi Pico board, other boards may vary.
 
    GPIO PICO_DEFAULT_I2C_SDA_PIN (On Pico this is GP4 (physical pin 6)) -> SDA on MCP9808 board
-   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is GP5 (physcial pin 7)) -> SCL on MCP9808 board
+   GPIO PICO_DEFAULT_I2C_SCK_PIN (On Pico this is GP5 (physical pin 7)) -> SCL on MCP9808 board
    Vsys (physical pin 39) -> VDD on MCP9808 board
    GND (physical pin 38)  -> GND on MCP9808 board
 

@@ -17,7 +17,7 @@
    inbuilt FIFO to make it more useful.
 
    NOTE: Ensure the device is capable of being driven at 3.3v NOT 5v. The Pico
-   GPIO (and therefor I2C) cannot be used at 5v.
+   GPIO (and therefore I2C) cannot be used at 5v.
 
    You will need to use a level shifter on the I2C lines if you want to run the
    board at 5v.

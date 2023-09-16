@@ -17,7 +17,7 @@
 #include "nec_carrier_control.pio.h"
 
 // Claim an unused state machine on the specified PIO and configure it
-// to transmit NEC IR frames on the specificied GPIO pin.
+// to transmit NEC IR frames on the specified GPIO pin.
 //
 // Returns: on success, the number of the carrier_control state machine
 // otherwise -1

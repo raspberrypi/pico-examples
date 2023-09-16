@@ -5,7 +5,7 @@
  */
 
 // Vertical bitmaps, A-Z, 0-9. Each is 8 pixels high and wide
-// Theses are defined vertically to make them quick to copy to FB
+// These are defined vertically to make them quick to copy to FB
 
 static uint8_t font[] = {
 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Nothing

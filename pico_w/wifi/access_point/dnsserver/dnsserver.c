@@ -202,7 +202,7 @@ static void dns_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
 
     dns_hdr->flags = lwip_htons(
                 0x1 << 15 | // QR = response
-                0x1 << 10 | // AA = authoritive
+                0x1 << 10 | // AA = authoritative
                 0x1 << 7);   // RA = authenticated
     dns_hdr->question_count = lwip_htons(1);
     dns_hdr->answer_record_count = lwip_htons(1);

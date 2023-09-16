@@ -12,7 +12,7 @@
 
 /* Example code to talk to a LIS3DH Mini GPS module.
 
-   This example reads data from all 3 axes of the accelerometer and uses an auxillary ADC to output temperature values.
+   This example reads data from all 3 axes of the accelerometer and uses an auxiliary ADC to output temperature values.
 
    Connections on Raspberry Pi Pico board, other boards may vary.
 
@@ -44,7 +44,7 @@ void lis3dh_init() {
     buf[1] = 0x80;
     i2c_write_blocking(i2c_default, ADDRESS, buf, 2, false);
 
-    // Turn auxillary ADC on
+    // Turn auxiliary ADC on
     buf[0] = TEMP_CFG_REG;
     buf[1] = 0xC0;
     i2c_write_blocking(i2c_default, ADDRESS, buf, 2, false);

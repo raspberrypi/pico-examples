@@ -3,7 +3,7 @@
 import random
 import socket
 
-# Set server adress to machines IP
+# Set server address to machines IP
 SERVER_ADDR = "0.0.0.0"
 
 # These constants should match the client
