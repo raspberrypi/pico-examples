@@ -34,7 +34,7 @@ static inline void st7789_lcd_program_init(PIO pio, uint sm, uint offset, bool c
     sm_config_set_clkdiv(&c, clk_div);
     sm_config_set_out_shift(&c, false, true, 8);
 	
-    // The pin muxes can be configured to invert the output (among other things
+    // The pin muxes can be configured to invert the output (among other things),
     // and this is a cheesy way to allow changing polarity
     gpio_set_outover(clk_pin, cpol ? GPIO_OVERRIDE_INVERT : GPIO_OVERRIDE_NORMAL);
 	
