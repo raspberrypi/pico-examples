@@ -153,6 +153,8 @@ default being *background*. This can be changed by passing `-DBTSTACK_EXAMPLE_TY
 examples can be built (which may be slow) by passing `-DBTSTACK_EXAMPLE_TYPE=all`
 Freertos versions can only be built if `FREERTOS_KERNEL_PATH` is defined.
 
+The Bluetooth examples that use audio require code in [pico-extras](https://github.com/raspberrypi/pico-extras). Pass `-DPICO_EXTRAS_PATH=${HOME}/pico-extras` on the cmake command line or define `PICO_EXTRAS_PATH=${HOME}/pico-extras` in your environment and re-run cmake to include them in the build.
+
 App|Description
 ---|---
 [picow_bt_example_a2dp_sink_demo](https://github.com/bluekitchen/btstack/tree/master/example/a2dp_sink_demo.c) | A2DP Sink - Receive Audio Stream and Control Playback.
