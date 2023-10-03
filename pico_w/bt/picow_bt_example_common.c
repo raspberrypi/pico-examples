@@ -12,6 +12,8 @@
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 #include "btstack.h"
+#include "hci_dump.h"
+#include "hci_dump_embedded_stdout.h"
 
 #if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
 #define TEST_BTWIFI 1
@@ -87,6 +89,12 @@ int picow_bt_example_init(void) {
 void picow_bt_example_main(void) {
 
     btstack_main(0, NULL);
+    
+    // if WANT_HCI_DUMP=1, enable debug output as well as packet logger
+#if WANT_HCI_DUMP
+    hci_dump_init(hci_dump_embedded_stdout_get_instance());
+    hci_dump_enable_packet_log(true);
+#endif
 
 #if TEST_BTWIFI
     uint32_t start_ms = to_ms_since_boot(get_absolute_time());
