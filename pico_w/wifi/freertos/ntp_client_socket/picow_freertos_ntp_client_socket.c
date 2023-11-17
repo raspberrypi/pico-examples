@@ -66,7 +66,22 @@ void main_task(__unused void *params) {
 #else
         char address[INET6_ADDRSTRLEN] = {0};
 #endif
-        inet_ntop(dns_result->ai_family, (struct sockaddr_in*)(dns_result->ai_addr), address, sizeof(address));
+        ip_addr_t ip_addr;
+#if LWIP_IPV4
+        if (dns_result->ai_addr->sa_family == AF_INET) {
+            const struct sockaddr_in *sock_addr = (struct sockaddr_in*)dns_result->ai_addr;
+            inet_addr_to_ip4addr(ip_2_ip4(&ip_addr), &sock_addr->sin_addr);
+            IP_SET_TYPE(&ip_addr, IPADDR_TYPE_V4);
+        }
+#endif
+#if LWIP_IPV6
+        if (dns_result->ai_addr->sa_family == AF_INET6) {
+            const struct sockaddr_in6 *sock_addr = (struct sockaddr_in6*)dns_result->ai_addr;
+            inet6_addr_to_ip6addr(ip_2_ip6(&ip_addr), &sock_addr->sin6_addr);
+            IP_SET_TYPE(&ip_addr, IPADDR_TYPE_V6);
+        }
+#endif
+        inet_ntop(dns_result->ai_family, &ip_addr, address, sizeof(address));
         printf("Got DNS response: %s\n", address);
 
         int sock = socket(dns_result->ai_family, dns_result->ai_socktype, dns_result->ai_protocol);
