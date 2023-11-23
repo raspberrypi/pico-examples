@@ -97,10 +97,10 @@ static int test_server_content(const char *request, const char *params, char *re
             if (led_param == 1) {
                 if (led_state) {
                     // Turn led on
-                    cyw43_gpio_set(&cyw43_state, 0, true);
+                    cyw43_gpio_set(&cyw43_state, LED_GPIO, true);
                 } else {
                     // Turn led off
-                    cyw43_gpio_set(&cyw43_state, 0, false);
+                    cyw43_gpio_set(&cyw43_state, LED_GPIO, false);
                 }
             }
         }
