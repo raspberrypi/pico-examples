@@ -113,8 +113,17 @@ int8_t read_from_dht(struct DHT_Data *result) {
     */
 
     if (_checksum_ok) {
-        uint16_t hum = (data[0] << 8) | data[1];
-        int16_t temp = (data[2] << 8) | data[3];
+        uint16_t hum = (uint16_t)((data[0] << 8) | data[1]);
+        // check now if temperature is smaller than zero
+        int16_t temp {0};
+        if (data[2] & 0x80) {
+            // found negative Temperature
+            data[2] &= 0x7f;
+            temp = -(int16_t)((data[2] << 8) | data[3]);
+        }
+        else {
+            temp = (int16_t)((data[2] << 8) | data[3]);
+        }
         result->humidity  = hum * 0.1F;
         result->temp_celsius = temp * 0.1F;
         return SENSOR_READ_OK;	
