@@ -99,17 +99,26 @@ void tuh_hid_umount_cb(uint8_t dev_addr, uint8_t instance)
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len)
 {
   uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+  uint8_t const rpt_count = tuh_hid_instance_count(dev_addr);
+
+  uint8_t const* reportAdj = report;
+
+  if ( rpt_count != 1 )
+  {
+    // Composite report, 1st byte is report ID, data starts from 2nd byte
+    reportAdj++;
+  }
 
   switch (itf_protocol)
   {
     case HID_ITF_PROTOCOL_KEYBOARD:
       TU_LOG2("HID receive boot keyboard report\r\n");
-      process_kbd_report( (hid_keyboard_report_t const*) report );
+      process_kbd_report( (hid_keyboard_report_t const*) reportAdj );
     break;
 
     case HID_ITF_PROTOCOL_MOUSE:
       TU_LOG2("HID receive boot mouse report\r\n");
-      process_mouse_report( (hid_mouse_report_t const*) report );
+      process_mouse_report( (hid_mouse_report_t const*) reportAdj );
     break;
 
     default:
