@@ -115,7 +115,7 @@ int8_t read_from_dht(struct DHT_Data *result) {
     if (_checksum_ok) {
         uint16_t hum = (uint16_t)((data[0] << 8) | data[1]);
         // check now if temperature is smaller than zero
-        int16_t temp {0};
+        int16_t temp = 0;
         if (data[2] & 0x80) {
             // found negative Temperature
             data[2] &= 0x7f;
