@@ -42,6 +42,8 @@ int main() {
     gpio_set_dir(LED_PIN, GPIO_OUT);
 #endif
      printf("\n\n === Pi Pico Example - Read DHTxx-Sensor === \n\n");
+     // wait min. 2 s to power up the sensor (see darasheet)
+     sleep_ms(2000);
     
     while (1) {
 
