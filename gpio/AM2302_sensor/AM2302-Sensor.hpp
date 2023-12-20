@@ -24,6 +24,8 @@ namespace AM2302 {
 
    // define timeout in 100 µs
    constexpr uint8_t READ_TIMEOUT         {100U};
+
+   // define maximum sensor read frequency in milliseconds (2 s)
    constexpr uint16_t READ_FREQUENCY      {2000U};
 
    class AM2302_Sensor {
@@ -36,7 +38,7 @@ namespace AM2302 {
          float get_Humidity() const {return _hum * 0.1F;}
 
       private:
-         unsigned long _millis_last_read;
+         unsigned long _us_last_read;
          uint16_t _hum {0};
          int16_t _temp {0};
          uint8_t _pin;
