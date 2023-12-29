@@ -8,7 +8,7 @@
 #include "pico/stdlib.h"
 #include "AM2302-Sensor.hpp"
 
-const uint LED = 13U;
+const uint LED_PIN = 13U;
 
 // DHT Pin
 const uint DHT_PIN = 15;
@@ -19,10 +19,8 @@ AM2302::AM2302_Sensor am2302{DHT_PIN};
 int main() {
     stdio_init_all();
 
-#ifdef LED_PIN
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
-#endif
     
     printf("\n\n === Pi Pico C++ Example - Read AM2302-Sensor === \n\n");
     // setup pin and do a sensor check
@@ -35,14 +33,10 @@ int main() {
     sleep_ms(3000);
     while (true) {
 
-#ifdef LED_PIN
         gpio_put(LED_PIN, 1);
-#endif
         int8_t status = am2302.read();
 
-#ifdef LED_PIN
     gpio_put(LED_PIN, 0);
-#endif
 
         printf("Sensor-status: %d\n", status);
 
