@@ -8,7 +8,7 @@
 #include "pico/stdlib.h"
 #include "AM2302-Sensor.hpp"
 
-const uint LED_PIN = 13U;
+const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 
 // DHT Pin
 const uint DHT_PIN = 15;
