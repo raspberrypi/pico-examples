@@ -7,6 +7,7 @@ target_compile_definitions(picow_freertos_iperf_server_nosys PRIVATE
         )
 target_include_directories(picow_freertos_iperf_server_nosys PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common FreeRTOSConfig
         ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts
         )
 target_link_libraries(picow_freertos_iperf_server_nosys
@@ -27,6 +28,7 @@ target_compile_definitions(picow_freertos_iperf_server_sys PRIVATE
         )
 target_include_directories(picow_freertos_iperf_server_sys PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common FreeRTOSConfig
         ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts
         )
 target_link_libraries(picow_freertos_iperf_server_sys
