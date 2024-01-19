@@ -8,17 +8,16 @@
 // the I2C bus. Print out a table that looks like this:
 //
 // I2C Bus Scan
-//   0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
-// 0
-// 1       @
-// 2
-// 3             @
-// 4
-// 5
-// 6
-// 7
-//
-// E.g. if slave addresses 0x12 and 0x34 were acknowledged.
+//    0 1 2 3 4 5 6 7 8 9 A B C D E F
+// 00 . . . . . . . . . . . . . . . .
+// 10 . . @ . . . . . . . . . . . . .
+// 20 . . . . . . . . . . . . . . . .
+// 30 . . . . @ . . . . . . . . . . .
+// 40 . . . . . . . . . . . . . . . .
+// 50 . . . . . . . . . . . . . . . .
+// 60 . . . . . . . . . . . . . . . .
+// 70 . . . . . . . . . . . . . . . .
+// E.g. if addresses 0x12 and 0x34 were acknowledged.
 
 #include <stdio.h>
 #include "pico/stdlib.h"
