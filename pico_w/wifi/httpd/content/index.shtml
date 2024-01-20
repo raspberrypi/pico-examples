@@ -1,0 +1,18 @@
+<html>
+<head>
+    <title>Pico httpd example</title>
+</head>
+<body>
+    <h1>Pico httpd example</h1>
+    <p><img src="/img/rpi.png"/></p>
+    <p><!--#welcome--></p>
+    <p>Uptime is <!--#uptime--> seconds</p>
+    <p><a href="/?test">CGI handler test</a></p>
+    <p>
+        <form action="/led.cgi" method="post">
+            <input type="hidden" name="led_state" value="<!--#ledinv-->">
+            <input type="submit" value="Turn led <!--#ledinv-->">
+        </form>
+    </p>
+</body>
+</html>

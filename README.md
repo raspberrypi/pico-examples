@@ -130,6 +130,7 @@ App|Description
 [picow_tls_verify](pico_w/wifi/tls_client) | Demonstrates how to make a HTTPS request using TLS with certificate verification.
 [picow_wifi_scan](pico_w/wifi/wifi_scan) | Scans for WiFi networks and prints the results.
 [picow_udp_beacon](pico_w/wifi/udp_beacon) | A simple UDP transmitter.
+[picow_httpd](pico_w/wifi/httpd) | Runs a LWIP HTTP server test app
 
 #### FreeRTOS examples
 
@@ -142,6 +143,8 @@ App|Description
 [picow_freertos_iperf_server_sys](pico_w/wifi/freertos/iperf) | Runs an "iperf" server for WiFi speed testing under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode. The LED is blinked in another task
 [picow_freertos_ping_nosys](pico_w/wifi/freertos/ping) | Runs the lwip-contrib/apps/ping test app under FreeRTOS in NO_SYS=1 mode.
 [picow_freertos_ping_sys](pico_w/wifi/freertos/ping) | Runs the lwip-contrib/apps/ping test app under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode. The test app uses the lwIP _socket_ API in this case.
+[pico_freertos_httpd_nosys](pico_w/wifi/freertos/httpd) | Runs a LWIP HTTP server test app under FreeRTOS in NO_SYS=1 mode.
+[pico_freertos_httpd_sys](pico_w/wifi/freertos/httpd) | Runs a LWIP HTTP server test app under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode.
 
 ### Pico W Bluetooth
 
