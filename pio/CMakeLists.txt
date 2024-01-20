@@ -1,4 +1,5 @@
 if (NOT PICO_NO_HARDWARE)
+    add_subdirectory(7_segment)
     add_subdirectory(addition)
     add_subdirectory(apa102)
     add_subdirectory(clocked_input)
