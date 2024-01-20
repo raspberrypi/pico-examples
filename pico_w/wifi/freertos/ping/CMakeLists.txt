@@ -9,6 +9,7 @@ if (EXISTS ${PICO_LWIP_CONTRIB_PATH}/apps/ping/ping.c)
             )
     target_include_directories(picow_freertos_ping_nosys PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}
+            ${CMAKE_CURRENT_LIST_DIR}/.. # for our common FreeRTOSConfig
             ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts
             ${PICO_LWIP_CONTRIB_PATH}/apps/ping
             )
@@ -33,6 +34,7 @@ if (EXISTS ${PICO_LWIP_CONTRIB_PATH}/apps/ping/ping.c)
             )
     target_include_directories(picow_freertos_ping_sys PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}
+            ${CMAKE_CURRENT_LIST_DIR}/.. # for our common FreeRTOSConfig
             ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts
             ${PICO_LWIP_CONTRIB_PATH}/apps/ping
             )
