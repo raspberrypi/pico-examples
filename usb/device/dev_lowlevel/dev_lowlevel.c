@@ -489,6 +489,9 @@ static void usb_handle_buff_status() {
  *
  */
 /// \tag::isr_setup_packet[]
+#ifdef __cplusplus
+extern "C" {
+#endif
 void isr_usbctrl(void) {
     // USB interrupt handler
     uint32_t status = usb_hw->ints;
@@ -520,6 +523,9 @@ void isr_usbctrl(void) {
         panic("Unhandled IRQ 0x%x\n", (uint) (status ^ handled));
     }
 }
+#ifdef __cplusplus
+}
+#endif
 
 /**
  * @brief EP0 in transfer complete. Either finish the SET_ADDRESS process, or receive a zero
