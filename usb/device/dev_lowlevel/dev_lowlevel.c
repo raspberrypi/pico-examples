@@ -488,10 +488,10 @@ static void usb_handle_buff_status() {
  * @brief USB interrupt handler
  *
  */
-/// \tag::isr_setup_packet[]
 #ifdef __cplusplus
 extern "C" {
 #endif
+/// \tag::isr_setup_packet[]
 void isr_usbctrl(void) {
     // USB interrupt handler
     uint32_t status = usb_hw->ints;
