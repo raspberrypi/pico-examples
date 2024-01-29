@@ -236,6 +236,7 @@ App|Description
 [uart_tx](pio/uart_tx) | Implement the transmit component of a UART serial port, and print hello world.
 [ws2812](pio/ws2812) | Examples of driving WS2812 addressable RGB LEDs.
 [addition](pio/addition) | Add two integers together using PIO. Only around 8 billion times slower than Cortex-M0+.
+[uart_pio_dma](pio/uart_pio_dma) | Send and receive data from a UART implemented using the PIO and DMA
 
 ### PWM
 
