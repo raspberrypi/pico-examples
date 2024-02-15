@@ -153,8 +153,9 @@ static int btstack_audio_pico_sink_init(
 
     playback_callback  = playback;
 
-    btstack_audio_pico_audio_buffer_pool = init_audio(samplerate, channels);
-
+    if (!btstack_audio_pico_audio_buffer_pool) {
+        btstack_audio_pico_audio_buffer_pool = init_audio(samplerate, channels);
+    }
     return 0;
 }
 
