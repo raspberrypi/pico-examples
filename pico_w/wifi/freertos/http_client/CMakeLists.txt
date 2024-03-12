@@ -14,7 +14,7 @@ target_include_directories(picow_freertos_http_client_nosys PRIVATE
 target_link_libraries(picow_freertos_http_client_nosys
         pico_cyw43_arch_lwip_threadsafe_background
         pico_stdlib
-        pico_lwip_http_util
+        example_lwip_http_util
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
 pico_add_extra_outputs(picow_freertos_http_client_nosys)
@@ -27,6 +27,7 @@ target_compile_definitions(picow_freertos_http_client_sys PRIVATE
         WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
         NO_SYS=0 # don't want NO_SYS (generally this would be in your lwipopts.h)
         ALTCP_MBEDTLS_AUTHMODE=MBEDTLS_SSL_VERIFY_REQUIRED
+        CYW43_TASK_STACK_SIZE=2048
         )
 target_include_directories(picow_freertos_http_client_sys PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
@@ -36,7 +37,7 @@ target_include_directories(picow_freertos_http_client_sys PRIVATE
 target_link_libraries(picow_freertos_http_client_sys
         pico_cyw43_arch_lwip_sys_freertos
         pico_stdlib
-        pico_lwip_http_util
+        example_lwip_http_util
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
 pico_add_extra_outputs(picow_freertos_http_client_sys)

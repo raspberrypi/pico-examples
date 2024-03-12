@@ -7,6 +7,9 @@ pico_mirrored_target_link_libraries(example_lwip_http_util INTERFACE
         pico_lwip_mbedtls
         pico_mbedtls
         )
+target_include_directories(example_lwip_http_util INTERFACE
+        ${CMAKE_CURRENT_LIST_DIR}
+        )
 
 add_executable(picow_http_client
         picow_http_client.c

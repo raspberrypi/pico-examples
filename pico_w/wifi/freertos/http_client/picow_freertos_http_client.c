@@ -6,20 +6,20 @@
 
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
-#include "pico/http_client_util.h"
 #include "lwip/altcp_tls.h"
 
 #include "lwip/netif.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
+#include "example_http_client_util.h"
 
 #ifndef RUN_FREERTOS_ON_CORE
 #define RUN_FREERTOS_ON_CORE 0
 #endif
 
-#define TEST_TASK_PRIORITY				( tskIDLE_PRIORITY + 2UL )
-#define BLINK_TASK_PRIORITY				( tskIDLE_PRIORITY + 4UL )
+#define TEST_TASK_PRIORITY ( tskIDLE_PRIORITY + 2UL )
+#define TEST_TASK_STACK_SIZE 1024
 
 // Using this url as we know the root cert won't change for a long time
 #define HOST "fw-download-alias1.raspberrypi.com"
@@ -46,31 +46,11 @@ PC3wSPqJ1byJKA6D+ZyjKR1aORbiDQVEpDNWRKiQ5QapLg8wbcED0MrRKQIxAKUT\n\
 v8TJkb/8jC/oBVTmczKlPMkciN+uiaZSXahgYKyYhvKTatCTZb+geSIhc0w/2w==\n\
 -----END CERTIFICATE-----\n"
 
-void blink_task(__unused void *params) {
-    bool on = false;
-    printf("blink_task starts\n");
-    while (true) {
-#if 0 && configNUM_CORES > 1
-        static int last_core_id;
-        if (portGET_CORE_ID() != last_core_id) {
-            last_core_id = portGET_CORE_ID();
-            printf("blinking now from core %d\n", last_core_id);
-        }
-#endif
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, on);
-        on = !on;
-        vTaskDelay(200);
-    }
-    vTaskDelete(NULL);
-}
-
 void main_task(__unused void *params) {
     if (cyw43_arch_init()) {
         printf("failed to initialise\n");
         return;
     }
-    TaskHandle_t blinkHandle = NULL;
-    xTaskCreate(blink_task, "BlinkThread", configMINIMAL_STACK_SIZE, NULL, BLINK_TASK_PRIORITY, &blinkHandle);
 
     cyw43_arch_enable_sta_mode();
     printf("Connecting to Wi-Fi...\n");
@@ -82,27 +62,26 @@ void main_task(__unused void *params) {
     }
 
     static const uint8_t cert_ok[] = TLS_ROOT_CERT_OK;
-    EXAMPLE_HTTP_REQUEST_T req = {0};
+    static EXAMPLE_HTTP_REQUEST_T req = {0};
     req.hostname = HOST;
     req.url = URL_REQUEST;
     req.headers_fn = http_client_header_print_fn;
     req.recv_fn = http_client_receive_print_fn;
     req.tls_config = altcp_tls_create_config_client(cert_ok, sizeof(cert_ok));
+
     int pass = http_client_request_sync(cyw43_arch_async_context(), &req);
     altcp_tls_free_config(req.tls_config);
-
     if (pass != 0) {
         panic("test failed");
     }
 
-    vTaskDelete(blinkHandle);
     cyw43_arch_deinit();
     panic("Test passed");
 }
 
 void vLaunch( void) {
     TaskHandle_t task;
-    xTaskCreate(main_task, "TestMainThread", 1024, NULL, TEST_TASK_PRIORITY, &task);
+    xTaskCreate(main_task, "TestMainThread", TEST_TASK_STACK_SIZE, NULL, TEST_TASK_PRIORITY, &task);
 
 #if NO_SYS && configUSE_CORE_AFFINITY && configNUM_CORES > 1
     // we must bind the main task to one core (well at least while the init is called)
