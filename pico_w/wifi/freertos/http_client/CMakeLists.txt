@@ -9,7 +9,7 @@ target_compile_definitions(picow_freertos_http_client_nosys PRIVATE
 target_include_directories(picow_freertos_http_client_nosys PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/.. # for our common FreeRTOSConfig
-        ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts and mbedtls_config
         )
 target_link_libraries(picow_freertos_http_client_nosys
         pico_cyw43_arch_lwip_threadsafe_background

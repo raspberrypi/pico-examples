@@ -20,7 +20,7 @@ target_compile_definitions(picow_http_client PRIVATE
         )
 target_include_directories(picow_http_client PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts and mbedtls_config
         )
 target_link_libraries(picow_http_client
         pico_cyw43_arch_lwip_threadsafe_background
@@ -41,7 +41,7 @@ target_compile_definitions(picow_http_client_verify PRIVATE
         )
 target_include_directories(picow_http_client_verify PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts and mbedtls_config
         )
 target_link_libraries(picow_http_client_verify
         pico_cyw43_arch_lwip_threadsafe_background
