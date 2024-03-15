@@ -1,3 +1,5 @@
+if (0)
+# Currently disabled as mbedtls uses too much stack
 add_executable(picow_freertos_http_client_nosys
         picow_freertos_http_client.c
         )
@@ -18,6 +20,7 @@ target_link_libraries(picow_freertos_http_client_nosys
         FreeRTOS-Kernel-Heap4 # FreeRTOS kernel and dynamic heap
         )
 pico_add_extra_outputs(picow_freertos_http_client_nosys)
+endif()
 
 add_executable(picow_freertos_http_client_sys
         picow_freertos_http_client.c
