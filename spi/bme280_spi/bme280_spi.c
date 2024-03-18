@@ -147,7 +147,7 @@ static void read_registers(uint8_t reg, uint8_t *buf, uint16_t len) {
 void read_compensation_parameters() {
     uint8_t buffer[26];
 
-    read_registers(0x88, buffer, 24);
+    read_registers(0x88, buffer, 26);
 
     dig_T1 = buffer[0] | (buffer[1] << 8);
     dig_T2 = buffer[2] | (buffer[3] << 8);
@@ -163,15 +163,15 @@ void read_compensation_parameters() {
     dig_P8 = buffer[20] | (buffer[21] << 8);
     dig_P9 = buffer[22] | (buffer[23] << 8);
 
-    dig_H1 = buffer[25];
+    dig_H1 = buffer[25]; // 0xA1
 
     read_registers(0xE1, buffer, 8);
 
-    dig_H2 = buffer[0] | (buffer[1] << 8);
-    dig_H3 = (int8_t) buffer[2];
-    dig_H4 = buffer[3] << 4 | (buffer[4] & 0xf);
-    dig_H5 = (buffer[5] >> 4) | (buffer[6] << 4);
-    dig_H6 = (int8_t) buffer[7];
+    dig_H2 = buffer[0] | (buffer[1] << 8); // 0xE1 | 0xE2
+    dig_H3 = (int8_t) buffer[2]; // 0xE3
+    dig_H4 = buffer[3] << 4 | (buffer[4] & 0xf); // 0xE4 | 0xE5[3:0]
+    dig_H5 = (buffer[4] >> 4) | (buffer[5] << 4); // 0xE5[7:4] | 0xE6
+    dig_H6 = (int8_t) buffer[6]; // 0xE7
 }
 
 static void bme280_read_raw(int32_t *humidity, int32_t *pressure, int32_t *temperature) {
@@ -225,8 +225,8 @@ int main() {
 
         // These are the raw numbers from the chip, so we need to run through the
         // compensations to get human understandable numbers
-        pressure = compensate_pressure(pressure);
         temperature = compensate_temp(temperature);
+        pressure = compensate_pressure(pressure);
         humidity = compensate_humidity(humidity);
 
         printf("Humidity = %.2f%%\n", humidity / 1024.0);
