@@ -225,8 +225,8 @@ int main() {
 
         // These are the raw numbers from the chip, so we need to run through the
         // compensations to get human understandable numbers
-        pressure = compensate_pressure(pressure);
         temperature = compensate_temp(temperature);
+        pressure = compensate_pressure(pressure);
         humidity = compensate_humidity(humidity);
 
         printf("Humidity = %.2f%%\n", humidity / 1024.0);
