@@ -1,7 +1,21 @@
-.idea
-.vscode
-_deps
+.idea/
+.vscode/
+_deps/
 cmake-*
-build
-.DS_Store
+build/
+.DS_Store/
 *.pdf
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts/
+CMakeTmp/
+cmake_install.cmake
+install_manifest.txt
+Makefile
+Testing/
+
+# Compiled binaries and libraries
+*.o
+*.a
+*.so
