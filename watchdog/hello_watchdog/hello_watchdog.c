@@ -11,7 +11,7 @@
 int main() {
     stdio_init_all();
 
-    if (watchdog_caused_reboot()) {
+    if (watchdog_enable_caused_reboot()) {
         printf("Rebooted by Watchdog!\n");
         return 0;
     } else {
