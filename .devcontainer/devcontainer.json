@@ -1,0 +1,4 @@
+{
+	"name": "raspberry-pi-pico-sdk",
+	"image": "lukstep/raspberry-pi-pico-sdk"
+}
