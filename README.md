@@ -1,5 +1,30 @@
 # Raspberry Pi Pico SDK Examples
 
+## hashtagchris's addition
+
+### Building
+
+1. Spin up a Codespace or a devcontainer
+2. Build one or more examples
+```
+$ mkdir build
+$ cd build
+$ cmake ..
+$ cd blink # or another example
+$ make # or make -j8 to use more cores
+$ find . -name *.uf2
+```
+3. Find the `.uf2` file in VS Code's Explorer View, right-click and select `Download...` to download the binary to your local filesystem.
+4. Use the pico's `BOOTSEL` button to mount the pico as a usb storage device, and copy over the `.uf2`.
+5. Use `minicom -o -D /dev/usbmodem0000000000001` or similar to monitor `printf`s.
+
+### Resources
+
+* https://github.com/lukstep/raspberry-pi-pico-docker-sdk
+* https://hub.docker.com/r/lukstep/raspberry-pi-pico-sdk
+* https://blog.sellorm.com/2021/01/29/using-the-pico-and-python-with-a-mac/
+* https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
+
 ## Getting started
 
 See [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started) and the README in the [pico-sdk](https://github.com/raspberrypi/pico-sdk) for information
@@ -148,8 +173,8 @@ App|Description
 These examples are for the Pico W, and are only available for `PICO_BOARD=pico_w`.
 They are examples from the Blue Kitchen Bluetooth stack, see [here](https://bluekitchen-gmbh.com/btstack/#examples/examples/index.html) for a full description.
 
-By default, the Bluetooth examples are only built in one "mode" only (*background*, *poll*, or *freertos*), with the 
-default being *background*. This can be changed by passing `-DBTSTACK_EXAMPLE_TYPE=poll` etc. to `CMake`, or all 
+By default, the Bluetooth examples are only built in one "mode" only (*background*, *poll*, or *freertos*), with the
+default being *background*. This can be changed by passing `-DBTSTACK_EXAMPLE_TYPE=poll` etc. to `CMake`, or all
 examples can be built (which may be slow) by passing `-DBTSTACK_EXAMPLE_TYPE=all`
 Freertos versions can only be built if `FREERTOS_KERNEL_PATH` is defined.
 
@@ -231,7 +256,7 @@ App|Description
 [spi](pio/spi) | Use PIO to erase, program and read an external SPI flash chip. A second example runs a loopback test with all four CPHA/CPOL combinations.
 [squarewave](pio/squarewave) | Drive a fast square wave onto a GPIO. This example accesses low-level PIO registers directly, instead of using the SDK functions.
 [st7789_lcd](pio/st7789_lcd) | Set up PIO for 62.5 Mbps serial output, and use this to display a spinning image on a ST7789 serial LCD.
-[quadrature_encoder](pio/quadrature_encoder) | A quadrature encoder using PIO to maintain counts independent of the CPU. 
+[quadrature_encoder](pio/quadrature_encoder) | A quadrature encoder using PIO to maintain counts independent of the CPU.
 [uart_rx](pio/uart_rx) | Implement the receive component of a UART serial port. Attach it to the spare Arm UART to see it receive characters.
 [uart_tx](pio/uart_tx) | Implement the transmit component of a UART serial port, and print hello world.
 [ws2812](pio/ws2812) | Examples of driving WS2812 addressable RGB LEDs.
@@ -297,7 +322,7 @@ App|Description
 
 ### USB Device
 
-#### TinyUSB Examples 
+#### TinyUSB Examples
 
 Most of the USB device examples come directly from the TinyUSB device examples directory [here](https://github.com/hathach/tinyusb/tree/master/examples/device).
 Those that are supported on RP2040 devices are automatically included as part of the pico-examples
@@ -331,7 +356,7 @@ tailored to how TinyUSB builds their examples within their source tree.
 For a better example of how to configure `CMakeLists.txt` for using TinyUSB in device mode with the Raspberry Pi SDK
 see below:
 
-#### SDK build example 
+#### SDK build example
 App|Description
 ---|---
 [dev_hid_composite](usb/device/dev_hid_composite) | A copy of the TinyUSB device example with the same name, but with a CMakeLists.txt which demonstrates how to add a dependency on the TinyUSB device libraries with the Raspberry Pi Pico SDK
