@@ -5,6 +5,7 @@ add_executable(flash_ssi_dma
 target_link_libraries(flash_ssi_dma
         pico_stdlib
         hardware_dma
+        hardware_sync
         )
 
 # create map/bin/hex file etc.
