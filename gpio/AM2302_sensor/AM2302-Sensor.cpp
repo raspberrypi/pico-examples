@@ -67,7 +67,6 @@ int8_t AM2302::AM2302_Sensor::read() {
       // nothing to do
       return status;
    }
-   return status;
 }
 
 /**
@@ -215,7 +214,7 @@ int8_t AM2302::AM2302_Sensor::read_sensor_data(uint8_t *buffer, uint8_t size) {
  * 
  * @return sensor state
 */
-const char * AM2302::AM2302_Sensor::get_sensorState(int8_t state) const {
+const char * AM2302::AM2302_Sensor::get_sensorState(int8_t state) {
    if(state == AM2302_READ_OK) {
       return AM2302_STATE_OK;
    }

@@ -41,7 +41,7 @@ namespace AM2302 {
          int8_t read();
          float get_Temperature() const {return _temp * 0.1F;}
          float get_Humidity() const {return _hum * 0.1F;}
-         const char * get_sensorState(int8_t state) const;
+         static const char * get_sensorState(int8_t state);
 
       private:
          unsigned long _us_last_read;

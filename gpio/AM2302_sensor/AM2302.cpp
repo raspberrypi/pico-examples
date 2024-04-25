@@ -45,7 +45,7 @@ int main() {
         gpio_put(LED_PIN, 1);
         printf("\n\tStatus        :");
         for (size_t i = 0; i < SIZE; ++i) {
-            printf("\t%s", am2302[i].get_sensorState(am2302[i].read()));
+            printf("\t%s", AM2302::AM2302_Sensor::get_sensorState(am2302[i].read()));
         }
         printf("\n\tTemperature   :");
         gpio_put(LED_PIN, 0);
