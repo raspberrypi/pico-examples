@@ -37,6 +37,7 @@ const uint DHT_PIN = 15;
 int main() {
     stdio_init_all();
     gpio_init(DHT_PIN);
+    gpio_pull_up(DHT_PIN);
 #ifdef LED_PIN
     gpio_init(LED_PIN);
     gpio_set_dir(LED_PIN, GPIO_OUT);
