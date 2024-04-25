@@ -1,12 +1,14 @@
 /*
 *	AM2302-Sensor.cpp
 *
-*	Author: Frank Häfele
-*	Date:	21.11.2023
+*	Author:  Frank Häfele
+*	Date:    25.04.2024
 *
-*	Object: Measure Sensor Data of AM2302-Sensor
+*	Objective: AM2302-Sensor class
 *
+*  SPDX-License-Identifier: BSD-3-Clause
 */
+
 #include "AM2302-Sensor.hpp"
 
 /**
