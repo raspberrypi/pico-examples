@@ -1,7 +1,9 @@
 /**
- * Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+ * Author:  Frank Häfele
  *
- * SPDX-License-Identifier: BSD-3-Clause
+ * Date:    25.04.2024
+ * 
+ * Objective: Read one or multiple AM2302-Sensors
  */
 
 #include <cstdio>
@@ -11,10 +13,15 @@
 const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 
 // DHT Pin
-const uint DHT_PIN = 15;
+const uint8_t SIZE = 3U;
+const uint8_t PINS[SIZE] = {13U, 14U, 15U};
 
 // create am2302 object
-AM2302::AM2302_Sensor am2302{DHT_PIN};
+AM2302::AM2302_Sensor am2302[SIZE] = {
+    AM2302::AM2302_Sensor{PINS[0]},
+    AM2302::AM2302_Sensor{PINS[1]},
+    AM2302::AM2302_Sensor{PINS[2]}
+};
 
 int main() {
     stdio_init_all();
@@ -24,38 +31,30 @@ int main() {
     
     printf("\n\n === Pi Pico C++ Example - Read AM2302-Sensor === \n\n");
     // setup pin and do a sensor check
-    if (!am2302.begin()) {
-        while(true) {
-           printf("ERROR: during sensor check! Pleae check sensor connectivity!\n");
-           sleep_ms(10000);
-        }
+    
+    for (size_t i = 0; i < SIZE; ++i) {
+        printf("Sensor available : %d\n", am2302[i].begin());
     }
+    printf("\n");
     sleep_ms(3000);
     while (true) {
 
         gpio_put(LED_PIN, 1);
-        int8_t status = am2302.read();
-
-    gpio_put(LED_PIN, 0);
-
-        printf("Sensor-status: %d\n", status);
-
-        if (status == AM2302::AM2302_READ_OK) {
-            printf("Humidity = %.1f %%\tTemperature = %.1f degC\n",
-                am2302.get_Humidity(), am2302.get_Temperature());
+        printf("\n\tStatus        :");
+        for (size_t i = 0; i < SIZE; ++i) {
+            printf("\t%s", am2302[i].get_sensorState(am2302[i].read()));
         }
-        else {
-            if (status == AM2302::AM2302_ERROR_CHECKSUM) {
-                printf("ERROR: Checksum not valid\n");
-            }
-            else if (status == AM2302::AM2302_ERROR_TIMEOUT) {
-                printf("ERROR: Timeout overflow\n");
-            }
-            else if (status == AM2302::AM2302_ERROR_READ_FREQ) {
-                printf("ERROR: Read frequency too high!\n");
-            }
+        printf("\n\tTemperature   :");
+        gpio_put(LED_PIN, 0);
+
+        for (size_t i = 0; i < SIZE; ++i) {
+            printf("\t%5.2f", am2302[i].get_Temperature());
+        }
+        printf("\n\tHumidity      :");
+        for (size_t i = 0; i < SIZE; ++i) {
+            printf("\t%5.2f", am2302[i].get_Humidity());
         }
         printf("\n\n");
-        sleep_ms(2000);
+        sleep_ms(10000);
     }
 }

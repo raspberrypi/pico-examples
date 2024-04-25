@@ -14,7 +14,7 @@
  * 
  * @param pin Pin for AM2302 sensor
  */
-AM2302::AM2302_Sensor::AM2302_Sensor(uint8_t pin) : _us_last_read{0}, _pin{pin}
+AM2302::AM2302_Sensor::AM2302_Sensor(uint8_t pin) : _millis_last_read{0}, _pin{pin}
 {}
 
 /**
@@ -25,6 +25,7 @@ AM2302::AM2302_Sensor::AM2302_Sensor(uint8_t pin) : _us_last_read{0}, _pin{pin}
  */
 bool AM2302::AM2302_Sensor::begin() {
    gpio_init(_pin);
+   gpio_pull_up(_pin);
    // required delay() for a secure sensor check,
    // if you reset the mcu very fast one after another
    auto tic{time_us_64()};
@@ -32,7 +33,7 @@ bool AM2302::AM2302_Sensor::begin() {
       sleep_ms(1U);
    }
    auto status{read()};
-   _us_last_read = time_us_64();
+   _millis_last_read = time_us_64();
    if (status == AM2302_READ_OK) {
       return true;
    }
@@ -41,13 +42,43 @@ bool AM2302::AM2302_Sensor::begin() {
    }
 }
 
-
+/**
+ * @brief read functionality
+ * 
+ * @return sensor status
+*/
 int8_t AM2302::AM2302_Sensor::read() {
+   auto status{read_sensor()};
+   
+   if (status == AM2302_READ_OK) {
+      // return status immediately
+      return status;
+   }
+   else if (status == AM2302_ERROR_READ_FREQ) {
+      return status;
+   }
+   else if (status == AM2302_ERROR_TIMEOUT) {
+      resetData();
+      return status;
+   }
+   else if (status == AM2302_ERROR_CHECKSUM) {
+      // nothing to do
+      return status;
+   }
+   return status;
+}
+
+/**
+ * @brief initiate start sequence and read sensor data
+ * 
+ * @return sensor status
+*/
+int8_t AM2302::AM2302_Sensor::read_sensor() {
    // check read frequency
-   if ( time_us_64() - _us_last_read < READ_FREQUENCY * 1000U) {
+   if ( time_us_64() - _millis_last_read < READ_FREQUENCY * 1000U) {
       return AM2302_ERROR_READ_FREQ;
    }
-   _us_last_read = time_us_64();
+   _millis_last_read = time_us_64();
    // *****************************
    //  === send start sequence ===
    // ****************************
@@ -175,6 +206,36 @@ int8_t AM2302::AM2302_Sensor::read_sensor_data(uint8_t *buffer, uint8_t size) {
       }
    }
    return AM2302_READ_OK;
+}
+
+/**
+ * @brief get Sensor State in human readable manner
+ * 
+ * @return sensor state
+*/
+const char * AM2302::AM2302_Sensor::get_sensorState(int8_t state) const {
+   if(state == AM2302_READ_OK) {
+      return AM2302_STATE_OK;
+   }
+   else if(state == AM2302_ERROR_CHECKSUM) {
+      return AM2302_STATE_ERR_CKSUM;
+   }
+   else if(state == AM2302_ERROR_TIMEOUT) {
+      return AM2302_STATE_ERR_TIMEOUT;
+   }
+   else if(state == AM2302_ERROR_READ_FREQ) {
+      return AM2302_STATE_ERR_READ_FREQ;
+   }
+}
+
+/**
+ * @brief reset temperature and humidity data
+ * 
+ */
+void AM2302::AM2302_Sensor::resetData() {
+   // reset tem to -255 and hum to 0 as indication
+   _temp = -2550;
+   _hum = 0;
 }
 
 /**
