@@ -29,6 +29,7 @@ namespace AM2302 {
 
    // define timeout in 100 µs
    constexpr uint8_t READ_TIMEOUT         {100U};
+   // read cycle max every 2 s
    constexpr uint16_t READ_FREQUENCY      {2000U};
 
    class AM2302_Sensor {
@@ -42,7 +43,7 @@ namespace AM2302 {
          const char * get_sensorState(int8_t state) const;
 
       private:
-         unsigned long _millis_last_read;
+         unsigned long _us_last_read;
          uint16_t _hum {0};
          int16_t _temp {0};
          uint8_t _pin;

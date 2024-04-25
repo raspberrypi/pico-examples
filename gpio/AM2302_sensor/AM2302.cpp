@@ -3,6 +3,8 @@
  *
  * Date:    25.04.2024
  * 
+ * SPDX-License-Identifier: BSD-3-Clause
+ * 
  * Objective: Read one or multiple AM2302-Sensors
  */
 

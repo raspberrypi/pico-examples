@@ -14,7 +14,7 @@
  * 
  * @param pin Pin for AM2302 sensor
  */
-AM2302::AM2302_Sensor::AM2302_Sensor(uint8_t pin) : _millis_last_read{0}, _pin{pin}
+AM2302::AM2302_Sensor::AM2302_Sensor(uint8_t pin) : _us_last_read{0}, _pin{pin}
 {}
 
 /**
@@ -33,7 +33,7 @@ bool AM2302::AM2302_Sensor::begin() {
       sleep_ms(1U);
    }
    auto status{read()};
-   _millis_last_read = time_us_64();
+   _us_last_read = time_us_64();
    if (status == AM2302_READ_OK) {
       return true;
    }
@@ -75,10 +75,10 @@ int8_t AM2302::AM2302_Sensor::read() {
 */
 int8_t AM2302::AM2302_Sensor::read_sensor() {
    // check read frequency
-   if ( time_us_64() - _millis_last_read < READ_FREQUENCY * 1000U) {
+   if ( time_us_64() - _us_last_read < READ_FREQUENCY * 1000U) {
       return AM2302_ERROR_READ_FREQ;
    }
-   _millis_last_read = time_us_64();
+   _us_last_read = time_us_64();
    // *****************************
    //  === send start sequence ===
    // ****************************
