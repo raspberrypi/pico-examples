@@ -12,7 +12,20 @@
 #include "hardware/clocks.h"
 #include "ws2812.pio.h"
 
-#define IS_RGBW true
+/**
+ * NOTE:
+ *  Take into consideration if your WS2812 is a RGB or RGBW variant.
+ *
+ *  If it is RGBW, you need to set IS_RGBW to true and provide 4 bytes per 
+ *  pixel (Red, Green, Blue, White) and use urgbw_u32().
+ *
+ *  If it is RGB, set IS_RGBW to false and provide 3 bytes per pixel (Red,
+ *  Green, Blue) and use urgb_u32().
+ *
+ *  When RGBW is used with urgb_u32(), the White channel will be ignored (off).
+ *
+ */
+#define IS_RGBW false
 #define NUM_PIXELS 150
 
 #ifdef PICO_DEFAULT_WS2812_PIN
@@ -30,6 +43,14 @@ static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
     return
             ((uint32_t) (r) << 8) |
             ((uint32_t) (g) << 16) |
+            (uint32_t) (b);
+}
+
+static inline uint32_t urgbw_u32(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
+    return
+            ((uint32_t) (r) << 8) |
+            ((uint32_t) (g) << 16) |
+            ((uint32_t) (w) << 24) |
             (uint32_t) (b);
 }
 
