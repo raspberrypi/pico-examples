@@ -30,7 +30,6 @@ typedef struct TCP_SERVER_T_ {
     struct tcp_pcb *server_pcb;
     bool complete;
     ip_addr_t gw;
-    async_context_t *context;
 } TCP_SERVER_T;
 
 typedef struct TCP_CONNECT_STATE_T_ {
@@ -269,24 +268,15 @@ static bool tcp_server_open(void *arg, const char *ap_name) {
     return true;
 }
 
-// This "worker" function is called to safely perform work when instructed by key_pressed_func
-void key_pressed_worker_func(async_context_t *context, async_when_pending_worker_t *worker) {
-    assert(worker->user_data);
-    printf("Disabling wifi\n");
-    cyw43_arch_disable_ap_mode();
-    ((TCP_SERVER_T*)(worker->user_data))->complete = true;
-}
-
-static async_when_pending_worker_t key_pressed_worker = {
-        .do_work = key_pressed_worker_func
-};
-
 void key_pressed_func(void *param) {
     assert(param);
+    TCP_SERVER_T *state = (TCP_SERVER_T*)param;
     int key = getchar_timeout_us(0); // get any pending key press but don't wait
     if (key == 'd' || key == 'D') {
-        // We are probably in irq context so call wifi in a "worker"
-        async_context_set_work_pending(((TCP_SERVER_T*)param)->context, &key_pressed_worker);
+        cyw43_arch_lwip_begin();
+        cyw43_arch_disable_ap_mode();
+        cyw43_arch_lwip_end();
+        state->complete = true;
     }
 }
 
@@ -305,9 +295,6 @@ int main() {
     }
 
     // Get notified if the user presses a key
-    state->context = cyw43_arch_async_context();
-    key_pressed_worker.user_data = state;
-    async_context_add_when_pending_worker(cyw43_arch_async_context(), &key_pressed_worker);
     stdio_set_chars_available_callback(key_pressed_func, state);
 
     const char *ap_name = "picow_test";
@@ -358,5 +345,6 @@ int main() {
     dns_server_deinit(&dns_server);
     dhcp_server_deinit(&dhcp_server);
     cyw43_arch_deinit();
+    printf("Test complete\n");
     return 0;
 }
