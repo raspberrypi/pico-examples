@@ -9,6 +9,7 @@ target_compile_definitions(picow_freertos_ntp_client_socket PRIVATE
         )
 target_include_directories(picow_freertos_ntp_client_socket PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common FreeRTOSConfig
         ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts
         )
 target_link_libraries(picow_freertos_ntp_client_socket
