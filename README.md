@@ -5,13 +5,14 @@
 See [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started) and the README in the [pico-sdk](https://github.com/raspberrypi/pico-sdk) for information
 on getting up and running.
 
-### First  Examples
+### First Examples
 
 App|Description | Link to prebuilt UF2
 ---|---|---
 [hello_serial](hello_world/serial) | The obligatory Hello World program for Pico (Output over serial version) |
 [hello_usb](hello_world/usb) | The obligatory Hello World program for Pico (Output over USB version) | https://rptl.io/pico-hello-usb
-[blink](blink) | Blink an LED on and off. | https://rptl.io/pico-blink
+[blink](blink) | Blink an LED on and off. Pico W should use [picow_blink](pico_w/wifi/blink). | https://rptl.io/pico-blink
+[picow_blink](pico_w/wifi/blink) | Blinks the Pico W on-board LED (which is connected via the WiFi chip). | http://rptl.io/pico-w-blink
 
 ### ADC
 
