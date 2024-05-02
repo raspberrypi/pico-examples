@@ -1,0 +1,196 @@
+;
+; Copyright (c) 2020 Raspberry Pi (Trading) Ltd.
+;
+; SPDX-License-Identifier: BSD-3-Clause
+;
+
+; These programs implement full-duplex SPI, with a SCK period of 4 clock
+; cycles. A different program is provided for each value of CPHA, and CPOL is
+; achieved using the hardware GPIO inversion available in the IO controls.
+;
+; Transmit-only SPI can go twice as fast -- see the ST7789 example!
+
+
+
+; -----------------------------------------------------------------
+;  TDMtx
+; -----------------------------------------------------------------
+; Pin assignments:
+; - CLK is IN pin 0 (GPIO 18)
+; - FRM is IN pin 1 (GPIO 19)
+; - ADR is OUT pin 0 (GPIO 16)
+; - DAT is OUT pin 1 (GPIO 17)
+;
+;  Transmits in TDM slot 4 of 8
+;
+.program TDMtx
+.side_set 1
+.define CLK 0
+.define FRM 3
+.wrap_target
+    mov X,Y             side 0      
+    pull block          side 0    
+wait_FRM:
+    wait 1 GPIO 17      side 0  ; wait for a FRM pulse
+    wait 0 GPIO 16      side 0    
+wait_slot:                      ; count CLK pulses (in Y register) till desired slot (4 of 8)
+    wait 1 GPIO 16      side 0
+    wait 0 GPIO 16      side 0
+    jmp x--,wait_slot   side 0
+    set x,16            side 1 [3]     
+word_loop:
+    out pins, 1         side 1 [7]  ; output fifo word for bits 64..80
+    jmp x--, word_loop  side 1 [7]     
+.wrap 
+
+
+% c-sdk {
+#include "hardware/gpio.h"
+static inline void pio_TDMtx_init(PIO pio, uint sm, uint prog_offs, uint n_bits,
+        float clkdiv, uint pin_TXEN, uint pin_ADR) {
+    pio_sm_config c = TDMtx_program_get_default_config(prog_offs);
+    sm_config_set_out_pins(&c, pin_ADR, 1);
+//    sm_config_set_in_pins(&c, pin_CLK);
+    sm_config_set_sideset_pins(&c, pin_TXEN);
+
+    // Only support MSB-first in this example code (shift to left, auto push/pull, threshold=nbits)
+    sm_config_set_out_shift(&c, false, false, n_bits);
+    sm_config_set_clkdiv(&c, clkdiv);
+
+    // MOSI, SCK output are low, MISO is input
+    pio_sm_set_pins_with_mask(pio, sm, 0, 0x1 << pin_ADR);
+    pio_sm_set_pindirs_with_mask(pio, sm, 0x1 << pin_ADR, 0x1 << pin_ADR);
+    pio_sm_set_pins_with_mask(pio, sm, 0, 0x1 << pin_TXEN);
+    pio_sm_set_pindirs_with_mask(pio, sm, 0x1 << pin_TXEN, 0x1 << pin_TXEN);
+    pio_gpio_init(pio, pin_ADR);
+    pio_gpio_init(pio, pin_TXEN);
+
+    // The pin muxes can be configured to invert the output (among other things)
+    // and this is a cheesy way to get CPOL=1
+//    gpio_set_outover(pin_CLK, cpol ? GPIO_OVERRIDE_INVERT : GPIO_OVERRIDE_NORMAL);
+    // SPI is synchronous, so bypass input synchroniser to reduce input delay.
+//    hw_set_bits(&pio->input_sync_bypass, 1u << pin_miso);
+
+    pio_sm_init(pio, sm, prog_offs, &c);
+
+    // initialize X & Y registers
+    pio_sm_put_blocking(pio, sm, 32);
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_pull(false,false));
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_out(pio_y, 32));
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_set(pio_x, 0));
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_pull(false,false));
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_mov(pio_x, pio_y));
+
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+; -----------------------------------------------------------------
+;  TDMrx
+; -----------------------------------------------------------------
+; Pin assignments:
+; - CLK is IN pin 2 (GPIO 1)
+; - FRM is IN pin 3 (GPIO 4)
+; - ADR is IN pin 0 (GPIO 7)
+; - DAT is IN pin 1 (GPIO 10)
+;
+;  Receives from
+; TDM slot 4 of 8
+.program TDMrx
+.wrap_target
+wait_FRM:
+    wait 1 GPIO 17              ; wait for a FRM pulse
+    wait 0 GPIO 16
+wait_slot:                      ; count CLK pulses (in Y register) till desired slot (4 of 8)
+    wait 1 GPIO 16
+    wait 0 GPIO 16
+    jmp x--,wait_slot
+    set x,16 
+word_loop:                      ; read ADR & DAT (interleaved) info input shift register
+    wait 1 GPIO 16
+    wait 0 GPIO 16
+    in pins, 1
+    jmp x--,word_loop
+    mov x,!ISR                  ; throw away FFFF words
+    jmp !x, nosave
+    push noblock                ; push received data into fifo (if not zero)
+ nosave:  
+    mov isr, !null              ; load all 1 bits into ISR, to check for FFFF words elsewhere
+    mov x,y                     ; reload CLK pulse counter
+.wrap 
+
+% c-sdk {
+#include "hardware/gpio.h"
+static inline void pio_TDMrx_init(PIO pio, uint sm, uint prog_offs, uint n_bits,
+        float clkdiv, uint pin_ADR) {
+    pio_sm_config c = TDMrx_program_get_default_config(prog_offs);
+    sm_config_set_in_pins(&c, pin_ADR);
+
+    // Only support MSB-first in this example code (shift to left, auto push/pull, threshold=nbits)
+    sm_config_set_in_shift(&c, false, false, n_bits);
+    sm_config_set_clkdiv(&c, clkdiv);
+
+    // MOSI, SCK output are low, MISO is input
+    pio_sm_set_pins_with_mask(pio, sm, 0, 0x1 << pin_ADR);
+    pio_sm_set_pindirs_with_mask(pio, sm, 0, 0x1 << pin_ADR);
+    pio_gpio_init(pio, pin_ADR);
+
+    pio_sm_init(pio, sm, prog_offs, &c);
+
+    // initialize X & Y registers
+    pio_sm_put_blocking(pio, sm, 63);
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_pull(false,false));
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_out(pio_y, 32));
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_set(pio_x, 0));
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_pull(false,false));
+    pio_sm_exec_wait_blocking(pio, sm, pio_encode_mov(pio_x, pio_y));
+
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+; -----------------------------------------------------------------
+;  HSSrx
+; -----------------------------------------------------------------
+; Pin assignments:
+; - CLK is IN pin 0 (GPIO 20)
+; - FRM is IN pin 1 (GPIO 21)
+; - DAT is IN pin 1 (GPIO 22)
+;
+.program HSSrx
+.wrap_target
+wait_FRM:
+    wait 1 pin 31               ; wait for a FRM pulse
+    set x,16 
+word_loop:                      ; read ADR & DAT (interleaved) info input shift register
+    wait 0 pin 30 
+    in pins, 1
+    wait 1 pin 30
+    jmp x--,word_loop 
+    push noblock                ; push received data into fifo (if not zero)
+.wrap 
+
+% c-sdk {
+#include "hardware/gpio.h"
+static inline void pio_HSSrx_init(PIO pio, uint sm, uint prog_offs, uint n_bits,
+        float clkdiv, uint pin_DAT) {
+    pio_sm_config c = HSSrx_program_get_default_config(prog_offs);
+    sm_config_set_in_pins(&c, pin_DAT);
+
+    // Only support MSB-first in this example code (shift to left, auto push/pull, threshold=nbits)
+    sm_config_set_in_shift(&c, false, false, n_bits);
+    sm_config_set_clkdiv(&c, clkdiv);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_RX);
+
+    // MOSI, SCK output are low, MISO is input
+    pio_sm_set_pins_with_mask(pio, sm, 0, 0x7 << (pin_DAT-2));
+    pio_sm_set_pindirs_with_mask(pio, sm, 0, 0x7 << (pin_DAT-2));
+    pio_gpio_init(pio, pin_DAT);
+    pio_gpio_init(pio, pin_DAT-1);
+    pio_gpio_init(pio, pin_DAT-2);
+
+    pio_sm_init(pio, sm, prog_offs, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
