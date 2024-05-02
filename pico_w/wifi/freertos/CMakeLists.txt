@@ -5,4 +5,5 @@ else()
 
     add_subdirectory(iperf)
     add_subdirectory(ping)
+    add_subdirectory(ntp_client_socket)
 endif()

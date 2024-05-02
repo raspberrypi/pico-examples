@@ -143,6 +143,7 @@ App|Description
 [picow_freertos_iperf_server_sys](pico_w/wifi/freertos/iperf) | Runs an "iperf" server for WiFi speed testing under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode. The LED is blinked in another task
 [picow_freertos_ping_nosys](pico_w/wifi/freertos/ping) | Runs the lwip-contrib/apps/ping test app under FreeRTOS in NO_SYS=1 mode.
 [picow_freertos_ping_sys](pico_w/wifi/freertos/ping) | Runs the lwip-contrib/apps/ping test app under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode. The test app uses the lwIP _socket_ API in this case.
+[picow_freertos_ntp_client_socket](pico_w/wifi/freertos/ntp_client_socket) | Connects to an NTP server using the LwIP Socket API with FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode.
 
 ### Pico W Bluetooth
 
