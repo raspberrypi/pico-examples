@@ -394,11 +394,21 @@ int main(void)
     // replace this with the output of the calibration function
     substep_set_calibration_data(&state, 64, 128, 192);
 
+    uint last_position = 0;
+    int last_speed = 0;
+    uint last_raw_step = 0;
     while (1) {
+
         // read the PIO and update the state data
         substep_update(&state);
-        // print out the result
-        printf("%10d %10d %10d\n", state.position, state.speed, state.raw_step);
+
+        if (last_position != state.position || last_speed != state.speed || last_raw_step != state.raw_step) {
+            // print out the result
+            printf("pos: %-10d  speed: %-10d  raw_steps: %-10d\n", state.position, state.speed, state.raw_step);
+            last_position = state.position;
+            last_speed = state.speed;
+            last_raw_step = state.raw_step;
+        }
 
         // run at roughly 100Hz
         sleep_ms(10);
