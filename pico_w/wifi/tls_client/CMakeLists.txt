@@ -8,7 +8,7 @@ target_compile_definitions(picow_tls_client_background PRIVATE
         )
 target_include_directories(picow_tls_client_background PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts and mbedtls_config.h
         )
 target_link_libraries(picow_tls_client_background
         pico_cyw43_arch_lwip_threadsafe_background
@@ -28,7 +28,7 @@ target_compile_definitions(picow_tls_client_poll PRIVATE
         )
 target_include_directories(picow_tls_client_poll PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts and mbedtls_config.h
         )
 target_link_libraries(picow_tls_client_poll
         pico_cyw43_arch_lwip_poll
@@ -52,7 +52,7 @@ target_compile_definitions(picow_tls_verify_background PRIVATE
         )
 target_include_directories(picow_tls_verify_background PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts
+        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts and mbedtls_config.h
         )
 target_link_libraries(picow_tls_verify_background
         pico_cyw43_arch_lwip_threadsafe_background
