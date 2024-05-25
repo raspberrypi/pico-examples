@@ -13,12 +13,12 @@
 #define TEMPERATURE_UNITS 'C'
 
 // WiFi
-#define WIFI_SSID "Elliot"
-#define WIFI_PASSWORD "cocoelle"
+#define WIFI_SSID "YOUR_WIFI_SSID"
+#define WIFI_PASSWORD "YOUR_WIFI_PASSWD"
 // MQTT
 #define PORT  1883
 #define MQTT_CLIENT_ID "clientID"
-#define MQTT_BROKER_IP "192.168.204.71"
+#define MQTT_BROKER_IP "YOUR_BROKER_IP"
 
 
 
@@ -55,8 +55,13 @@ float read_onboard_temperature(const char unit) {
 }
 
 void control_led(bool on) {
-    // Public state on /state topic
+    // Public state on /state topic and on/off led board
     const char* message = on ? "On" : "Off";
+    if (on)
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
+    else
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+
     char state_topic[128];
     snprintf(state_topic, sizeof(state_topic), "%s/state", mqtt->topic);
     mqtt_publish(mqtt->mqtt_client_inst, state_topic, message, strlen(message), 0, 0, NULL, NULL);
@@ -75,7 +80,7 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
     mqtt_client->len = len;
     mqtt_client->data[len] = '\0';
     //Stampo i messaggi e  i topic
-    printf("Topic: %s, Messaggio: %s\n", mqtt_client->topic, mqtt_client->data);
+    printf("Topic: %s, Message: %s\n", mqtt_client->topic, mqtt_client->data);
 
 
     if (strcmp(mqtt->topic, "/led") == 0)
@@ -96,8 +101,8 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
 static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status) {
     MQTT_CLIENT_DATA_T* mqtt_client = (MQTT_CLIENT_DATA_T*)arg;
     if (status == MQTT_CONNECT_ACCEPTED) {
-        mqtt_sub_unsub(client, "/temperature", 0, NULL, arg, 1);
-        printf("Connesso al topic /temperature con successo\n");
+        mqtt_sub_unsub(client, "/led", 0, NULL, arg, 1);
+        printf("Connected to the /led topic successfully\n");
     }
 }
 int main() {
