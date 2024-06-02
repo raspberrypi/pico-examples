@@ -79,9 +79,8 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
     strncpy(mqtt_client->data, data, len);
     mqtt_client->len = len;
     mqtt_client->data[len] = '\0';
-    //Stampo i messaggi e  i topic
-    printf("Topic: %s, Message: %s\n", mqtt_client->topic, mqtt_client->data);
 
+    printf("Topic: %s, Message: %s\n", mqtt_client->topic, mqtt_client->data);
 
     if (strcmp(mqtt->topic, "/led") == 0)
     {
@@ -90,7 +89,6 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
         else if  (strcmp((const char *)mqtt_client->data, "Off") == 0)
             control_led(false);
     }
-
 }
 
 static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len) {
@@ -120,7 +118,7 @@ int main() {
     }
     // MQTT CLIENT INFO
     mqtt->mqtt_client_info.client_id = MQTT_CLIENT_ID;
-    mqtt->mqtt_client_info.keep_alive = 60; // Keep alive in secondi
+    mqtt->mqtt_client_info.keep_alive = 60; // Keep alive in sec
 
     if (cyw43_arch_init()) {
         printf("Failed to inizialize CYW43\n");
