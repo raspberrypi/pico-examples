@@ -68,7 +68,6 @@ uint32_t *expect = (uint32_t *) XIP_NOCACHE_NOALLOC_BASE;
 int main() {
     stdio_init_all();
     
-    sleep_ms(2500);
     memset(rxdata, 0, DATA_SIZE_WORDS * sizeof(uint32_t));
 
     printf("Starting DMA\n");
