@@ -373,3 +373,9 @@ At the time of writing, there is only one dual example available:
 App|Description
 ---|---
 [hello_watchdog](watchdog/hello_watchdog) | Set the watchdog timer, and let it expire. Detect the reboot, and halt.
+
+### Tone
+
+App|Description
+---|---
+[christmas_melody](tone/christmas_melody) | Play a christmas melody :notes::christmas_tree: with a Buzzer :speaker:.
