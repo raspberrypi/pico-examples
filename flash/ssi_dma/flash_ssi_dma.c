@@ -11,6 +11,7 @@
 #include "pico/time.h"
 #include "hardware/dma.h"
 #include "hardware/structs/ssi.h"
+#include "hardware/sync.h"
 
 // This example DMAs 16kB of data from the start of flash to SRAM, and
 // measures the transfer speed.
@@ -66,11 +67,16 @@ uint32_t *expect = (uint32_t *) XIP_NOCACHE_NOALLOC_BASE;
 
 int main() {
     stdio_init_all();
+    
     memset(rxdata, 0, DATA_SIZE_WORDS * sizeof(uint32_t));
 
     printf("Starting DMA\n");
     uint32_t start_time = time_us_32();
+
+    uint32_t ints = save_and_disable_interrupts();
     flash_bulk_read(rxdata, 0, DATA_SIZE_WORDS, 0);
+    restore_interrupts(ints);
+
     uint32_t finish_time = time_us_32();
     printf("DMA finished\n");
 
