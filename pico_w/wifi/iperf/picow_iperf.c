@@ -36,21 +36,12 @@ static void iperf_report(void *arg, enum lwiperf_report_type report_type,
 #endif
 }
 
-// This "worker" function is called to safely perform work when instructed by key_pressed_func
-void key_pressed_worker_func(async_context_t *context, async_when_pending_worker_t *worker) {
-    printf("Disabling wifi\n");
-    cyw43_arch_disable_sta_mode();
-}
-
-static async_when_pending_worker_t key_pressed_worker = {
-        .do_work = key_pressed_worker_func
-};
-
 void key_pressed_func(void *param) {
     int key = getchar_timeout_us(0); // get any pending key press but don't wait
     if (key == 'd' || key == 'D') {
-        // We are probably in irq context so call wifi in a "worker"
-        async_context_set_work_pending((async_context_t*)param, &key_pressed_worker);
+        cyw43_arch_lwip_begin();
+        cyw43_arch_disable_sta_mode();
+        cyw43_arch_lwip_end();
     }
 }
 
@@ -63,7 +54,6 @@ int main() {
     }
 
     // Get notified if the user presses a key
-    async_context_add_when_pending_worker(cyw43_arch_async_context(), &key_pressed_worker);
     stdio_set_chars_available_callback(key_pressed_func, cyw43_arch_async_context());
 
     cyw43_arch_enable_sta_mode();
@@ -122,5 +112,6 @@ int main() {
     }
 
     cyw43_arch_deinit();
+    printf("Test complete\n");
     return 0;
 }
