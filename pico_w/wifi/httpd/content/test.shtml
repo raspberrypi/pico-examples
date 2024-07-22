@@ -1,0 +1,11 @@
+<html>
+<head>
+    <title>Pico cgi handler test</title>
+</head>
+<body>
+    <h1>Pico cgi handler test</h1>
+    <p><table><!--#table--></table></p>
+    <p>Test result: <!--#status--></p>
+    <p><a href="/">Go back</a></p>
+</body>
+</html>
