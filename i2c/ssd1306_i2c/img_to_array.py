@@ -73,7 +73,7 @@ for i in range(img_height // OLED_PAGE_HEIGHT):
         buffer.append(f'{out_byte:#04x}')
 
 buffer = ", ".join(buffer)
-buffer_hex = f'static uint8_t {img_name}[] = {{{buffer}}}\n'
+buffer_hex = f'static uint8_t {img_name}[] = {{{buffer}}};\n'
 
 with open(f'{img_name}.h', 'wt') as file:
     file.write(f'#define IMG_WIDTH {img_width}\n')
