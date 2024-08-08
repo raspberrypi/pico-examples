@@ -48,8 +48,12 @@ void read_from_dht(dht_reading *result) {
 
     gpio_set_dir(DHT_PIN, GPIO_OUT);
     gpio_put(DHT_PIN, 0);
-    sleep_ms(20);
+    sleep_ms(18);
+    gpio_put(DHT_PIN,1);
+    sleep_us(40);
+    
     gpio_set_dir(DHT_PIN, GPIO_IN);
+    
 
 #ifdef LED_PIN
     gpio_put(LED_PIN, 1);
@@ -66,7 +70,7 @@ void read_from_dht(dht_reading *result) {
 
         if ((i >= 4) && (i % 2 == 0)) {
             data[j / 8] <<= 1;
-            if (count > 16) data[j / 8] |= 1;
+            if (count > 35) data[j / 8] |= 1;
             j++;
         }
     }
