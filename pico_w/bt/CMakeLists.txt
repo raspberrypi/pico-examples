@@ -388,7 +388,7 @@ foreach(NAME ${BTSTACK_EXAMPLES})
                 continue()
         endif()
         # add example
-        add_subdirectory(${NAME})
+        add_subdirectory_exclude_platforms(${NAME})
         MATH(EXPR BTSTACK_EXAMPLE_COUNT "${BTSTACK_EXAMPLE_COUNT}+1")
 endforeach()
 message("Adding ${BTSTACK_EXAMPLE_COUNT} BTstack examples of type '${BTSTACK_EXAMPLE_TYPE}'")

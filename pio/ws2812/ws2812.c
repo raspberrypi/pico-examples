@@ -71,21 +71,21 @@ void pattern_snakes(uint len, uint t) {
 void pattern_random(uint len, uint t) {
     if (t % 8)
         return;
-    for (int i = 0; i < len; ++i)
+    for (uint i = 0; i < len; ++i)
         put_pixel(rand());
 }
 
 void pattern_sparkle(uint len, uint t) {
     if (t % 8)
         return;
-    for (int i = 0; i < len; ++i)
+    for (uint i = 0; i < len; ++i)
         put_pixel(rand() % 16 ? 0 : 0xffffffff);
 }
 
 void pattern_greys(uint len, uint t) {
-    int max = 100; // let's not draw too much current!
+    uint max = 100; // let's not draw too much current!
     t %= max;
-    for (int i = 0; i < len; ++i) {
+    for (uint i = 0; i < len; ++i) {
         put_pixel(t * 0x10101);
         if (++t >= max) t = 0;
     }

@@ -1,5 +1,3 @@
-if (NOT PICO_NO_HARDWARE)
-    add_subdirectory(hello_timer)
-endif ()
-add_subdirectory(periodic_sampler)
-add_subdirectory(timer_lowlevel)
+add_subdirectory_exclude_platforms(hello_timer host)
+add_subdirectory_exclude_platforms(periodic_sampler)
+add_subdirectory_exclude_platforms(timer_lowlevel host)

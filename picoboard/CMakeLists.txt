@@ -1,4 +1,2 @@
-if (NOT PICO_NO_HARDWARE)
-    add_subdirectory(blinky)
-    add_subdirectory(button)
-endif ()
+add_subdirectory_exclude_platforms(blinky host)
+add_subdirectory_exclude_platforms(button host)

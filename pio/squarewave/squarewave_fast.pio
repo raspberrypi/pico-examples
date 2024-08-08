@@ -7,7 +7,7 @@
 ; Note that if you modify squarewave.c to include this program, you'll also
 ; need to set the wrap registers yourself. This would be handled for you by
 ; squarewave_program_get_default_config().
-
+.pio_version 0 // only requires PIO version 0
 
 .program squarewave_fast
 ; Like squarewave_wrap, but remove the delay cycles so we can run twice as fast.

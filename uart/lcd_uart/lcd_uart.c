@@ -134,9 +134,9 @@ int main() {
     stdio_init_all();
     uart_init(UART_ID, BAUD_RATE);
     uart_set_translate_crlf(UART_ID, false);
-    gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
+    gpio_set_function(UART_TX_PIN, UART_FUNCSEL_NUM(UART_ID, UART_TX_PIN));
 
-    bi_decl(bi_1pin_with_func(UART_TX_PIN, GPIO_FUNC_UART));
+    bi_decl(bi_1pin_with_func(UART_TX_PIN, UART_FUNCSEL_NUM(UART_ID, UART_TX_PIN)));
 
     lcd_init();
 

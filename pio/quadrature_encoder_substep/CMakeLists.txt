@@ -12,6 +12,7 @@ target_link_libraries(pio_quadrature_encoder_substep PRIVATE
         hardware_watchdog
         )
 
+target_compile_definitions(pio_quadrature_encoder_substep PRIVATE PICO_STDIO_USB_DEFAULT_CRLF=0)
 pico_enable_stdio_usb(pio_quadrature_encoder_substep 1)
 
 pico_add_extra_outputs(pio_quadrature_encoder_substep)

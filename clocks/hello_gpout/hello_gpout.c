@@ -17,7 +17,11 @@ int main() {
     clock_gpio_init(21, CLOCKS_CLK_GPOUT0_CTRL_AUXSRC_VALUE_CLK_SYS, 10);
     clock_gpio_init(23, CLOCKS_CLK_GPOUT1_CTRL_AUXSRC_VALUE_CLK_USB, 10);
     clock_gpio_init(24, CLOCKS_CLK_GPOUT2_CTRL_AUXSRC_VALUE_CLK_ADC, 10);
+#if PICO_RP2040
     clock_gpio_init(25, CLOCKS_CLK_GPOUT3_CTRL_AUXSRC_VALUE_CLK_RTC, 10);
+#else
+    clock_gpio_init(25, CLOCKS_CLK_GPOUT3_CTRL_AUXSRC_VALUE_CLK_PERI, 10);
+#endif
 
     return 0;
 }

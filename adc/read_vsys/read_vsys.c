@@ -28,9 +28,9 @@ int main() {
     }
     #endif
 
-    bool old_battery_status;
-    float old_voltage;
+    bool old_battery_status = false;
     bool battery_status = true;
+    float old_voltage = -1;
     char *power_str = "UNKNOWN";
 
     while(true) {
@@ -50,7 +50,7 @@ int main() {
             if (battery_status && voltage_return == PICO_OK) {
                 const float min_battery_volts = 3.0f;
                 const float max_battery_volts = 4.2f;
-                int percent_val = ((voltage - min_battery_volts) / (max_battery_volts - min_battery_volts)) * 100;
+                int percent_val = (int) (((voltage - min_battery_volts) / (max_battery_volts - min_battery_volts)) * 100);
                 snprintf(percent_buf, sizeof(percent_buf), " (%d%%)", percent_val);
             }
 

@@ -10,14 +10,14 @@
 /// \tag::timer_example[]
 volatile bool timer_fired = false;
 
-int64_t alarm_callback(alarm_id_t id, void *user_data) {
+int64_t alarm_callback(alarm_id_t id, __unused void *user_data) {
     printf("Timer %d fired!\n", (int) id);
     timer_fired = true;
     // Can return a value here in us to fire in the future
     return 0;
 }
 
-bool repeating_timer_callback(struct repeating_timer *t) {
+bool repeating_timer_callback(__unused struct repeating_timer *t) {
     printf("Repeat at %lld\n", time_us_64());
     return true;
 }

@@ -22,7 +22,7 @@ uint32_t buf[count_of(random_test_data)];
 
 int main() {
     stdio_init_all();
-    for (int i = 0; i < count_of(random_test_data); ++i)
+    for (uint i = 0; i < count_of(random_test_data); ++i)
         buf[i] = 0;
 
     // This example won't work with PICO_NO_FLASH builds. Note that XIP stream
@@ -75,7 +75,7 @@ int main() {
     printf("DMA complete\n");
 
     bool mismatch = false;
-    for (int i = 0; i < count_of(random_test_data); ++i) {
+    for (uint i = 0; i < count_of(random_test_data); ++i) {
         if (random_test_data[i] != buf[i]) {
             printf("Data mismatch: %08x (actual) != %08x (expected)\n", buf[i], random_test_data[i]);
             mismatch = true;

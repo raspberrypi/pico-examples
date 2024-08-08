@@ -5,6 +5,7 @@
 ;
 
 ; Side-set pin 0 is used for PWM output
+.pio_version 0 // only requires PIO version 0
 
 .program pwm
 .side_set 1 opt

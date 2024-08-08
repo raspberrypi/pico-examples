@@ -56,21 +56,21 @@ void pattern_snakes(uint len, uint t) {
 void pattern_random(uint len, uint t) {
     if (t % 8)
         return;
-    for (int i = 0; i < len; ++i)
+    for (uint i = 0; i < len; ++i)
         put_pixel(rand());
 }
 
 void pattern_sparkle(uint len, uint t) {
     if (t % 8)
         return;
-    for (int i = 0; i < len; ++i)
+    for (uint i = 0; i < len; ++i)
         put_pixel(rand() % 16 ? 0 : 0xffffffff);
 }
 
 void pattern_greys(uint len, uint t) {
-    int max = 100; // let's not draw too much current!
+    uint max = 100; // let's not draw too much current!
     t %= max;
-    for (int i = 0; i < len; ++i) {
+    for (uint i = 0; i < len; ++i) {
         put_pixel(t * 0x10101);
         if (++t >= max) t = 0;
     }
@@ -78,7 +78,7 @@ void pattern_greys(uint len, uint t) {
 
 void pattern_solid(uint len, uint t) {
     t = 1;
-    for (int i = 0; i < len; ++i) {
+    for (uint i = 0; i < len; ++i) {
         put_pixel(t * 0x10101);
     }
 }
@@ -101,7 +101,7 @@ void pattern_fade(uint len, uint t) {
     slow_t >>= shift;
     slow_t *= 0x010101;
 
-    for (int i = 0; i < len; ++i) {
+    for (uint i = 0; i < len; ++i) {
         put_pixel(slow_t);
     }
 }
@@ -156,7 +156,7 @@ void transform_strips(strip_t **strips, uint num_strips, value_bits_t *values, u
                        uint frac_brightness) {
     for (uint v = 0; v < value_length; v++) {
         memset(&values[v], 0, sizeof(values[v]));
-        for (int i = 0; i < num_strips; i++) {
+        for (uint i = 0; i < num_strips; i++) {
             if (v < strips[i]->data_len) {
                 // todo clamp?
                 uint32_t value = (strips[i]->data[v] * strips[i]->frac_brightness) >> 8u;
@@ -219,7 +219,7 @@ static struct semaphore reset_delay_complete_sem;
 // alarm handle for handling delay
 alarm_id_t reset_delay_alarm_id;
 
-int64_t reset_delay_complete(alarm_id_t id, void *user_data) {
+int64_t reset_delay_complete(__unused alarm_id_t id, __unused void *user_data) {
     reset_delay_alarm_id = 0;
     sem_release(&reset_delay_complete_sem);
     // no repeat

@@ -8,13 +8,13 @@
 #include "pico/stdlib.h"
 #include "hardware/structs/watchdog.h"
 
-// This app shows the effect of byte and halfword writes on IO registers. All
-// IO registers on RP2040 will sample the entire 32 bit write data bus on any
-// write; the transfer size and the 2 LSBs of the address are *ignored*.
+// This app shows the effect of byte and halfword writes on IO registers. Most
+// IO registers sample the entire 32 bit write data bus on any write; the
+// transfer size and the 2 LSBs of the address are *ignored*.
 //
-// This can have unintuitive results, especially given the way RP2040
-// busmasters replicate narrow write data across the entire 32-bit write data
-// bus. However, this behaviour can be quite useful if you are aware of it!
+// This can have unintuitive results, especially given the way busmasters
+// replicate narrow write data across the entire 32-bit write data bus.
+// However, this behaviour can be quite useful if you are aware of it!
 
 int main() {
     stdio_init_all();
@@ -42,8 +42,8 @@ int main() {
     printf("%02x ", scratch8[2]);
     printf("%02x\n", scratch8[3]);
 
-    // The Cortex-M0+ and the RP2040 DMA replicate byte writes across the bus,
-    // and IO registers will sample the entire write bus always.
+    // Byte writes are replicated four times across the 32-bit bus, and IO
+    // registers usually sample the entire write bus.
     printf("\nWriting 8 bit value 0xa5 at offset 0\n");
     scratch8[0] = 0xa5;
     // Read back the whole scratch register in one go

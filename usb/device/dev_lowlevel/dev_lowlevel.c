@@ -182,8 +182,7 @@ void usb_setup_endpoints() {
  */
 void usb_device_init() {
     // Reset usb controller
-    reset_block(RESETS_RESET_USBCTRL_BITS);
-    unreset_block_wait(RESETS_RESET_USBCTRL_BITS);
+    reset_unreset_block_num_wait_blocking(RESET_USBCTRL);
 
     // Clear any previous state in dpram just in case
     memset(usb_dpram, 0, sizeof(*usb_dpram)); // <1>
@@ -370,7 +369,7 @@ void usb_set_device_address(volatile struct usb_setup_packet *pkt) {
  *
  * @param pkt, the setup packet from the host.
  */
-void usb_set_device_configuration(volatile struct usb_setup_packet *pkt) {
+void usb_set_device_configuration(__unused volatile struct usb_setup_packet *pkt) {
     // Only one configuration so just acknowledge the request
     printf("Device Enumerated\r\n");
     usb_acknowledge_out_request();
@@ -534,7 +533,7 @@ void isr_usbctrl(void) {
  * @param buf the data that was sent
  * @param len the length that was sent
  */
-void ep0_in_handler(uint8_t *buf, uint16_t len) {
+void ep0_in_handler(__unused uint8_t *buf, __unused uint16_t len) {
     if (should_set_address) {
         // Set actual device address in hardware
         usb_hw->dev_addr_ctrl = dev_addr;
@@ -546,8 +545,7 @@ void ep0_in_handler(uint8_t *buf, uint16_t len) {
     }
 }
 
-void ep0_out_handler(uint8_t *buf, uint16_t len) {
-    ;
+void ep0_out_handler(__unused uint8_t *buf, __unused uint16_t len) {
 }
 
 // Device specific functions
@@ -558,7 +556,7 @@ void ep1_out_handler(uint8_t *buf, uint16_t len) {
     usb_start_transfer(ep, buf, len);
 }
 
-void ep2_in_handler(uint8_t *buf, uint16_t len) {
+void ep2_in_handler(__unused uint8_t *buf, uint16_t len) {
     printf("Sent %d bytes to host\n", len);
     // Get ready to rx again from host
     usb_start_transfer(usb_get_endpoint_configuration(EP1_OUT_ADDR), NULL, 64);

@@ -1,3 +1,5 @@
-if (NOT PICO_NO_HARDWARE)
-    add_subdirectory(hello_interp)
-endif ()
+if (TARGET hardware_interp)
+    add_subdirectory_exclude_platforms(hello_interp)
+else()
+    message("Skipping interp examples as hardware_interp is unavailable on this platform")
+endif()

@@ -1,5 +1,3 @@
-if (NOT PICO_NO_HARDWARE)
-    add_subdirectory(dht_sensor)
-    add_subdirectory(hello_7segment)
-    add_subdirectory(hello_gpio_irq)
-endif ()
+add_subdirectory_exclude_platforms(dht_sensor host)
+add_subdirectory_exclude_platforms(hello_7segment host)
+add_subdirectory_exclude_platforms(hello_gpio_irq host)

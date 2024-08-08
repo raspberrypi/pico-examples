@@ -1,0 +1,1 @@
+add_subdirectory_exclude_platforms(hello_dcp host rp2040 rp2350-riscv)

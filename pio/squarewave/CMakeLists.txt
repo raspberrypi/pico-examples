@@ -22,14 +22,25 @@ add_custom_target(pio_squarewave_datasheet DEPENDS
 		)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.hex
         DEPENDS ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio
-        COMMAND Pioasm -o hex ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.hex
+        COMMAND pioasm -o hex ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.hex
         VERBATIM)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.pio.h
         DEPENDS ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio
-        COMMAND Pioasm ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.pio.h
+        COMMAND pioasm ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave.pio.h
         VERBATIM)
 add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave_wrap.pio.h
         DEPENDS ${CMAKE_CURRENT_LIST_DIR}/squarewave_wrap.pio
-        COMMAND Pioasm ${CMAKE_CURRENT_LIST_DIR}/squarewave_wrap.pio ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave_wrap.pio.h
+        COMMAND pioasm ${CMAKE_CURRENT_LIST_DIR}/squarewave_wrap.pio ${CMAKE_CURRENT_LIST_DIR}/generated/squarewave_wrap.pio.h
         VERBATIM)
 add_dependencies(pio_squarewave pio_squarewave_datasheet)
+
+add_executable(pio_squarewave_div_sync)
+pico_generate_pio_header(pio_squarewave_div_sync ${CMAKE_CURRENT_LIST_DIR}/squarewave.pio)
+target_sources(pio_squarewave_div_sync PRIVATE
+    squarewave_div_sync.c
+    )
+target_link_libraries(pio_squarewave_div_sync PRIVATE
+    pico_stdlib hardware_pio
+    )
+pico_add_extra_outputs(pio_squarewave_div_sync)
+example_auto_set_url(pio_squarewave_div_sync)

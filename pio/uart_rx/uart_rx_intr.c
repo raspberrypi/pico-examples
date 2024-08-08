@@ -73,7 +73,7 @@ static void pio_irq_func(void) {
 }
 
 // Process characters
-static void async_worker_func(async_context_t *async_context, async_when_pending_worker_t *worker) {
+static void async_worker_func(__unused async_context_t *async_context, __unused async_when_pending_worker_t *worker) {
     work_done = true;
     while(!queue_is_empty(&fifo)) {
         char c;

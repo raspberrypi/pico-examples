@@ -28,10 +28,10 @@ int main() {
         uint bar_x_pos = adc_x_raw * bar_width / adc_max;
         uint bar_y_pos = adc_y_raw * bar_width / adc_max;
         printf("\rX: [");
-        for (int i = 0; i < bar_width; ++i)
+        for (uint i = 0; i < bar_width; ++i)
             putchar( i == bar_x_pos ? 'o' : ' ');
         printf("]  Y: [");
-        for (int i = 0; i < bar_width; ++i)
+        for (uint i = 0; i < bar_width; ++i)
             putchar( i == bar_y_pos ? 'o' : ' ');
         printf("]");
         sleep_ms(50);

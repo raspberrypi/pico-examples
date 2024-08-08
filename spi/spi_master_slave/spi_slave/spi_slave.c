@@ -32,7 +32,7 @@
 #define BUF_LEN         0x100
 
 void printbuf(uint8_t buf[], size_t len) {
-    int i;
+    size_t i;
     for (i = 0; i < len; ++i) {
         if (i % 16 == 15)
             printf("%02x\n", buf[i]);

@@ -34,7 +34,7 @@ int main() {
     // Load the assembled program directly into the PIO's instruction memory.
     // Each PIO instance has a 32-slot instruction memory, which all 4 state
     // machines can see. The system has write-only access.
-    for (int i = 0; i < count_of(squarewave_program_instructions); ++i)
+    for (uint i = 0; i < count_of(squarewave_program_instructions); ++i)
         pio->instr_mem[i] = squarewave_program_instructions[i];
     /// \end::load_program[]
 
@@ -56,7 +56,7 @@ int main() {
     pio->sm[0].pinctrl =
             (1 << PIO_SM0_PINCTRL_SET_COUNT_LSB) |
             (0 << PIO_SM0_PINCTRL_SET_BASE_LSB);
-    gpio_set_function(0, GPIO_FUNC_PIO0);
+    gpio_set_function(0, pio_get_funcsel(pio));
     /// \end::setup_pins[]
 
     /// \tag::start_sm[]

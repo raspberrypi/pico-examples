@@ -9,7 +9,7 @@
 ; achieved using the hardware GPIO inversion available in the IO controls.
 ;
 ; Transmit-only SPI can go twice as fast -- see the ST7789 example!
-
+.pio_version 0 // only requires PIO version 0
 
 .program spi_cpha0
 .side_set 1

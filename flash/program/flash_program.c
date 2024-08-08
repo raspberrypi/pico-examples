@@ -29,7 +29,7 @@ void print_buf(const uint8_t *buf, size_t len) {
 int main() {
     stdio_init_all();
     uint8_t random_data[FLASH_PAGE_SIZE];
-    for (int i = 0; i < FLASH_PAGE_SIZE; ++i)
+    for (uint i = 0; i < FLASH_PAGE_SIZE; ++i)
         random_data[i] = rand() >> 16;
 
     printf("Generated random data:\n");
@@ -47,7 +47,7 @@ int main() {
     print_buf(flash_target_contents, FLASH_PAGE_SIZE);
 
     bool mismatch = false;
-    for (int i = 0; i < FLASH_PAGE_SIZE; ++i) {
+    for (uint i = 0; i < FLASH_PAGE_SIZE; ++i) {
         if (random_data[i] != flash_target_contents[i])
             mismatch = true;
     }

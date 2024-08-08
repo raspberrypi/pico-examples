@@ -77,7 +77,7 @@ int main() {
 
     printf("Fibonacci %d is %d\n", TEST_NUM, res);
 
-
+    return 0;
 }
 
 /// \end::multicore_dispatch[]

@@ -6,6 +6,8 @@
 
 ; SET pin 0 should be mapped to your LED GPIO
 
+.pio_version 0 // only requires PIO version 0
+
 .program blink
     pull block
     out y, 32

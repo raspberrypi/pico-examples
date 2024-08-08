@@ -14,6 +14,7 @@
 
 #define squarewave_wrap_target 0
 #define squarewave_wrap 3
+#define squarewave_pio_version 0
 
 static const uint16_t squarewave_program_instructions[] = {
             //     .wrap_target
@@ -29,6 +30,10 @@ static const struct pio_program squarewave_program = {
     .instructions = squarewave_program_instructions,
     .length = 4,
     .origin = -1,
+    .pio_version = 0,
+#if PICO_PIO_VERSION > 0
+    .used_gpio_ranges = 0x0
+#endif
 };
 
 static inline pio_sm_config squarewave_program_get_default_config(uint offset) {

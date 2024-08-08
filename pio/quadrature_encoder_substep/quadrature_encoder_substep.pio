@@ -17,7 +17,7 @@
 ; the PIO code counts steps like the standard quadrature encoder code, but also
 ; keeps track of the time passed since the last transition. That allows the C
 ; code to build a good estimate of a fractional step position based on the
-; lastest speed and time passed
+; latest speed and time passed
 ;
 ; since it needs to push two values, it only pushes new data when the FIFO has
 ; enough space to hold both values. Otherwise it could either stall or go out

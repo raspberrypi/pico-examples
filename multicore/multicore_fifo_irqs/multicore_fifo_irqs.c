@@ -34,9 +34,8 @@ void core1_sio_irq() {
 
 void core1_entry() {
     multicore_fifo_clear_irq();
-    irq_set_exclusive_handler(SIO_IRQ_PROC1, core1_sio_irq);
-
-    irq_set_enabled(SIO_IRQ_PROC1, true);
+    irq_set_exclusive_handler(SIO_FIFO_IRQ_NUM(1), core1_sio_irq);
+    irq_set_enabled(SIO_FIFO_IRQ_NUM(1), true);
 
     // Send something to Core0, this should fire the interrupt.
     multicore_fifo_push_blocking(FLAG_VALUE1);
@@ -55,8 +54,8 @@ int main() {
     // they are used for the launch will result in unexpected behaviour.
     multicore_launch_core1(core1_entry);
 
-    irq_set_exclusive_handler(SIO_IRQ_PROC0, core0_sio_irq);
-    irq_set_enabled(SIO_IRQ_PROC0, true);
+    irq_set_exclusive_handler(SIO_FIFO_IRQ_NUM(0), core0_sio_irq);
+    irq_set_enabled(SIO_FIFO_IRQ_NUM(0), true);
 
     // Wait for a bit for things to happen
     sleep_ms(10);

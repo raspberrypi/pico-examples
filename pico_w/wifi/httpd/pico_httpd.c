@@ -133,7 +133,7 @@ err_t httpd_post_begin(void *connection, const char *uri, const char *http_reque
     return ERR_VAL;
 }
 
-// Return a value for a paramter
+// Return a value for a parameter
 char *httpd_param_value(struct pbuf *p, const char *param_name, char *value_buf, size_t value_buf_len) {
     size_t param_len = strlen(param_name);
     u16_t param_pos = pbuf_memfind(p, param_name, param_len, 0);

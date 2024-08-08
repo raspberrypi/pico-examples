@@ -43,7 +43,7 @@ void blink_task(__unused void *params) {
     bool on = false;
     printf("blink_task starts\n");
     while (true) {
-#if 0 && configNUM_CORES > 1
+#if 0 && configNUMBER_OF_CORES > 1
         static int last_core_id;
         if (portGET_CORE_ID() != last_core_id) {
             last_core_id = portGET_CORE_ID();
@@ -96,7 +96,7 @@ void vLaunch( void) {
     TaskHandle_t task;
     xTaskCreate(main_task, "TestMainThread", configMINIMAL_STACK_SIZE, NULL, TEST_TASK_PRIORITY, &task);
 
-#if NO_SYS && configUSE_CORE_AFFINITY && configNUM_CORES > 1
+#if NO_SYS && configUSE_CORE_AFFINITY && configNUMBER_OF_CORES > 1
     // we must bind the main task to one core (well at least while the init is called)
     // (note we only do this in NO_SYS mode, because cyw43_arch_freertos
     // takes care of it otherwise)
@@ -113,13 +113,13 @@ int main( void )
 
     /* Configure the hardware ready to run the demo. */
     const char *rtos_name;
-#if ( portSUPPORT_SMP == 1 )
+#if ( configNUMBER_OF_CORES > 1 )
     rtos_name = "FreeRTOS SMP";
 #else
     rtos_name = "FreeRTOS";
 #endif
 
-#if ( portSUPPORT_SMP == 1 ) && ( configNUM_CORES == 2 )
+#if ( configNUMBER_OF_CORES == 2 )
     printf("Starting %s on both cores:\n", rtos_name);
     vLaunch();
 #elif ( RUN_FREERTOS_ON_CORE == 1 )

@@ -14,6 +14,7 @@
 
 #define ws2812_wrap_target 0
 #define ws2812_wrap 3
+#define ws2812_pio_version 0
 
 #define ws2812_T1 2
 #define ws2812_T2 5
@@ -33,6 +34,10 @@ static const struct pio_program ws2812_program = {
     .instructions = ws2812_program_instructions,
     .length = 4,
     .origin = -1,
+    .pio_version = 0,
+#if PICO_PIO_VERSION > 0
+    .used_gpio_ranges = 0x0
+#endif
 };
 
 static inline pio_sm_config ws2812_program_get_default_config(uint offset) {
@@ -65,6 +70,7 @@ static inline void ws2812_program_init(PIO pio, uint sm, uint offset, uint pin, 
 
 #define ws2812_parallel_wrap_target 0
 #define ws2812_parallel_wrap 3
+#define ws2812_parallel_pio_version 0
 
 #define ws2812_parallel_T1 2
 #define ws2812_parallel_T2 5
@@ -84,6 +90,10 @@ static const struct pio_program ws2812_parallel_program = {
     .instructions = ws2812_parallel_program_instructions,
     .length = 4,
     .origin = -1,
+    .pio_version = 0,
+#if PICO_PIO_VERSION > 0
+    .used_gpio_ranges = 0x0
+#endif
 };
 
 static inline pio_sm_config ws2812_parallel_program_get_default_config(uint offset) {

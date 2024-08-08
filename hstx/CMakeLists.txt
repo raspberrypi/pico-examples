@@ -1,0 +1,2 @@
+add_subdirectory_exclude_platforms(dvi_out_hstx_encoder host rp2040)
+add_subdirectory_exclude_platforms(spi_lcd host rp2040)

@@ -15,16 +15,16 @@ int main() {
     printf("Hello, reset!\n");
 
     // Put the PWM block into reset
-    reset_block(RESETS_RESET_PWM_BITS);
+    reset_block_num(RESET_PWM);
 
     // And bring it out
-    unreset_block_wait(RESETS_RESET_PWM_BITS);
+    unreset_block_num_wait_blocking(RESET_PWM);
 
-    // Put the PWM and RTC block into reset
-    reset_block(RESETS_RESET_PWM_BITS | RESETS_RESET_RTC_BITS);
+    // Put the PWM and ADC block into reset
+    reset_block_mask((1u << RESET_PWM) | (1u << RESET_ADC));
 
     // Wait for both to come out of reset
-    unreset_block_wait(RESETS_RESET_PWM_BITS | RESETS_RESET_RTC_BITS);
+    unreset_block_mask_wait_blocking((1u << RESET_PWM) | (1u << RESET_ADC));
 
     return 0;
 }

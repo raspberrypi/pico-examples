@@ -16,5 +16,5 @@ if (TARGET tinyusb_device)
     # add url via pico_set_program_url
     example_auto_set_url(hello_usb)
 elseif(PICO_ON_DEVICE)
-    message(WARNING "not building hello_usb because TinyUSB submodule is not initialized in the SDK")
+    message("Skipping hello_usb because TinyUSB submodule is not initialized in the SDK")
 endif()

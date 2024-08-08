@@ -1,4 +1,17 @@
-# Raspberry Pi Pico SDK Examples
+# Raspberry Pi RP2350 Pico SDK Examples - Early Access
+
+## RP2350 Instructions
+
+Everything below this section is from the stock pico-examples, so ignore URLs etc., but generally instructions are the same.
+
+The Pico SDK default continues to be to build for RP2040 (PICO_PLATFORM=rp2040), so to build for RP2350, you need to pass
+`-DPICO_PLATFORM=rp2350` to CMake (or `-DPICO_PLATFORM=rp2350-riscv` for RISC-V).
+
+Most, but not all examples, currently work on RP2350 however you should be able to do a full build with any of the above platforms (PICO_PLATFORM=host however currently fails on some examples)
+
+For RISC-V compilation, you should take a compiler from here: https://www.embecosm.com/resources/tool-chain-downloads/#riscv-stable
+
+# Original pico-examples docs
 
 ## Getting started
 
@@ -7,12 +20,13 @@ on getting up and running.
 
 ### First Examples
 
-App|Description | Link to prebuilt UF2
----|---|---
-[hello_serial](hello_world/serial) | The obligatory Hello World program for Pico (Output over serial version) |
-[hello_usb](hello_world/usb) | The obligatory Hello World program for Pico (Output over USB version) | https://rptl.io/pico-hello-usb
-[blink](blink) | Blink an LED on and off. Pico W should use [picow_blink](pico_w/wifi/blink). | https://rptl.io/pico-blink
-[picow_blink](pico_w/wifi/blink) | Blinks the Pico W on-board LED (which is connected via the WiFi chip). | http://rptl.io/pico-w-blink
+App| Description                                                                | Link to prebuilt UF2
+---|----------------------------------------------------------------------------|---
+[hello_serial](hello_world/serial) | The obligatory Hello World program for Pico (Output over serial version)   |
+[hello_usb](hello_world/usb) | The obligatory Hello World program for Pico (Output over USB version)      | https://rptl.io/pico-hello-usb
+[blink](blink) | Blink an LED on and off. Works on both boards with regular LEDs and Pico W | https://rptl.io/pico-blink
+[blink_simple](blink_simple) | Blink an LED on and off. Does not work on Pico W.                          | https://rptl.io/pico-blink
+[picow_blink](pico_w/wifi/blink) | Blinks the Pico W on-board LED (which is connected via the WiFi chip).     | http://rptl.io/pico-w-blink
 
 ### ADC
 
@@ -25,6 +39,11 @@ App|Description
 [microphone_adc](adc/microphone_adc) | Read analog values from a microphone and plot the measured sound amplitude.
 [dma_capture](adc/dma_capture) | Use the DMA to capture many samples from the ADC.
 [read_vsys](adc/read_vsys) | Demonstrates how to read VSYS to get the voltage of the power supply.
+
+### Bootloaders (RP2350 Only)
+App|Description
+---|---
+[enc_bootloader](bootloaders/encrypted) | A bootloader which decrypts binaries from flash into SRAM. See the separate [README](bootloaders/encrypted/README.md) for more information
 
 ### Clocks
 
@@ -41,6 +60,12 @@ App|Description
 ---|---
 [build_variants](cmake/build_variants) | Builds two version of the same app with different configurations
 
+### DCP
+
+App|Description
+---|---
+[hello_dcp](dcp/hello_dcp) | Use the double-precision coprocessor directly in assembler.
+
 ### DMA
 
 App|Description
@@ -49,6 +74,12 @@ App|Description
 [control_blocks](dma/control_blocks) | Build a control block list, to program a longer sequence of DMA transfers to the UART.
 [channel_irq](dma/channel_irq) | Use an IRQ handler to reconfigure a DMA channel, in order to continuously drive data through a PIO state machine.
 [sniff_crc](dma/sniff_crc) | Use the DMA engine's 'sniff' capability to calculate a CRC32 on a data buffer.
+
+### HSTX
+
+App|Description
+---|---
+[dvi_out_hstx_encoder](dvi_out_hstx_encoder) `RP2350`| Use the HSTX to output a DVI signal with 3:3:2 RGB
 
 ### Flash
 
@@ -59,6 +90,15 @@ App|Description
 [program](flash/program) | Erase a flash sector, program one flash page, and read back the data.
 [xip_stream](flash/xip_stream) | Stream data using the XIP stream hardware, which allows data to be DMA'd in the background whilst executing code from flash.
 [ssi_dma](flash/ssi_dma) | DMA directly from the flash interface (continuous SCK clocking) for maximum bulk read performance.
+[runtime_flash_permissions](flash/runtime_flash_permissions) | Demonstrates adding partitions at runtime to change the flash permissions
+
+### FreeRTOS
+
+These examples require you to set the `FREERTOS_KERNEL_PATH` to point to the FreeRTOS Kernel. See https://github.com/FreeRTOS/FreeRTOS-Kernel
+
+App|Description
+---|---
+[hello_freertos](freertos/hello_freertos) | Examples that demonstrate how run FreeRTOS and tasks on 1 or 2 cores.
 
 ### GPIO
 
@@ -107,6 +147,13 @@ App|Description
 [hello_multicore](multicore/hello_multicore) | Launch a function on the second core, printf some messages on each core, and pass data back and forth through the mailbox FIFOs.
 [multicore_fifo_irqs](multicore/multicore_fifo_irqs) | On each core, register and interrupt handler for the mailbox FIFOs. Show how the interrupt fires when that core receives a message.
 [multicore_runner](multicore/multicore_runner) | Set up the second core to accept, and run, any function pointer pushed into its mailbox FIFO. Push in a few pieces of code and get answers back.
+[multicore_doorbell](multicore/multicore_doorbell) | Claims two doorbells for signaling between the cores. Counts how many doorbell IRQs occur on the second core and uses doorbells to coordinate exit.
+
+### OTP
+
+App|Description
+---|---
+[hello_otp](otp/hello_otp) | Demonstrate reading and writing from the OTP on RP2350, along with some of the features of OTP (error correction and page locking).
 
 ### Pico Board
 
@@ -123,6 +170,7 @@ App|Description
 ---|---
 [picow_access_point](pico_w/wifi/access_point) | Starts a WiFi access point, and fields DHCP requests.
 [picow_blink](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip).
+[picow_blink_slow_clock](pico_w/wifi/blink_slow_clock) | Blinks the on-board LED (which is connected via the WiFi chip) with a slower system clock to show how to reconfigure communication with the WiFi chip under those circumstances
 [picow_iperf_server](pico_w/wifi/iperf) | Runs an "iperf" server for WiFi speed testing.
 [picow_ntp_client](pico_w/wifi/ntp_client) | Connects to an NTP server to fetch and display the current time.
 [picow_tcp_client](pico_w/wifi/tcp_client) | A simple TCP client. You can run [python_test_tcp_server.py](pico_w/wifi/python_test_tcp/python_test_tcp_server.py) for it to connect to.
@@ -136,7 +184,7 @@ App|Description
 #### FreeRTOS examples
 
 These are examples of integrating Pico W networking under FreeRTOS, and require you to set the `FREERTOS_KERNEL_PATH`
-to point to the FreeRTOS Kernel.
+to point to the FreeRTOS Kernel. See https://github.com/FreeRTOS/FreeRTOS-Kernel
 
 App|Description
 ---|---
@@ -237,6 +285,7 @@ App|Description
 [pwm](pio/pwm) | Pulse width modulation on PIO. Use it to gradually fade the brightness of an LED.
 [spi](pio/spi) | Use PIO to erase, program and read an external SPI flash chip. A second example runs a loopback test with all four CPHA/CPOL combinations.
 [squarewave](pio/squarewave) | Drive a fast square wave onto a GPIO. This example accesses low-level PIO registers directly, instead of using the SDK functions.
+[squarewave_div_sync](pio/squarewave) | Generates a square wave on three GPIOs and synchronises the divider on all the state machines
 [st7789_lcd](pio/st7789_lcd) | Set up PIO for 62.5 Mbps serial output, and use this to display a spinning image on a ST7789 serial LCD.
 [quadrature_encoder](pio/quadrature_encoder) | A quadrature encoder using PIO to maintain counts independent of the CPU. 
 [quadrature_encoder_substep](pio/quadrature_encoder_substep) | High resolution speed measurement using a standard quadrature encoder
@@ -267,6 +316,13 @@ App|Description
 [rtc_alarm](rtc/rtc_alarm) | Set an alarm on the RTC to trigger an interrupt at a date/time 5 seconds into the future.
 [rtc_alarm_repeat](rtc/rtc_alarm_repeat) | Trigger an RTC interrupt once per minute.
 
+### SHA-256
+
+App|Description
+---|---
+[hello_sha256](sha/sha256) | Demonstrates how to use the pico_sha256 library to calculate a checksum using the hardware in rp2350
+[mbedtls_sha256](sha/mbedtls_sha256) | Demonstrates using the SHA-256 hardware acceleration in mbedtls
+
 ### SPI
 
 App|Description
@@ -283,7 +339,9 @@ App|Description
 
 App|Description
 ---|---
+[boot_info](system/boot_info) | Demonstrate how to read and interpret sys info boot info.
 [hello_double_tap](system/hello_double_tap) | An LED blink with the `pico_bootsel_via_double_reset` library linked. This enters the USB bootloader when it detects the system being reset twice in quick succession, which is useful for boards with a reset button but no BOOTSEL button.
+[rand](system/rand) | Demonstrate how to use the pico random number functions.
 [narrow_io_write](system/narrow_io_write) | Demonstrate the effects of 8-bit and 16-bit writes on a 32-bit IO register.
 [unique_board_id](system/unique_board_id) | Read the 64 bit unique ID from external flash, which serves as a unique identifier for the board.
 
@@ -302,6 +360,16 @@ App|Description
 [hello_uart](uart/hello_uart) | Print some text from one of the UART serial ports, without going through `stdio`.
 [lcd_uart](uart/lcd_uart) | Display text and symbols on a 16x02 RGB LCD display via UART
 [uart_advanced](uart/uart_advanced) | Use some other UART features like RX interrupts, hardware control flow, and data formats other than 8n1.
+
+### Universal
+
+These are examples of how to build universal binaries which run on RP2040, and RP2350 Arm & RISC-V.
+These require you to set `PICO_ARM_TOOLCHAIN_PATH` and `PICO_RISCV_TOOLCHAIN_PATH` to appropriate paths, to ensure you have compilers for both architectures.
+
+App|Description
+---|---
+[hello_universal](universal/hello_universal) | The obligatory Hello World program for Pico (USB and serial output). On RP2350 it will reboot to the other architecture after every 10 prints.
+[nuke_universal](universal/CMakeLists.txt#L107) | Same as the [nuke](flash/nuke) binary, but universal. On RP2350 runs as a packaged SRAM binary, so is written to flash and copied to SRAM by the bootloader
 
 ### USB Device
 

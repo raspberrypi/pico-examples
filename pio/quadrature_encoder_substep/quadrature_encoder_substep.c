@@ -371,7 +371,6 @@ int main(void)
     const uint PIN_A = 2;
 
     stdio_init_all();
-    stdio_set_translate_crlf(&stdio_usb, false);
 
     PIO pio = pio0;
     const uint sm = 0;

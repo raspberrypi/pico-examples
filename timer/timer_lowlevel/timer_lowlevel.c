@@ -9,6 +9,8 @@
 #include "hardware/timer.h"
 #include "hardware/irq.h"
 
+// Note on RP2350 timer_hw is the default timer instance (as per PICO_DEFAULT_TIMER)
+
 /// \tag::get_time[]
 // Simplest form of getting 64 bit time from the timer.
 // It isn't safe when called from 2 cores because of the latching
@@ -24,7 +26,7 @@ static uint64_t get_time(void) {
 /// \tag::alarm_standalone[]
 // Use alarm 0
 #define ALARM_NUM 0
-#define ALARM_IRQ TIMER_IRQ_0
+#define ALARM_IRQ hardware_alarm_get_irq_num(timer_hw, ALARM_NUM)
 
 // Alarm interrupt handler
 static volatile bool alarm_fired;

@@ -14,6 +14,7 @@
 
 #define squarewave_wrap_wrap_target 1
 #define squarewave_wrap_wrap 2
+#define squarewave_wrap_pio_version 0
 
 static const uint16_t squarewave_wrap_program_instructions[] = {
     0xe081, //  0: set    pindirs, 1                 
@@ -28,6 +29,10 @@ static const struct pio_program squarewave_wrap_program = {
     .instructions = squarewave_wrap_program_instructions,
     .length = 3,
     .origin = -1,
+    .pio_version = 0,
+#if PICO_PIO_VERSION > 0
+    .used_gpio_ranges = 0x0
+#endif
 };
 
 static inline pio_sm_config squarewave_wrap_program_get_default_config(uint offset) {

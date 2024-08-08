@@ -389,7 +389,7 @@ restart:
     };
 
     int y = 0;
-    for (int i = 0 ;i < count_of(text); i++) {
+    for (uint i = 0 ;i < count_of(text); i++) {
         WriteString(buf, 5, y, text[i]);
         y+=8;
     }

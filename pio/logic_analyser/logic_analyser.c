@@ -94,9 +94,9 @@ void print_capture_buf(const uint32_t *buf, uint pin_base, uint pin_count, uint3
     // Each FIFO record may be only partially filled with bits, depending on
     // whether pin_count is a factor of 32.
     uint record_size_bits = bits_packed_per_word(pin_count);
-    for (int pin = 0; pin < pin_count; ++pin) {
+    for (uint pin = 0; pin < pin_count; ++pin) {
         printf("%02d: ", pin + pin_base);
-        for (int sample = 0; sample < n_samples; ++sample) {
+        for (uint32_t sample = 0; sample < n_samples; ++sample) {
             uint bit_index = pin + sample * pin_count;
             uint word_index = bit_index / record_size_bits;
             // Data is left-justified in each FIFO entry, hence the (32 - record_size_bits) offset

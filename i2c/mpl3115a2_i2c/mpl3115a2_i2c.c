@@ -63,7 +63,7 @@ struct mpl3115a2_data_t {
     float altitude;
 };
 
-void copy_to_vbuf(uint8_t buf1[], volatile uint8_t buf2[], int buflen) {
+void copy_to_vbuf(uint8_t buf1[], volatile uint8_t buf2[], uint buflen) {
     for (size_t i = 0; i < buflen; i++) {
         buf2[i] = buf1[i];
     }
@@ -123,7 +123,7 @@ void mpl3115a2_init() {
     i2c_write_blocking(i2c_default, ADDR, buf, 2, false);
 }
 
-void gpio_callback(uint gpio, uint32_t events) {
+void gpio_callback(uint gpio, __unused uint32_t events) {
     // if we had enabled more than 2 interrupts on same pin, then we should read
     // INT_SOURCE reg to find out which interrupt triggered
 

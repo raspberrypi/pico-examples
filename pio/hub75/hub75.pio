@@ -3,6 +3,7 @@
 ;
 ; SPDX-License-Identifier: BSD-3-Clause
 ;
+.pio_version 0 // only requires PIO version 0
 
 .program hub75_row
 

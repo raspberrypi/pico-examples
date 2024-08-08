@@ -93,4 +93,5 @@ int main() {
     queue_remove_blocking(&results_queue, &res);
 
     printf("Fibonacci %d is %d\n", TEST_NUM, res);
+    return 0;
 }

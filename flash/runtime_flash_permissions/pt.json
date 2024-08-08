@@ -1,0 +1,9 @@
+{
+  "version": [1, 0],
+  "unpartitioned": {
+    "families": ["absolute"],
+    "permissions": {
+      "bootloader": "rw"
+    }
+  }
+}
