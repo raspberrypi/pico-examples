@@ -215,7 +215,7 @@ void texture_mapping_setup(uint8_t *texture, uint texture_width_bits, uint textu
                            uint uv_fractional_bits) {
     interp_config cfg = interp_default_config();
     // set add_raw flag to use raw (un-shifted and un-masked) lane accumulator value when adding
-    // it to the the lane base to make the lane result
+    // it to the lane base to make the lane result
     interp_config_set_add_raw(&cfg, true);
     interp_config_set_shift(&cfg, uv_fractional_bits);
     interp_config_set_mask(&cfg, 0, texture_width_bits - 1);
