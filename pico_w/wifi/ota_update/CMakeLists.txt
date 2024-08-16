@@ -13,10 +13,15 @@ target_include_directories(picow_ota_update_background PRIVATE
 target_link_libraries(picow_ota_update_background
         pico_cyw43_arch_lwip_threadsafe_background
         pico_stdlib
+        pico_sha256
         boot_uf2_headers
         )
 
-pico_sign_binary(picow_ota_update_background)
+pico_hash_binary(picow_ota_update_background)
+get_target_property(hasSigfile picow_ota_update_background PICOTOOL_SIGFILE)
+if (hasSigfile)
+        pico_sign_binary(picow_ota_update_background)
+endif()
 # pico_set_binary_type(picow_ota_update_background no_flash)
 # pico_package_uf2_output(picow_ota_update_background 0x10000000)
 
@@ -37,9 +42,15 @@ target_include_directories(picow_ota_update_poll PRIVATE
 target_link_libraries(picow_ota_update_poll
         pico_cyw43_arch_lwip_poll
         pico_stdlib
+        pico_sha256
         boot_uf2_headers
         )
 
+pico_hash_binary(picow_ota_update_poll)
+get_target_property(hasSigfile picow_ota_update_poll PICOTOOL_SIGFILE)
+if (hasSigfile)
+        pico_sign_binary(picow_ota_update_poll)
+endif()
 # pico_set_binary_type(picow_ota_update_background no_flash)
 # pico_package_uf2_output(picow_ota_update_background 0x10000000)
 
