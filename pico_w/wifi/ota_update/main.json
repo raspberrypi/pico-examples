@@ -1,0 +1,61 @@
+{
+  "version": [1, 0],
+  "unpartitioned": {
+    "families": ["absolute"],
+    "permissions": {
+      "secure": "rw",
+      "nonsecure": "rw",
+      "bootloader": "rw"
+    }
+  },
+  "partitions": [
+    {
+      "name": "Main A",
+      "id": 0,
+      "size": "500K",
+      "families": ["rp2350-arm-s", "rp2350-riscv"],
+      "permissions": {
+        "secure": "rw",
+        "nonsecure": "rw",
+        "bootloader": "rw"
+      }
+    },
+    {
+      "name": "Main B",
+      "id": 0,
+      "size": "500K",
+      "families": ["rp2350-arm-s", "rp2350-riscv"],
+      "permissions": {
+        "secure": "rw",
+        "nonsecure": "rw",
+        "bootloader": "rw"
+      },
+      "link": ["a", 0]
+    },
+    {
+      "name": "Firmware A",
+      "id": "0x123456789abcdef0",
+      "size": "240K",
+      "families": ["0x12345678"],
+      "permissions": {
+        "secure": "rw",
+        "nonsecure": "rw",
+        "bootloader": "rw"
+      },
+      "ignored_during_riscv_boot": true
+    },
+    {
+      "name": "Firmware B",
+      "id": 12345,
+      "size": "240K",
+      "families": ["0x12345678"],
+      "permissions": {
+        "secure": "rw",
+        "nonsecure": "rw",
+        "bootloader": "rw"
+      },
+      "link": ["a", 2],
+      "ignored_during_riscv_boot": true
+    }
+  ]
+}
