@@ -15,8 +15,6 @@
 #include "boot/picoboot.h"
 #include "boot/uf2.h"
 
-#include "bootrom_structs.h"
-
 #include "lwip/pbuf.h"
 #include "lwip/tcp.h"
 
@@ -322,17 +320,14 @@ int main() {
 
     if (rom_get_last_boot_type() == BOOT_TYPE_FLASH_UPDATE) {
         printf("Someone updated into me\n");
-        printf("Params were %x %x\n", boot_info.reboot_params[0], boot_info.reboot_params[1]);
-        printf("Update info %x\n", boot_info.tbyb_and_update_info);
-        printf("TBYB flash address is %x\n", always->zero_init.tbyb_flag_flash_addr);
-        printf("TBYB erase address is %x\n", always->zero_init.version_downgrade_erase_flash_addr);
-        printf("Workarea at %x\n", workarea);
+        if (boot_info.reboot_params[0]) printf("Flash update base was %x\n", boot_info.reboot_params[0]);
+        if (boot_info.tbyb_and_update_info) printf("Update info %x\n", boot_info.tbyb_and_update_info);
+        if (always->zero_init.tbyb_flag_flash_addr) printf("TBYB flash address is %x\n", always->zero_init.tbyb_flag_flash_addr);
+        if (always->zero_init.version_downgrade_erase_flash_addr) printf("TBYB erase address is %x\n", always->zero_init.version_downgrade_erase_flash_addr);
         ret = rom_explicit_buy(workarea, sizeof(workarea));
-        printf("Buy returned %d\n", ret);
+        if (ret) printf("Buy returned %d\n", ret);
         ret = rom_get_boot_info(&boot_info);
-        printf("Update info now %x\n", boot_info.tbyb_and_update_info);
-        printf("TBYB flash address is %x\n", always->zero_init.tbyb_flag_flash_addr);
-        printf("TBYB erase address is %x\n", always->zero_init.version_downgrade_erase_flash_addr);
+        if (boot_info.tbyb_and_update_info) printf("Update info now %x\n", boot_info.tbyb_and_update_info);
     }
 
 
