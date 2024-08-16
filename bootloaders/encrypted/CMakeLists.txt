@@ -30,8 +30,8 @@ function(add_linker_script target origin length)
             -Doutput_file:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/${target}.ld
             -P "${CMAKE_CURRENT_BINARY_DIR}/make_linker_script.cmake"
         DEPENDS ${PICO_LINKER_SCRIPT_PATH}/memmap_no_flash.ld)
-    add_custom_target(${target}.ld DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${target}.ld)
-    add_dependencies(${target} ${target}.ld)
+    add_custom_target(${target}_ld DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${target}.ld)
+    add_dependencies(${target} ${target}_ld)
     pico_set_linker_script(${target} ${CMAKE_CURRENT_BINARY_DIR}/${target}.ld)
 endfunction()
 
