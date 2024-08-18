@@ -79,7 +79,7 @@ App|Description
 
 App|Description
 ---|---
-[dvi_out_hstx_encoder](dvi_out_hstx_encoder) `RP2350`| Use the HSTX to output a DVI signal with 3:3:2 RGB
+[dvi_out_hstx_encoder](hstx/dvi_out_hstx_encoder) `RP2350`| Use the HSTX to output a DVI signal with 3:3:2 RGB
 
 ### Flash
 
