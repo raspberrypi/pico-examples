@@ -1,8 +1,6 @@
-# Raspberry Pi RP2350 Pico SDK Examples - Early Access
+# Raspberry Pi Pico SDK Examples
 
-## RP2350 Instructions
-
-Everything below this section is from the stock pico-examples, so ignore URLs etc., but generally instructions are the same.
+## Getting started
 
 The Pico SDK default continues to be to build for RP2040 (PICO_PLATFORM=rp2040), so to build for RP2350, you need to pass
 `-DPICO_PLATFORM=rp2350` to CMake (or `-DPICO_PLATFORM=rp2350-riscv` for RISC-V).
@@ -10,10 +8,6 @@ The Pico SDK default continues to be to build for RP2040 (PICO_PLATFORM=rp2040),
 Most, but not all examples, currently work on RP2350 however you should be able to do a full build with any of the above platforms (PICO_PLATFORM=host however currently fails on some examples)
 
 For RISC-V compilation, you should take a compiler from here: https://www.embecosm.com/resources/tool-chain-downloads/#riscv-stable
-
-# Original pico-examples docs
-
-## Getting started
 
 See [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started) and the README in the [pico-sdk](https://github.com/raspberrypi/pico-sdk) for information
 on getting up and running.
@@ -40,7 +34,7 @@ App|Description
 [dma_capture](adc/dma_capture) | Use the DMA to capture many samples from the ADC.
 [read_vsys](adc/read_vsys) | Demonstrates how to read VSYS to get the voltage of the power supply.
 
-### Bootloaders (RP2350 Only)
+### Bootloaders (RP235x Only)
 App|Description
 ---|---
 [enc_bootloader](bootloaders/encrypted) | A bootloader which decrypts binaries from flash into SRAM. See the separate [README](bootloaders/encrypted/README.md) for more information
@@ -60,7 +54,7 @@ App|Description
 ---|---
 [build_variants](cmake/build_variants) | Builds two version of the same app with different configurations
 
-### DCP
+### DCP (RP235x Only)
 
 App|Description
 ---|---
@@ -75,11 +69,11 @@ App|Description
 [channel_irq](dma/channel_irq) | Use an IRQ handler to reconfigure a DMA channel, in order to continuously drive data through a PIO state machine.
 [sniff_crc](dma/sniff_crc) | Use the DMA engine's 'sniff' capability to calculate a CRC32 on a data buffer.
 
-### HSTX
+### HSTX (RP235x Only)
 
 App|Description
 ---|---
-[dvi_out_hstx_encoder](dvi_out_hstx_encoder) `RP2350`| Use the HSTX to output a DVI signal with 3:3:2 RGB
+[dvi_out_hstx_encoder](dvi_out_hstx_encoder) | Use the HSTX to output a DVI signal with 3:3:2 RGB
 
 ### Flash
 
@@ -149,7 +143,7 @@ App|Description
 [multicore_runner](multicore/multicore_runner) | Set up the second core to accept, and run, any function pointer pushed into its mailbox FIFO. Push in a few pieces of code and get answers back.
 [multicore_doorbell](multicore/multicore_doorbell) | Claims two doorbells for signaling between the cores. Counts how many doorbell IRQs occur on the second core and uses doorbells to coordinate exit.
 
-### OTP
+### OTP (RP235x Only)
 
 App|Description
 ---|---
