@@ -1,8 +1,4 @@
-# Raspberry Pi RP2350 Pico SDK Examples - Early Access
-
-## RP2350 Instructions
-
-Everything below this section is from the stock pico-examples, so ignore URLs etc., but generally instructions are the same.
+# Raspberry Pi Pico SDK Examples
 
 The Pico SDK default continues to be to build for RP2040 (PICO_PLATFORM=rp2040), so to build for RP2350, you need to pass
 `-DPICO_PLATFORM=rp2350` to CMake (or `-DPICO_PLATFORM=rp2350-riscv` for RISC-V).
@@ -11,7 +7,6 @@ Most, but not all examples, currently work on RP2350 however you should be able 
 
 For RISC-V compilation, you should take a compiler from here: https://www.embecosm.com/resources/tool-chain-downloads/#riscv-stable
 
-# Original pico-examples docs
 
 ## Getting started
 
@@ -40,7 +35,7 @@ App|Description
 [dma_capture](adc/dma_capture) | Use the DMA to capture many samples from the ADC.
 [read_vsys](adc/read_vsys) | Demonstrates how to read VSYS to get the voltage of the power supply.
 
-### Bootloaders (RP2350 Only)
+### Bootloaders (RP235x Only)
 App|Description
 ---|---
 [enc_bootloader](bootloaders/encrypted) | A bootloader which decrypts binaries from flash into SRAM. See the separate [README](bootloaders/encrypted/README.md) for more information
@@ -60,7 +55,7 @@ App|Description
 ---|---
 [build_variants](cmake/build_variants) | Builds two version of the same app with different configurations
 
-### DCP
+### DCP (RP235x Only)
 
 App|Description
 ---|---
@@ -75,11 +70,11 @@ App|Description
 [channel_irq](dma/channel_irq) | Use an IRQ handler to reconfigure a DMA channel, in order to continuously drive data through a PIO state machine.
 [sniff_crc](dma/sniff_crc) | Use the DMA engine's 'sniff' capability to calculate a CRC32 on a data buffer.
 
-### HSTX
+### HSTX (RP235x Only)
 
 App|Description
 ---|---
-[dvi_out_hstx_encoder](dvi_out_hstx_encoder) `RP2350`| Use the HSTX to output a DVI signal with 3:3:2 RGB
+[dvi_out_hstx_encoder](hstx/dvi_out_hstx_encoder) | Use the HSTX to output a DVI signal with 3:3:2 RGB
 
 ### Flash
 
@@ -149,11 +144,11 @@ App|Description
 [multicore_runner](multicore/multicore_runner) | Set up the second core to accept, and run, any function pointer pushed into its mailbox FIFO. Push in a few pieces of code and get answers back.
 [multicore_doorbell](multicore/multicore_doorbell) | Claims two doorbells for signaling between the cores. Counts how many doorbell IRQs occur on the second core and uses doorbells to coordinate exit.
 
-### OTP
+### OTP (RP235x Only)
 
 App|Description
 ---|---
-[hello_otp](otp/hello_otp) | Demonstrate reading and writing from the OTP on RP2350, along with some of the features of OTP (error correction and page locking).
+[hello_otp](otp/hello_otp) | Demonstrate reading and writing from the OTP on RP235x, along with some of the features of OTP (error correction and page locking).
 
 ### Pico Board
 
@@ -316,7 +311,7 @@ App|Description
 [rtc_alarm](rtc/rtc_alarm) | Set an alarm on the RTC to trigger an interrupt at a date/time 5 seconds into the future.
 [rtc_alarm_repeat](rtc/rtc_alarm_repeat) | Trigger an RTC interrupt once per minute.
 
-### SHA-256
+### SHA-256 (RP235x Only)
 
 App|Description
 ---|---
