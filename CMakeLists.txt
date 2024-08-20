@@ -47,6 +47,9 @@ function(add_subdirectory_exclude_platforms NAME)
     add_subdirectory(${NAME})
 endfunction()
 
+# Set signing file for entire project
+set_property(GLOBAL PROPERTY PICOTOOL_SIGFILE "${CMAKE_CURRENT_LIST_DIR}/sample_keys/private.pem")
+
 # Add blink example
 add_subdirectory_exclude_platforms(blink)
 add_subdirectory_exclude_platforms(blink_simple)

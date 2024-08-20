@@ -12,7 +12,7 @@
     {
       "name": "Main A",
       "id": 0,
-      "size": "500K",
+      "size": "1748K",
       "families": ["rp2350-arm-s", "rp2350-riscv"],
       "permissions": {
         "secure": "rw",
@@ -23,7 +23,7 @@
     {
       "name": "Main B",
       "id": 0,
-      "size": "500K",
+      "size": "1748K",
       "families": ["rp2350-arm-s", "rp2350-riscv"],
       "permissions": {
         "secure": "rw",
