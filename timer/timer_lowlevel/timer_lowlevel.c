@@ -26,7 +26,7 @@ static uint64_t get_time(void) {
 /// \tag::alarm_standalone[]
 // Use alarm 0
 #define ALARM_NUM 0
-#define ALARM_IRQ hardware_alarm_get_irq_num(timer_hw, ALARM_NUM)
+#define ALARM_IRQ timer_hardware_alarm_get_irq_num(timer_hw, ALARM_NUM)
 
 // Alarm interrupt handler
 static volatile bool alarm_fired;
