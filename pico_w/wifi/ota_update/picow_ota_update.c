@@ -189,6 +189,7 @@ err_t tcp_update_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, er
             // Write to flash
             struct cflash_flags flags;
             int8_t ret;
+            (void)ret;
             if (block->target_addr / FLASH_SECTOR_ERASE_SIZE > state->highest_erased_sector) {
                 flags.flags =
                     (CFLASH_OP_VALUE_ERASE << CFLASH_OP_LSB) | 

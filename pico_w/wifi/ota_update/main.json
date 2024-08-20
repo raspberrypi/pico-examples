@@ -12,7 +12,7 @@
     {
       "name": "Main A",
       "id": 0,
-      "size": "1748K",
+      "size": "1744K",
       "families": ["rp2350-arm-s", "rp2350-riscv"],
       "permissions": {
         "secure": "rw",
@@ -23,7 +23,7 @@
     {
       "name": "Main B",
       "id": 0,
-      "size": "1748K",
+      "size": "1744K",
       "families": ["rp2350-arm-s", "rp2350-riscv"],
       "permissions": {
         "secure": "rw",
@@ -35,6 +35,7 @@
     {
       "name": "Firmware A",
       "id": "0x123456789abcdef0",
+      "start": "3500k",
       "size": "240K",
       "families": ["0x12345678"],
       "permissions": {
@@ -42,7 +43,8 @@
         "nonsecure": "rw",
         "bootloader": "rw"
       },
-      "ignored_during_riscv_boot": true
+      "ignored_during_riscv_boot": true,
+      "no_reboot_on_uf2_download": true
     },
     {
       "name": "Firmware B",
@@ -55,7 +57,8 @@
         "bootloader": "rw"
       },
       "link": ["a", 2],
-      "ignored_during_riscv_boot": true
+      "ignored_during_riscv_boot": true,
+      "no_reboot_on_uf2_download": true
     }
   ]
 }

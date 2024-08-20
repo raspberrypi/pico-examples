@@ -43,7 +43,7 @@ endfunction()
 add_linker_script(enc_bootloader "0x20070000" "64k")
 
 # sign, hash, and clear SRAM
-pico_sign_binary(enc_bootloader ${CMAKE_CURRENT_LIST_DIR}/private.pem)
+pico_sign_binary(enc_bootloader)
 pico_hash_binary(enc_bootloader)
 pico_load_map_clear_sram(enc_bootloader)
 
@@ -83,7 +83,7 @@ add_linker_script(hello_serial_enc "0x20000000" "448k")
 pico_set_otp_key_output_file(hello_serial_enc ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
 
 # sign, hash, and encrypt
-pico_sign_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/private.pem)
+pico_sign_binary(hello_serial_enc)
 pico_hash_binary(hello_serial_enc)
 pico_encrypt_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin ${CMAKE_CURRENT_LIST_DIR}/ivsalt.bin)
 

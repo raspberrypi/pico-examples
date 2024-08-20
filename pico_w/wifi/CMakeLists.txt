@@ -20,11 +20,10 @@ else()
     add_subdirectory_exclude_platforms(http_client)
     add_subdirectory_exclude_platforms(mqtt)
 
-    add_subdirectory_exclude_platforms(ota_update rp2040)
-
     if (NOT PICO_MBEDTLS_PATH)
-        message("Skipping tls examples as PICO_MBEDTLS_PATH is not defined")
+        message("Skipping some examples as PICO_MBEDTLS_PATH is not defined")
     else()
         add_subdirectory_exclude_platforms(tls_client)
+        add_subdirectory_exclude_platforms(ota_update rp2040)
     endif()
 endif()
