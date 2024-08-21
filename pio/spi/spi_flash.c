@@ -128,7 +128,10 @@ int main() {
                  PICO_DEFAULT_SPI_RX_PIN
     );
     // Make the 'SPI' pins available to picotool
-    bi_decl(bi_4pins_with_names(PICO_DEFAULT_SPI_RX_PIN, "SPI RX", PICO_DEFAULT_SPI_TX_PIN, "SPI TX", PICO_DEFAULT_SPI_SCK_PIN, "SPI SCK", PICO_DEFAULT_SPI_CSN_PIN, "SPI CS"));
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_RX_PIN, "SPI RX"));
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_TX_PIN, "SPI TX"));
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_SCK_PIN, "SPI SCK"));
+    bi_decl(bi_1pin_with_name(PICO_DEFAULT_SPI_CSN_PIN, "SPI CS"));
 
     uint8_t page_buf[FLASH_PAGE_SIZE];
 
