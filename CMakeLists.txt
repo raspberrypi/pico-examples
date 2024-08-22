@@ -43,12 +43,8 @@ function(add_subdirectory_exclude_platforms NAME)
 endfunction()
 
 # Add blink example
-if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
-    if (NOT TARGET pico_cyw43_arch)
-        message("Skipping blink for Pico W as support is not available")
-    else()
-        add_subdirectory_exclude_platforms(blink)
-    endif()
+if (PICO_CYW43_SUPPORTED AND NOT TARGET pico_cyw43_arch)
+    message("Skipping blink for Pico W as support is not available")
 else()
     add_subdirectory_exclude_platforms(blink)
 endif()
