@@ -368,8 +368,9 @@ These require you to set `PICO_ARM_TOOLCHAIN_PATH` and `PICO_RISCV_TOOLCHAIN_PAT
 
 App|Description
 ---|---
+[blink](universal/CMakeLists.txt#L126) | Same as the [blink](blink) example, but universal.
 [hello_universal](universal/hello_universal) | The obligatory Hello World program for Pico (USB and serial output). On RP2350 it will reboot to the other architecture after every 10 prints.
-[nuke_universal](universal/CMakeLists.txt#L107) | Same as the [nuke](flash/nuke) binary, but universal. On RP2350 runs as a packaged SRAM binary, so is written to flash and copied to SRAM by the bootloader
+[nuke_universal](universal/CMakeLists.txt#L132) | Same as the [nuke](flash/nuke) example, but universal. On RP2350 runs as a packaged SRAM binary, so is written to flash and copied to SRAM by the bootloader
 
 ### USB Device
 
