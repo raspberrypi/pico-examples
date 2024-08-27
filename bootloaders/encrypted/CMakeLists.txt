@@ -64,7 +64,7 @@ example_auto_set_url(enc_bootloader)
 
 # Example binary to load
 add_executable(hello_serial_enc
-        ../../hello_world/serial/hello_serial.c
+        hello_serial.c
         )
 
 # pull in common dependencies
