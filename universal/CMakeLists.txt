@@ -53,6 +53,11 @@ function (add_universal_target TARGET SOURCE)
     else()
         set(universal_picotool_DIR ${picotool_INSTALL_DIR}/picotool)
     endif()
+    if (pioasm_DIR)
+        set(universal_pioasm_DIR ${pioasm_DIR})
+    else()
+        set(universal_pioasm_DIR ${PIOASM_INSTALL_DIR}/pioasm)
+    endif()
 
     set(DEPS "")
     set(BINS "")
@@ -76,7 +81,7 @@ function (add_universal_target TARGET SOURCE)
                 "-DUNIVERSAL_BINARY_DIR:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/${TARGET}/${platform}"
                 "-DSOURCE_TARGET=${SOURCE_TARGET}"
                 "-Dpicotool_DIR=${universal_picotool_DIR}"
-                "-Dpioasm_DIR=${PIOASM_INSTALL_DIR}/pioasm"
+                "-Dpioasm_DIR=${universal_pioasm_DIR}"
             BUILD_ALWAYS 1 # force dependency checking
             INSTALL_COMMAND ""
             )
