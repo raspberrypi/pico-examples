@@ -22,7 +22,7 @@
 #endif
 
 // Whether to flash the led
-#ifndef USB_LED
+#ifndef USE_LED
 #define USE_LED 1
 #endif
 
