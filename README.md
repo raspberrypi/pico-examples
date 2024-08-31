@@ -107,6 +107,7 @@ App|Description
 [hello_7segment](gpio/hello_7segment) | Use the GPIOs to drive a seven segment LED display.
 [hello_gpio_irq](gpio/hello_gpio_irq) | Register an interrupt handler to run when a GPIO is toggled.
 [dht_sensor](gpio/dht_sensor) | Use GPIO to bitbang the serial protocol for a DHT temperature/humidity sensor.
+[keypad](keypad) | Use GPIO to get key pressed on a 4x4 Keypad.
 
 See also: [blink](blink), blinking an LED attached to a GPIO.
 
