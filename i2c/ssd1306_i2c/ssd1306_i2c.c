@@ -387,30 +387,22 @@ restart:
         "by the name of",
         "    PICO"
     };
-    int max_lines = SSD1306_HEIGHT / 8;  // Each line is 8px tall.
     int y = 0;
     for (uint i = 0; i < count_of(text); i++) {
-        int line_number = i + 1;
         WriteString(buf, 5, y, text[i]);
         y += 8;
-        // On the 32px-tall versions of SSD1306, we can't display
-        // all the text at once. We need to display 4 lines at a time.
-        bool is_end_of_screen = (line_number % max_lines) == 0;
-        if (is_end_of_screen) {
+        // Height limit reached. Show some lines.
+        if (y == SSD1306_HEIGHT) {
             render(buf, &frame_area);
             sleep_ms(3000);
             memset(buf, 0, SSD1306_BUF_LEN);
             y = 0;
         }
-        // If it's the last line...
-        if (line_number == count_of(text)) {
-            // And the last line is not a multiple of max_lines...
-            if (line_number % max_lines != 0) {
-                // Then we will have a little more text to display.
-                render(buf, &frame_area);
-                sleep_ms(3000);
-            }
-        }
+    }
+    // Check if there's any more text left to display.
+    if (y != 0) {
+        render(buf, &frame_area);
+        sleep_ms(3000);
     }
 
     // Test the display invert function
