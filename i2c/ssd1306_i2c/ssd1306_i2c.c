@@ -387,6 +387,7 @@ restart:
         "by the name of",
         "    PICO"
     };
+
     int y = 0;
     for (uint i = 0; i < count_of(text); i++) {
         WriteString(buf, 5, y, text[i]);
@@ -406,7 +407,6 @@ restart:
     }
 
     // Test the display invert function
-    sleep_ms(3000);
     SSD1306_send_cmd(SSD1306_SET_INV_DISP);
     sleep_ms(3000);
     SSD1306_send_cmd(SSD1306_SET_NORM_DISP);
