@@ -100,7 +100,7 @@ int main() {
 
     // setup iperf
     cyw43_arch_lwip_begin();
-    printf("\nReady, running iperf server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_default)));
+    printf("\nReady, running iperf server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
     lwiperf_start_tcp_server_default(&iperf_report, NULL);
     cyw43_arch_lwip_end();
 

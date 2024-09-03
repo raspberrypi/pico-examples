@@ -79,7 +79,7 @@ void main_task(__unused void *params) {
     ip4_addr_set_u32(&clientaddr, ipaddr_addr(xstr(IPERF_SERVER_IP)));
     assert(lwiperf_start_tcp_client_default(&clientaddr, &iperf_report, NULL) != NULL);
 #else
-    printf("\nReady, running iperf server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_default)));
+    printf("\nReady, running iperf server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
     lwiperf_start_tcp_server_default(&iperf_report, NULL);
 #endif
     cyw43_arch_lwip_end();

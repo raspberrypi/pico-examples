@@ -97,7 +97,7 @@ void picow_bt_example_main(void) {
     } else {
         printf("Connected in %lus.\n", (to_ms_since_boot(get_absolute_time()) - start_ms) / 1000);
     }
-    printf("\nReady, running iperf server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_default)));
+    printf("\nReady, running iperf server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
     lwiperf_start_tcp_server_default(&iperf_report, NULL);
 #endif
 }
