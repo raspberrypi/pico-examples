@@ -203,7 +203,7 @@ int main() {
     } else {
         printf("Connected.\n");
     }
-    printf("\nReady, running httpd at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
+    printf("\nReady, running httpd at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_default)));
 
     // start http server
     wifi_connected_time = get_absolute_time();

@@ -158,7 +158,7 @@ void main_task(__unused void *params) {
 #endif
 #endif
 
-    printf("\nReady, running httpd at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
+    printf("\nReady, running httpd at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_default)));
     httpd_init();
 
     http_set_cgi_handlers(cgi_handlers, LWIP_ARRAYSIZE(cgi_handlers));
