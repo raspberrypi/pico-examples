@@ -11,7 +11,7 @@
 #define KEYPAD_NUM_ROWS           4
 #define KEYPAD_NUM_COLUMNS        4
 #define NO_KEY_PRESSED         '\0'  // Just a character that unlikely be
-                                     // present in keyboards, so it can by used
+                                     // present in keyboards, so it can be used
                                      // to determine if no key is pressed.
 #define READ_MS_DELAY            10  // Delay between lectures to avoid noise
 
