@@ -13,7 +13,7 @@
 #define NO_KEY_PRESSED         '\0'  // Just a character that unlikely be
                                      // present in keyboards, so it can be used
                                      // to determine if no key is pressed.
-#define READ_MS_DELAY            10  // Delay between lectures to avoid noise
+#define READ_MS_DELAY            10  // Delay between read to avoid noise
 
 
 const uint8_t keypad_rows_pins[KEYPAD_NUM_ROWS] = {
