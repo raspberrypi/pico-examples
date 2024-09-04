@@ -40,17 +40,17 @@ const char keypad_keys[KEYPAD_NUM_ROWS][KEYPAD_NUM_COLUMNS] = {
 };
 
 
-void pico_keypad_init(void){
+void pico_keypad_init(void) {
     // Initialize GPIOs
     //Initialize row pins as GPIO_OUT
-    for (int i=0; i < KEYPAD_NUM_ROWS; i++){
+    for (int i=0; i < KEYPAD_NUM_ROWS; i++) {
         uint8_t pin_number = keypad_rows_pins[i];
         gpio_init(pin_number);
         gpio_set_dir(pin_number, GPIO_OUT);
         gpio_put(pin_number, 0);  // Make sure GPIO_OUT is LOW
     }
     //Initialize column pins as GPIO_IN
-    for (int i=0; i < KEYPAD_NUM_COLUMNS; i++){
+    for (int i=0; i < KEYPAD_NUM_COLUMNS; i++) {
         uint8_t pin_number = keypad_columns_pins[i];
         gpio_init(pin_number);
         gpio_set_dir(pin_number, GPIO_IN);
@@ -58,15 +58,15 @@ void pico_keypad_init(void){
 }
 
 
-char get_keypad_value(void){
+char get_keypad_value(void) {
     // Iterate over key and rows to identify which key is pressed.
     // When iterating rows, the GPIO_OUT associted to the row needs to be set
     // to HIGH, and then iterate the columns to determine the GPIO_IN.
-    for (int row=0; row < KEYPAD_NUM_ROWS; row++){
+    for (int row=0; row < KEYPAD_NUM_ROWS; row++) {
         gpio_put(keypad_rows_pins[row], 1);
-        for (int column=0; column < KEYPAD_NUM_COLUMNS; column++){
+        for (int column=0; column < KEYPAD_NUM_COLUMNS; column++) {
             sleep_ms(READ_MS_DELAY);
-            if(gpio_get(keypad_columns_pins[column])){
+            if(gpio_get(keypad_columns_pins[column])) {
                 // If the pin is HIGH, this means this is a matching row and
                 // column, so we put the row pin to LOW and return the pressed
                 // key by using the bidimensional array keypad_keys.
@@ -85,7 +85,7 @@ int main() {
     pico_keypad_init();
     while (true) {
         char key = get_keypad_value();
-        if (key == NO_KEY_PRESSED){
+        if (key == NO_KEY_PRESSED) {
             printf("No key pressed\n");
         }
         else{
