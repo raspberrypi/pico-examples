@@ -41,8 +41,8 @@ The following table shows the GPIO pins used for the rows and columns of the key
 
 | Column 0 | GP5  | 5
 | Column 1 | GP4  | 4
-| Column 2 | GP2  | 2
-| Column 3 | GP1  | 1
+| Column 2 | GP3  | 3
+| Column 3 | GP2  | 2
 |===
 
 Ensure that the keypad rows and columns are connected to the GPIO pins on the Pico as indicated in the table.
