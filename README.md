@@ -353,6 +353,11 @@ App|Description
 [periodic_sampler](timer/periodic_sampler) | Sample GPIOs in a timer callback, and push the samples into a concurrency-safe queue. Pop data from the queue in code running in the foreground.
 [timer_lowlevel](timer/timer_lowlevel) | Example of direct access to the timer hardware. Not generally recommended, as the SDK may use the timer for IO timeouts.
 
+### Tiny (code)
+App|Description
+---|---
+[tiny_blink](tiny/tiny_blink) | Shows how to minimize the runtime by disabling runtime features via `CMakeLists.txt` to make a very small GPIO 'blink' binary.
+
 ### UART
 
 App|Description
