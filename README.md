@@ -1,23 +1,21 @@
-# Raspberry Pi RP2350 Pico SDK Examples - Early Access
-
-## RP2350 Instructions
-
-Everything below this section is from the stock pico-examples, so ignore URLs etc., but generally instructions are the same.
-
-The Pico SDK default continues to be to build for RP2040 (PICO_PLATFORM=rp2040), so to build for RP2350, you need to pass
-`-DPICO_PLATFORM=rp2350` to CMake (or `-DPICO_PLATFORM=rp2350-riscv` for RISC-V).
-
-Most, but not all examples, currently work on RP2350 however you should be able to do a full build with any of the above platforms (PICO_PLATFORM=host however currently fails on some examples)
-
-For RISC-V compilation, you should take a compiler from here: https://www.embecosm.com/resources/tool-chain-downloads/#riscv-stable
-
-# Original pico-examples docs
+# Raspberry Pi Pico SDK Examples
 
 ## Getting started
 
 See [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started) and the README in the [pico-sdk](https://github.com/raspberrypi/pico-sdk) for information
 on getting up and running.
 
+##### Notes on different boards and platforms (RP2040 / RP2350) 
+
+The majority of examples are applicable to both RP2040 and RP2350 based boards,
+however certain examples that use chip specific functionality will only build on that platform.
+Equally, for instance, Wi-Fi and Bluetooth examples will only build on a board that includes Wi-Fi and Bluetooth support.
+
+Board and platform information are passed to the CMake build via the `PICO_PLATFORM` and `PICO_BOARD` variables.
+For more information see the "Platform and Board Configuration" chapter of 
+the [Raspberry Pi Pico-series C/C++ SDK](https://rptl.io/pico-c-sdk) book
+
+Information on which examples are not being built is output during the CMake configuration step.
 ### First Examples
 
 App| Description                                                                | Link to prebuilt UF2
