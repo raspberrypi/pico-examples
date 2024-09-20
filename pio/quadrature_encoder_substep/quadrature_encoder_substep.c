@@ -368,9 +368,10 @@ int main(void)
 
     // base pin to connect the A phase of the encoder. the B phase must be
     // connected to the next pin
-    const uint PIN_A = 2;
+    const uint PIN_A = 10;
 
     stdio_init_all();
+    printf("Hello from quadrature encoder substep\n");
 
     PIO pio = pio0;
     const uint sm = 0;

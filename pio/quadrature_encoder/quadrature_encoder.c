@@ -34,12 +34,14 @@
 
 int main() {
     int new_value, delta, old_value = 0;
+    int last_value = -1, last_delta = -1;
 
     // Base pin to connect the A phase of the encoder.
     // The B phase must be connected to the next pin
     const uint PIN_AB = 10;
 
     stdio_init_all();
+    printf("Hello from quadrature encoder\n");
 
     PIO pio = pio0;
     const uint sm = 0;
@@ -56,7 +58,11 @@ int main() {
         delta = new_value - old_value;
         old_value = new_value;
 
-        printf("position %8d, delta %6d\n", new_value, delta);
+        if (new_value != last_value || delta != last_delta ) {
+            printf("position %8d, delta %6d\n", new_value, delta);
+            last_value = new_value;
+            last_delta = delta;
+        }
         sleep_ms(100);
     }
 }
