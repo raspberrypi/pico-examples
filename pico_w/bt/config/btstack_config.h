@@ -26,6 +26,16 @@
 #define ENABLE_CROSS_TRANSPORT_KEY_DERIVATION
 #endif
 
+// Mesh Configuration
+#ifdef ENABLE_MESH  // defined by pico_btstack_mesh
+#define ENABLE_MESH_ADV_BEARER
+#define ENABLE_MESH_GATT_BEARER
+#define ENABLE_MESH_PB_ADV
+#define ENABLE_MESH_PB_GATT
+#define ENABLE_MESH_PROVISIONER
+#define ENABLE_MESH_PROXY_SERVER
+#endif
+
 // BTstack configuration. buffers, sizes, ...
 #define HCI_OUTGOING_PRE_BUFFER_SIZE 4
 #define HCI_ACL_PAYLOAD_SIZE (1691 + 4)
@@ -50,6 +60,12 @@
 #define MAX_NR_SM_LOOKUP_ENTRIES 3
 #define MAX_NR_WHITELIST_ENTRIES 16
 #define MAX_NR_LE_DEVICE_DB_ENTRIES 16
+#define MAX_NR_MESH_SUBNETS 2
+#define MAX_NR_MESH_TRANSPORT_KEYS 16
+#define MAX_NR_MESH_VIRTUAL_ADDRESSES 16
+
+// allow for one NetKey update
+#define MAX_NR_MESH_NETWORK_KEYS (MAX_NR_MESH_SUBNETS+1)
 
 // Limit number of ACL/SCO Buffer to use by stack to avoid cyw43 shared bus overrun
 #define MAX_NR_CONTROLLER_ACL_BUFFERS 3

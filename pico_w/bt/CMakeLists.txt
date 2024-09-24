@@ -358,6 +358,7 @@ set(BTSTACK_EXAMPLES_ADDITIONAL
         gatt_browser
         gatt_device_information_query
         le_streamer_client
+        mesh_node_demo
 )
 
 # These examples will only be built if pico-extras exists
