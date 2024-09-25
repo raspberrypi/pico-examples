@@ -10,7 +10,7 @@ The AES key is just a 32 byte binary file - you can create one with
 dd if=/dev/urandom of=privateaes.bin bs=1 count=32
 ```
 
-You will need to program your OTP using the generated `otp.json` file in the build folder. Note that this will enable secure boot on your device, so only signed binaries can run, and will also lock down the page the AES key is stored in. If you wish to test without enabling secure boot then you can load the `otp.json` file in the source folder, which will just program the AES key and lock down that page.
+You will need to program your OTP using the generated `otp.json` file in the build folder. Note that this will enable secure boot on your device, so only signed binaries can run, and will also lock down the OTP page the AES key is stored in. If you wish to test without enabling secure boot then you can load the `otp.json` file in the source folder, which will just program the AES key and lock down that OTP page.
 ```bash
 picotool otp load otp.json
 ```
