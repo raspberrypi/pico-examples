@@ -15,6 +15,8 @@ You will need to program your OTP using the generated `otp.json` file in the bui
 picotool otp load otp.json
 ```
 
+> For more information on security see chapter 10 of the [RP2350 datasheet](https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf), and for information on how to sign other binaries to run on a secure chip see chapter 5.10
+
 Then either drag & drop the UF2 files to the device in order (enc_bootloader first, then hello_serial_enc) waiting for a reboot in-between, or run
 ```bash
 picotool load enc_bootloader.uf2
