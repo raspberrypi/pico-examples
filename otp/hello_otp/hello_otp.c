@@ -20,6 +20,25 @@ int main() {
     // Row to write raw data
     uint16_t raw_row = 0x410;
 
+    // Check rows are empty - else the rest of the tests won't behave as expected
+    unsigned char initial_data[32] = {0};
+    cmd.flags = ecc_row;
+    ret = rom_func_otp_access(initial_data, sizeof(initial_data)/2, cmd);
+    if (ret) {
+        printf("ERROR: Initial ECC Row Read failed with error %d\n", ret);
+    }
+    cmd.flags = raw_row;
+    ret = rom_func_otp_access(initial_data+(sizeof(initial_data)/2), sizeof(initial_data)/2, cmd);
+    if (ret) {
+        printf("ERROR: Initial Raw Row Read failed with error %d\n", ret);
+    }
+    for (int i=0; i < sizeof(initial_data); i++) {
+        if (initial_data[i] != 0) {
+            printf("ERROR: This example requires empty OTP rows to run - change the ecc_row and raw_row variables to an empty row and recompile\n");
+            return 0;
+        }
+    }
+
     if (ecc_row) {
         // Write an ECC value to OTP - the buffer must have a multiple of 2 length for ECC data
         unsigned char ecc_write_data[16] = "Hello from OTP";
