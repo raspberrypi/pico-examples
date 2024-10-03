@@ -323,8 +323,6 @@ int main() {
         printf("Someone updated into me\n");
         if (boot_info.reboot_params[0]) printf("Flash update base was %x\n", boot_info.reboot_params[0]);
         if (boot_info.tbyb_and_update_info) printf("Update info %x\n", boot_info.tbyb_and_update_info);
-        if (always->zero_init.tbyb_flag_flash_addr) printf("TBYB flash address is %x\n", always->zero_init.tbyb_flag_flash_addr);
-        if (always->zero_init.version_downgrade_erase_flash_addr) printf("TBYB erase address is %x\n", always->zero_init.version_downgrade_erase_flash_addr);
         ret = rom_explicit_buy(workarea, sizeof(workarea));
         if (ret) printf("Buy returned %d\n", ret);
         ret = rom_get_boot_info(&boot_info);
