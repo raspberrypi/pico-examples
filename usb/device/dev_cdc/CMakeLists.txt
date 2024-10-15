@@ -16,7 +16,6 @@ target_include_directories(dev_cdc PUBLIC
 target_link_libraries(dev_cdc PUBLIC pico_stdlib pico_unique_id tinyusb_device tinyusb_board)
 
 pico_enable_stdio_usb(dev_cdc 1)
-pico_enable_stdio_usb(dev_cdc 2)
 pico_add_extra_outputs(dev_cdc)
 
 # add url via pico_set_program_url

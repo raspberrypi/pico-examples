@@ -111,8 +111,9 @@ char const *string_desc_arr[] = {
     "Raspberry Pi",                 // 1: Manufacturer
     "Pico (2)",                     // 2: Product
     NULL,                           // 3: Serials (null so it uses unique ID if available)
-    "CDC Interface 0"               // 4: CDC Interface 0
-    "CDC Interface 1",              // 5: CDC Interface 1
+    "Pico SDK stdio"                // 4: CDC Interface 0
+    "Custom CDC",                   // 5: CDC Interface 1,
+    "RPiReset"                      // 6: Reset Interface
 };
 
 // buffer to hold the string descriptor during the request | plus 1 for the null terminator
