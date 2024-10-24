@@ -40,6 +40,13 @@ App|Description
 [dma_capture](adc/dma_capture) | Use the DMA to capture many samples from the ADC.
 [read_vsys](adc/read_vsys) | Demonstrates how to read VSYS to get the voltage of the power supply.
 
+### Binary Info
+
+App|Description
+---|---
+[blink_any](binary_info/blink_any) | Uses `bi_ptr` variables to create a configurable blink binary - see the separate [README](binary_info/README.md) for more details
+[hello_anything](binary_info/hello_anything) | Uses `bi_ptr` variables to create a configurable hello_world binary - see the separate [README](binary_info/README.md) for more details
+
 ### Bootloaders (RP2350 Only)
 App|Description
 ---|---
