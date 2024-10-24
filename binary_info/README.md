@@ -37,3 +37,19 @@ File hello_anything.uf2:
 text = "Hello, world!"
 setting text -> "Goodbye, world!"
 ```
+
+The binaries can also be configured after being loaded onto the device with
+```
+$ picotool config
+use_usb = 1
+uart_baud = 115200
+uart_rx = 1
+uart_tx = 0
+uart_num = 0
+use_uart = 1
+text = "Hello, world!"
+
+$ picotool config -s use_uart 0
+use_uart = 1
+setting use_uart -> 0
+```
