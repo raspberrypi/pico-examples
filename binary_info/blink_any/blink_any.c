@@ -15,15 +15,18 @@
 // Note that LED_TYPE == 1 is only supported when initially compiled for
 // a board with PICO_CYW43_SUPPORTED (eg pico_w), else the required
 // libraries won't be present
+bi_decl(bi_program_feature_group(0x1111, 0, "LED Configuration"));
 #if defined(PICO_DEFAULT_LED_PIN)
-    bi_decl(bi_ptr_int32(0x1234, 0x5678, LED_TYPE, 0));
-    bi_decl(bi_ptr_int32(0x1234, 0x5678, LED_PIN, PICO_DEFAULT_LED_PIN));
+    // the tag and id are not important as picotool filters based on the
+    // variable name, so just set them to 0
+    bi_decl(bi_ptr_int32(0x1111, 0, LED_TYPE, 0));
+    bi_decl(bi_ptr_int32(0x1111, 0, LED_PIN, PICO_DEFAULT_LED_PIN));
 #elif defined(CYW43_WL_GPIO_LED_PIN)
-    bi_decl(bi_ptr_int32(0x1234, 0x5678, LED_TYPE, 1));
-    bi_decl(bi_ptr_int32(0x1234, 0x5678, LED_PIN, CYW43_WL_GPIO_LED_PIN));
+    bi_decl(bi_ptr_int32(0x1111, 0, LED_TYPE, 1));
+    bi_decl(bi_ptr_int32(0x1111, 0, LED_PIN, CYW43_WL_GPIO_LED_PIN));
 #else
-    bi_decl(bi_ptr_int32(0x1234, 0x5678, LED_TYPE, 0));
-    bi_decl(bi_ptr_int32(0x1234, 0x5678, LED_PIN, 25));
+    bi_decl(bi_ptr_int32(0x1111, 0, LED_TYPE, 0));
+    bi_decl(bi_ptr_int32(0x1111, 0, LED_PIN, 25));
 #endif
 
 #ifndef LED_DELAY_MS
