@@ -5,19 +5,22 @@ You can view the configurable variables with
 $ picotool blink_any.uf2 
 File blink_any.uf2:
 
-LED_PIN = 25
-LED_TYPE = 0
+LED Configuration:
+ LED_PIN = 25
+ LED_TYPE = 0
 
 $ picotool config hello_anything.uf2 
 File hello_anything.uf2:
 
-use_usb = 1
-uart_baud = 115200
-uart_rx = 1
-uart_tx = 0
-uart_num = 0
-use_uart = 1
 text = "Hello, world!"
+Enabled Interfaces:
+ use_usb = 1
+ use_uart = 1
+UART Configuration:
+ uart_baud = 115200
+ uart_rx = 1
+ uart_tx = 0
+ uart_num = 0
 ```
 
 For example, to blink the LED on pin 7 instead of 25 use
@@ -41,13 +44,15 @@ setting text -> "Goodbye, world!"
 The binaries can also be configured after being loaded onto the device with
 ```
 $ picotool config
-use_usb = 1
-uart_baud = 115200
-uart_rx = 1
-uart_tx = 0
-uart_num = 0
-use_uart = 1
 text = "Hello, world!"
+Enabled Interfaces:
+ use_usb = 1
+ use_uart = 1
+UART Configuration:
+ uart_baud = 115200
+ uart_rx = 1
+ uart_tx = 0
+ uart_num = 0
 
 $ picotool config -s use_uart 0
 use_uart = 1
