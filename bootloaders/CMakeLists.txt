@@ -1,3 +1,5 @@
+add_subdirectory_exclude_platforms(uart host rp2040)
+
 if (TARGET pico_mbedtls)
     add_subdirectory_exclude_platforms(encrypted host rp2040 rp2350-riscv)
 else()
