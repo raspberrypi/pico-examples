@@ -55,6 +55,7 @@ App|Description
 App|Description
 ---|---
 [enc_bootloader](bootloaders/encrypted) | A bootloader which decrypts binaries from flash into SRAM. See the separate [README](bootloaders/encrypted/README.md) for more information
+[uart_boot](bootloaders/uart) | A bootloader which boots a separate RP2350 using the UART boot interface. See section 5.8 in the datasheet for more details, including the wiring requirements
 
 ### Clocks
 

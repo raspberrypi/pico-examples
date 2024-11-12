@@ -1,3 +1,5 @@
+add_subdirectory_exclude_platforms(uart host rp2040)
+
 if (TARGET pico_mbedtls)
     # older clang seem to have a segment overlap issue that confuses picotool
     if (PICO_C_COMPILER_IS_CLANG AND CMAKE_C_COMPILER_VERSION VERSION_LESS "17.0.0")
