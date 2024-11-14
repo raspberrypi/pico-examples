@@ -8,7 +8,6 @@
 
 // UART defines for uart boot
 #define UART_ID uart1
-#define BAUD_RATE 1000000
 
 // Use pins 4 and 5 for uart boot
 #define UART_TX_PIN 4
@@ -108,7 +107,7 @@ int main()
     stdio_init_all();
 
     // Set up our UART for booting the other device
-    uart_init(UART_ID, BAUD_RATE);
+    uart_init(UART_ID, 1000000);
     gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 
