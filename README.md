@@ -52,6 +52,9 @@ App|Description
 [hello_anything](binary_info/hello_anything) | Uses `bi_ptr` variables to create a configurable hello_world binary - see the separate [README](binary_info/README.md) for more details
 
 ### Bootloaders (RP235x Only)
+
+These examples all produce multiple UF2s - a bootloader UF2, and then a separate UF2 of the program that the bootloader will load and boot. To load them onto a device with empty flash, first load the bootloader UF2, then reset to BOOTSEL mode and load the program UF2. This ordering is required because the bootloaders contain embedded partition tables - see section 5.10.6 in the RP2350 datasheet for more details on those.
+
 App|Description
 ---|---
 [enc_bootloader](bootloaders/encrypted) | A bootloader which decrypts binaries from flash into SRAM. See the separate [README](bootloaders/encrypted/README.md) for more information
