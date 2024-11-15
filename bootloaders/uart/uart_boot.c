@@ -37,6 +37,7 @@ void uart_boot() {
 
         if (uart_is_readable_within_us(UART_ID, 1000)) {
             char in = uart_getc(UART_ID);
+            assert(in == 'n');
             printf("%c\n", in);
             break;
         } else {
@@ -61,18 +62,18 @@ void uart_boot() {
     assert(ret == 3);
 
     uint32_t location_and_permissions = buffer[1];
-    uint32_t saddr = XIP_BASE + ((location_and_permissions >> PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_LSB) & 0x1fffu) * FLASH_SECTOR_SIZE;
-    uint32_t eaddr = XIP_BASE + (((location_and_permissions >> PICOBIN_PARTITION_LOCATION_LAST_SECTOR_LSB) & 0x1fffu) + 1) * FLASH_SECTOR_SIZE;
-    printf("Start %08x, end %08x\n", saddr, eaddr);
+    uint32_t start_addr = XIP_BASE + ((location_and_permissions & PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_BITS) >> PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_LSB) * FLASH_SECTOR_SIZE;
+    uint32_t end_addr = XIP_BASE + (((location_and_permissions & PICOBIN_PARTITION_LOCATION_LAST_SECTOR_BITS) >> PICOBIN_PARTITION_LOCATION_LAST_SECTOR_LSB) + 1) * FLASH_SECTOR_SIZE;
+    printf("Start %08x, end %08x\n", start_addr, end_addr);
 
     free(buffer);
 
     printf("Writing binary\n");
-    uint32_t tstart = time_us_32();
-    uint32_t caddr = saddr;
-    while (caddr < eaddr) {
+    uint32_t time_start = time_us_32();
+    uint32_t current_addr = start_addr;
+    while (current_addr < end_addr) {
         uart_putc_raw(UART_ID, 'w');
-        char *buf = (char*)caddr;
+        char *buf = (char*)current_addr;
         for (int i=0; i < 32; i++) {
             uart_putc_raw(UART_ID, buf[i]);
         }
@@ -84,11 +85,12 @@ void uart_boot() {
         }
         char in = uart_getc(UART_ID);
         printf("%c\n", in);
-        caddr += 32;
+        assert(in == 'w');
+        current_addr += 32;
     }
 
-    uint32_t tend = time_us_32();
-    printf("Write took %dus\n", tend - tstart);
+    uint32_t time_end = time_us_32();
+    printf("Write took %dus\n", time_end - time_start);
     printf("Write complete - executing\n");
     uart_putc_raw(UART_ID, 'x');
     if (!uart_is_readable_within_us(UART_ID, 500)) {
@@ -99,6 +101,7 @@ void uart_boot() {
     }
     char in = uart_getc(UART_ID);
     printf("%c\n", in);
+    assert(in == 'x');
 }
 
 
@@ -133,12 +136,12 @@ int main()
         if (i > 0) {
             printf(" ...Read done\n");
         }
-        char *ptr = memchr(buf, 'R', sizeof(buf));
+        char *ptr = memchr(buf, splash[0], sizeof(buf));
         if (ptr && strncmp(ptr, splash, sizeof(splash) - 1) == 0) {
             printf("Splash found\n");
             uart_boot();
         } else {
-            ptr = memchr(buf, 'H', sizeof(buf));
+            ptr = memchr(buf, hello[0], sizeof(buf));
             if (ptr && strncmp(ptr, hello, sizeof(hello) - 1) == 0) {
                 printf("Device is running\n");
             } else {
