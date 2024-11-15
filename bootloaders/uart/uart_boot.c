@@ -27,6 +27,7 @@ void reset_chip() {
 
 void uart_boot() {
     uint knocks = 0;
+    char in = 0;
     while (true) {
         // Send the knock sequence
         uart_putc_raw(UART_ID, 0x56);
@@ -36,13 +37,17 @@ void uart_boot() {
         uart_putc_raw(UART_ID, 'n');
 
         if (uart_is_readable_within_us(UART_ID, 1000)) {
-            char in = uart_getc(UART_ID);
-            assert(in == 'n');
+            in = uart_getc(UART_ID);
+            if (in != 'n') {
+                printf("Incorrect response - resetting\n");
+                reset_chip();
+                return;
+            }
             printf("%c\n", in);
             break;
         } else {
             if (knocks > 10) {
-                printf("No response - resetting\n");    
+                printf("No response - resetting\n");
                 reset_chip();
                 return;
             }
@@ -83,15 +88,70 @@ void uart_boot() {
             reset_chip();
             return;
         }
-        char in = uart_getc(UART_ID);
-        printf("%c\n", in);
-        assert(in == 'w');
+        in = uart_getc(UART_ID);
+        if (in != 'w') {
+            printf("Incorrect response - resetting\n");
+            reset_chip();
+            return;
+        }
         current_addr += 32;
     }
 
     uint32_t time_end = time_us_32();
     printf("Write took %dus\n", time_end - time_start);
-    printf("Write complete - executing\n");
+    printf("Write complete - resetting pointer\n");
+
+    uart_putc_raw(UART_ID, 'c');
+    if (!uart_is_readable_within_us(UART_ID, 500)) {
+        // Detect hangs and reset the chip
+        printf("Clear has hung - resetting\n");
+        reset_chip();
+        return;
+    }
+    in = uart_getc(UART_ID);
+    printf("%c\n", in);
+    if (in != 'c') {
+        printf("Incorrect response - resetting\n");
+        reset_chip();
+        return;
+    }
+
+    printf("Verifying binary\n");
+    time_start = time_us_32();
+    current_addr = start_addr;
+    while (current_addr < end_addr) {
+        uart_putc_raw(UART_ID, 'r');
+        char *buf = (char*)current_addr;
+        if (!uart_is_readable_within_us(UART_ID, 500)) {
+            // Detect hangs and reset the chip
+            printf("Verify has hung - resetting\n");
+            reset_chip();
+            return;
+        }
+        int i = 0;
+        while (uart_is_readable_within_us(UART_ID, 10) && i < 32) {
+            in = uart_getc(UART_ID);
+            if (in != buf[i]) {
+                printf("Verify has incorrect data at 0x%08x - resetting\n", current_addr - start_addr + SRAM_BASE);
+            }
+            i++;
+        }
+        if (i != 32) {
+            printf("Verify has incorrect data size - resetting\n");
+        }
+        in = uart_getc(UART_ID);
+        if (in != 'r') {
+            printf("Incorrect response - resetting\n");
+            reset_chip();
+            return;
+        }
+        current_addr += 32;
+    }
+
+    time_end = time_us_32();
+    printf("Verify took %dus\n", time_end - time_start);
+    printf("Verify complete - executing\n");
+
     uart_putc_raw(UART_ID, 'x');
     if (!uart_is_readable_within_us(UART_ID, 500)) {
         // Detect hangs and reset the chip
@@ -99,9 +159,13 @@ void uart_boot() {
         reset_chip();
         return;
     }
-    char in = uart_getc(UART_ID);
+    in = uart_getc(UART_ID);
     printf("%c\n", in);
-    assert(in == 'x');
+    if (in != 'x') {
+        printf("Incorrect response - resetting\n");
+        reset_chip();
+        return;
+    }
 }
 
 
