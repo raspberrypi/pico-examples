@@ -12,7 +12,7 @@
     {
       "start": "128K",
       "size": "32K",
-      "families": ["rp2350-arm-s"],
+      "families": ["rp2350-arm-s", "rp2350-riscv"],
       "permissions": {
         "secure": "rw",
         "nonsecure": "rw",
