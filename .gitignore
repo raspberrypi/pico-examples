@@ -4,5 +4,8 @@ _deps
 cmake-*
 build
 build-*
+bazel-*
 .DS_Store
 *.pdf
+# Ignore for now to avoid churn.
+MODULE.bazel.lock

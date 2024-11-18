@@ -1,0 +1,44 @@
+module(
+    name = "pico-examples",
+    version = "0.0.1-20241114",
+)
+
+bazel_dep(name = "pico-sdk", version = "2.1.0")
+bazel_dep(name = "rules_platform", version = "0.1.0")
+bazel_dep(name = "rules_cc", version = "0.1.0")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+bazel_dep(name = "rules_python", version = "0.36.0")
+
+git_override(
+    module_name = "pico-sdk",
+    remote = "https://github.com/armandomontanez/pico-sdk.git",
+    commit = "fd64ca39f58317213033b9e46f19846c0541fc22",
+)
+
+register_toolchains(
+    "@pico-sdk//bazel/toolchain:linux-x86_64-rp2040",
+    "@pico-sdk//bazel/toolchain:linux-x86_64-rp2350",
+    "@pico-sdk//bazel/toolchain:win-x86_64-rp2040",
+    "@pico-sdk//bazel/toolchain:win-x86_64-rp2350",
+    "@pico-sdk//bazel/toolchain:mac-x86_64-rp2040",
+    "@pico-sdk//bazel/toolchain:mac-x86_64-rp2350",
+    "@pico-sdk//bazel/toolchain:mac-aarch64-rp2040",
+    "@pico-sdk//bazel/toolchain:mac-aarch64-rp2350",
+)
+
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    configure_coverage_tool = True,
+    python_version = "3.9",
+)
+
+use_repo(python, "pythons_hub")
+register_toolchains(
+    "@pythons_hub//:all",
+    dev_dependency = True,
+)
+register_toolchains(
+    "@rules_python//python/runtime_env_toolchains:all",
+    dev_dependency = True,
+)

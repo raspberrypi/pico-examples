@@ -1,0 +1,81 @@
+load("@rules_platform//platform_data:defs.bzl", "platform_data")
+load("@pico-sdk//bazel:pico_btstack_make_gatt_header.bzl", "pico_btstack_make_gatt_header")
+load("@pico-sdk//bazel/util:transition.bzl", "extra_copts_for_all_deps")
+
+package(default_visibility = ["//visibility:private"])
+
+cc_library(
+    name = "btstack_config",
+    hdrs = ["btstack_config.h"],
+    includes = ["."],
+    # This is enabled, the error about a missing define is a false positive.
+    defines = ["ENABLE_BLE=1"],
+)
+
+cc_library(
+    name = "lwip_config",
+    hdrs = ["lwipopts.h"],
+    includes = ["."],
+)
+
+pico_btstack_make_gatt_header(
+    name = "temp_sensor",
+    src = "temp_sensor.gatt",
+)
+
+cc_binary(
+    name = "picow_ble_temp_sensor_actual",
+    srcs = [
+        "server.c",
+        "server_common.c",
+        "server_common.h",
+    ],
+    deps = [
+        ":temp_sensor",
+        "@pico-sdk//src/rp2_common/pico_stdlib",
+        "@pico-sdk//src/rp2_common/pico_cyw43_arch:pico_cyw43_arch_none",
+        "@pico-sdk//src/rp2_common/pico_btstack",
+        "@pico-sdk//src/rp2_common/pico_cyw43_driver:pico_btstack_cyw43",
+        "@pico-sdk//src/rp2_common/hardware_adc",
+    ],
+)
+
+extra_copts_for_all_deps(
+    name = "picow_ble_temp_sensor",
+    src = ":picow_ble_temp_sensor_actual",
+    extra_copts = [
+        # Doesn't use multicore, but links in the multicore lib.
+        # Needed to fix a cautious flash assertion.
+        "-DPICO_FLASH_SAFE_EXECUTE_PICO_SUPPORT_MULTICORE_LOCKOUT=0",
+    ],
+)
+
+platform_data(
+    name = "picow_ble_temp_sensor_pico_w.elf",
+    platform = ":test_pico_w",
+    target = ":picow_ble_temp_sensor",
+)
+
+platform_data(
+    name = "picow_ble_temp_sensor_pico2_w.elf",
+    platform = ":test_pico2_w",
+    target = ":picow_ble_temp_sensor",
+)
+
+platform(
+    name = "test_pico_w",
+    parents = ["//pico_w:test_pico_w"],
+    flags = [
+        "--@pico-sdk//bazel/config:PICO_BTSTACK_CONFIG=//pico_w/bt/standalone:btstack_config",
+        "--@pico-sdk//bazel/config:PICO_BT_ENABLE_BLE=True",
+    ],
+)
+
+platform(
+    name = "test_pico2_w",
+    parents = ["//pico_w:test_pico2_w"],
+    flags = [
+        "--@pico-sdk//bazel/config:PICO_BTSTACK_CONFIG=//pico_w/bt/standalone:btstack_config",
+        "--@pico-sdk//bazel/config:PICO_BT_ENABLE_BLE=True",
+    ],
+)
