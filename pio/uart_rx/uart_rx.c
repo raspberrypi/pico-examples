@@ -26,6 +26,11 @@
 #define HARD_UART_TX_PIN 4
 #define PIO_RX_PIN 3
 
+// Check the pin is compatible with the platform
+#if PIO_RX_PIN >= NUM_BANK0_GPIOS
+#error Attempting to use a pin>=32 on a platform that does not support it
+#endif
+
 // Ask core 1 to print a string, to make things easier on core 0
 void core1_main() {
     const char *s = (const char *) multicore_fifo_pop_blocking();
@@ -42,10 +47,17 @@ int main() {
     gpio_set_function(HARD_UART_TX_PIN, GPIO_FUNC_UART);
 
     // Set up the state machine we're going to use to receive them.
-    PIO pio = pio0;
-    uint sm = 0;
-    uint offset = pio_add_program(pio, &uart_rx_program);
+    PIO pio;
+    uint sm;
+    uint offset;
+
+    // This will find a free pio and state machine for our program and load it for us
+    // We use pio_claim_free_sm_and_add_program_for_gpio_range so we can address gpios >= 32 if needed and supported by the hardware
+    bool success = pio_claim_free_sm_and_add_program_for_gpio_range(&uart_rx_program, &pio, &sm, &offset, PIO_RX_PIN, 1, true);
+    hard_assert(success);
+
     uart_rx_program_init(pio, sm, offset, PIO_RX_PIN, SERIAL_BAUD);
+    //uart_rx_mini_program_init(pio, sm, offset, PIO_RX_PIN, SERIAL_BAUD);
 
     // Tell core 1 to print some text to uart1 as fast as it can
     multicore_launch_core1(core1_main);
@@ -57,4 +69,7 @@ int main() {
         char c = uart_rx_program_getc(pio, sm);
         putchar(c);
     }
+
+    // This will free resources and unload our program
+    pio_remove_program_and_unclaim_sm(&uart_rx_program, pio, sm, offset);
 }

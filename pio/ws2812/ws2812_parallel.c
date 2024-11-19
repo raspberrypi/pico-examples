@@ -19,6 +19,11 @@
 #define NUM_PIXELS 64
 #define WS2812_PIN_BASE 2
 
+// Check the pin is compatible with the platform
+#if WS2812_PIN_BASE >= NUM_BANK0_GPIOS
+#error Attempting to use a pin>=32 on a platform that does not support it
+#endif
+
 // horrible temporary hack to avoid changing pattern code
 static uint8_t *current_strip_out;
 static bool current_strip_4color;
@@ -278,12 +283,16 @@ void output_strips_dma(value_bits_t *bits, uint value_length) {
 int main() {
     //set_sys_clock_48();
     stdio_init_all();
-    puts("WS2812 parallel");
+    printf("WS2812 parallel using pin %d\n", WS2812_PIN_BASE);
 
-    // todo get free sm
-    PIO pio = pio0;
-    int sm = 0;
-    uint offset = pio_add_program(pio, &ws2812_parallel_program);
+    PIO pio;
+    uint sm;
+    uint offset;
+
+    // This will find a free pio and state machine for our program and load it for us
+    // We use pio_claim_free_sm_and_add_program_for_gpio_range so we can address gpios >= 32 if needed and supported by the hardware
+    bool success = pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_parallel_program, &pio, &sm, &offset, WS2812_PIN_BASE, count_of(strips), true);
+    hard_assert(success);
 
     ws2812_parallel_program_init(pio, sm, offset, WS2812_PIN_BASE, count_of(strips), 800000);
 
@@ -318,4 +327,7 @@ int main() {
         }
         memset(&states, 0, sizeof(states)); // clear out errors
     }
+
+    // This will free resources and unload our program
+    pio_remove_program_and_unclaim_sm(&ws2812_parallel_program, pio, sm, offset);
 }

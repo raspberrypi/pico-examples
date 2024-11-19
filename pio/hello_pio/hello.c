@@ -17,6 +17,11 @@
 #define HELLO_PIO_LED_PIN PICO_DEFAULT_LED_PIN
 #endif
 
+// Check the pin is compatible with the platform
+#if HELLO_PIO_LED_PIN >= NUM_BANK0_GPIOS
+#error Attempting to use a pin>=32 on a platform that does not support it
+#endif
+
 int main() {
 #ifndef HELLO_PIO_LED_PIN
 #warning pio/hello_pio example requires a board with a regular LED

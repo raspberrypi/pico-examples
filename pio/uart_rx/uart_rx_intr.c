@@ -35,6 +35,11 @@
 #define FIFO_SIZE 64
 #define MAX_COUNTER 10
 
+// Check the pin is compatible with the platform
+#if PIO_RX_PIN >= NUM_BANK0_GPIOS
+#error Attempting to use a pin>=32 on a platform that does not support it
+#endif
+
 static PIO pio;
 static uint sm;
 static int8_t pio_irq;
@@ -84,27 +89,6 @@ static void async_worker_func(__unused async_context_t *async_context, __unused 
     }
 }
 
-// Find a free pio and state machine and load the program into it.
-// Returns false if this fails
-static bool init_pio(const pio_program_t *program, PIO *pio_hw, uint *sm, uint *offset) {
-    // Find a free pio
-    *pio_hw = pio1;
-    if (!pio_can_add_program(*pio_hw, program)) {
-        *pio_hw = pio0;
-        if (!pio_can_add_program(*pio_hw, program)) {
-            *offset = -1;
-            return false;
-        }
-    }
-    *offset = pio_add_program(*pio_hw, program);
-    // Find a state machine
-    *sm = (int8_t)pio_claim_unused_sm(*pio_hw, false);
-    if (*sm < 0) {
-        return false;
-    }
-    return true;
-}
-
 int main() {
     // Console output (also a UART, yes it's confusing)
     setup_default_uart();
@@ -123,16 +107,15 @@ int main() {
     }
     async_context_add_when_pending_worker(&async_context.core, &worker);
 
-    // Set up the state machine we're going to use to receive them.
-    // In real code you need to find a free pio and state machine in case pio resources are used elsewhere
-    if (!init_pio(&uart_rx_program, &pio, &sm, &offset)) {
-        panic("failed to setup pio");
-    }
+    // This will find a free pio and state machine for our program and load it for us
+    // We use pio_claim_free_sm_and_add_program_for_gpio_range so we can address gpios >= 32 if needed and supported by the hardware
+    bool success = pio_claim_free_sm_and_add_program_for_gpio_range(&uart_rx_program, &pio, &sm, &offset, PIO_RX_PIN, 1, true);
+    hard_assert(success);
+
     uart_rx_program_init(pio, sm, offset, PIO_RX_PIN, SERIAL_BAUD);
 
     // Find a free irq
-    static_assert(PIO0_IRQ_1 == PIO0_IRQ_0 + 1 && PIO1_IRQ_1 == PIO1_IRQ_0 + 1, "");
-    pio_irq = (pio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0;
+    pio_irq = pio_get_irq_num(pio, 0);
     if (irq_get_exclusive_handler(pio_irq)) {
         pio_irq++;
         if (irq_get_exclusive_handler(pio_irq)) {
@@ -143,8 +126,8 @@ int main() {
     // Enable interrupt
     irq_add_shared_handler(pio_irq, pio_irq_func, PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY); // Add a shared IRQ handler
     irq_set_enabled(pio_irq, true); // Enable the IRQ
-    const uint irq_index = pio_irq - ((pio == pio0) ? PIO0_IRQ_0 : PIO1_IRQ_0); // Get index of the IRQ
-    pio_set_irqn_source_enabled(pio, irq_index, pis_sm0_rx_fifo_not_empty + sm, true); // Set pio to tell us when the FIFO is NOT empty
+    const uint irq_index = pio_irq - pio_get_irq_num(pio, 0); // Get index of the IRQ
+    pio_set_irqn_source_enabled(pio, irq_index, pio_get_rx_fifo_not_empty_interrupt_source(sm), true); // Set pio to tell us when the FIFO is NOT empty
 
     // Tell core 1 to print text to uart1
     multicore_launch_core1(core1_main);
@@ -160,14 +143,12 @@ int main() {
     }
 
     // Disable interrupt
-    pio_set_irqn_source_enabled(pio, irq_index, pis_sm0_rx_fifo_not_empty + sm, false);
+    pio_set_irqn_source_enabled(pio, irq_index, pio_get_rx_fifo_not_empty_interrupt_source(sm), false);
     irq_set_enabled(pio_irq, false);
     irq_remove_handler(pio_irq, pio_irq_func);
 
-    // Cleanup pio
-    pio_sm_set_enabled(pio, sm, false);
-    pio_remove_program(pio, &uart_rx_program, offset);
-    pio_sm_unclaim(pio, sm);
+    // This will free resources and unload our program
+    pio_remove_program_and_unclaim_sm(&uart_rx_program, pio, sm, offset);
 
     async_context_remove_when_pending_worker(&async_context.core, &worker);
     async_context_deinit(&async_context.core);
