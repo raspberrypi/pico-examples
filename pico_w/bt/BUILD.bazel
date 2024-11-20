@@ -1,0 +1,65 @@
+package(default_visibility = ["//pico_w/bt:__subpackages__"])
+
+cc_library(
+    name = "lwip_config",
+    strip_include_prefix = "config",
+    hdrs = ["config/lwipopts.h"],
+)
+
+cc_library(
+    name = "btstack_config",
+    strip_include_prefix = "config",
+    hdrs = ["config/btstack_config.h"],
+)
+
+cc_library(
+    name = "freertos_config",
+    strip_include_prefix = "config",
+    hdrs = ["config/FreeRTOSConfig.h"],
+)
+
+cc_library(
+    name = "picow_bt_example_common",
+    srcs = ["picow_bt_example_common.c"],
+    strip_include_prefix = ".",
+    hdrs = ["picow_bt_example_common.h"],
+    deps = [
+        "@pico-sdk//src/rp2_common/pico_btstack",
+        "@pico-sdk//src/rp2_common/pico_btstack:pico_btstack_sbc_encoder",
+        "@pico-sdk//src/rp2_common/pico_btstack:pico_btstack_sbc_decoder",
+        "@pico-sdk//src/rp2_common/pico_btstack:pico_btstack_stdin",
+        "@pico-sdk//src/rp2_common/pico_cyw43_driver:pico_btstack_cyw43",
+        "@pico-sdk//src/rp2_common/pico_stdlib",
+        "@pico-sdk//src/rp2_common/pico_cyw43_arch",
+    ],
+)
+
+cc_library(
+    name = "picow_bt_example_poll",
+    srcs = ["picow_bt_example_poll.c"],
+    deps = [
+        ":picow_bt_example_common",
+        "@pico-sdk//src/rp2_common/pico_cyw43_driver:pico_btstack_cyw43",
+        "@pico-sdk//src/rp2_common/pico_stdlib",
+    ]
+)
+
+platform(
+    name = "test_pico_w",
+    parents = ["//pico_w:test_pico_w"],
+    flags = [
+        "--@pico-sdk//bazel/config:PICO_BTSTACK_CONFIG=//pico_w/bt:btstack_config",
+        "--@pico-sdk//bazel/config:PICO_BT_ENABLE_BLE=True",
+        "--@pico-sdk//bazel/config:PICO_BT_ENABLE_CLASSIC=True",
+    ],
+)
+
+platform(
+    name = "test_pico2_w",
+    parents = ["//pico_w:test_pico2_w"],
+    flags = [
+        "--@pico-sdk//bazel/config:PICO_BTSTACK_CONFIG=//pico_w/bt:btstack_config",
+        "--@pico-sdk//bazel/config:PICO_BT_ENABLE_BLE=True",
+        "--@pico-sdk//bazel/config:PICO_BT_ENABLE_CLASSIC=True",
+    ],
+)

@@ -1,0 +1,3 @@
+load("//pico_w/bt:picow_bt_example.bzl", "picow_bt_example")
+
+picow_bt_example()

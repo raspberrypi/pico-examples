@@ -26,7 +26,6 @@ register_toolchains(
     "@pico-sdk//bazel/toolchain:mac-aarch64-rp2350",
 )
 
-
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
     configure_coverage_tool = True,
@@ -41,4 +40,14 @@ register_toolchains(
 register_toolchains(
     "@rules_python//python/runtime_env_toolchains:all",
     dev_dependency = True,
+)
+
+new_git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
+
+# TODO: Provide btstack as a proper Bazel module.
+new_git_repository(
+    name = "btstack",
+    build_file = "//pico_w/bt:btstack_examples.BUILD",
+    commit = "2b49e57bd1fae85ac32ac1f41cdb7c794de335f6",  # keep-in-sync-with-submodule: lib/btstack
+    remote = "https://github.com/bluekitchen/btstack.git",
 )

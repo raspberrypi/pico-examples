@@ -14,7 +14,7 @@ cc_binary(
     srcs = ["picow_wifi_scan.c"],
     deps = [
         "@pico-sdk//src/rp2_common/pico_stdlib",
-        "@pico-sdk//src/rp2_common/pico_cyw43_arch:pico_cyw43_arch_lwip_threadsafe_background",
+        "@pico-sdk//src/rp2_common/pico_cyw43_arch",
         "@pico-sdk//src/rp2_common/hardware_vreg",
         "@pico-sdk//src/rp2_common/hardware_clocks",
 

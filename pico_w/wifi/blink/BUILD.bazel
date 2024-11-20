@@ -41,7 +41,7 @@ platform_data(
 
 platform_data(
     name = "picow_blink_pico2_w.elf",
-    platform = "//pico_w/wifi:test_pico2_w",
+    platform = "//pico_w:test_pico2_w",
     target = ":picow_blink",
 )
 
@@ -53,6 +53,6 @@ platform_data(
 
 platform_data(
     name = "picow_blink_slow_clock_pico2_w.elf",
-    platform = "//pico_w/wifi:test_pico2_w",
+    platform = "//pico_w:test_pico2_w",
     target = ":picow_blink_slow_clock",
 )

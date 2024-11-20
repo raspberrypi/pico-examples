@@ -1,0 +1,4 @@
+load("//pico_w/bt:picow_bt_example.bzl", "picow_bt_example")
+
+# TODO: Slightly more complicated.
+# picow_bt_example()
