@@ -46,7 +46,8 @@ extra_copts_for_all_deps(
     extra_copts = [
         # Doesn't use multicore, but links in the multicore lib.
         # Needed to fix a cautious flash assertion.
-        "-DPICO_FLASH_SAFE_EXECUTE_PICO_SUPPORT_MULTICORE_LOCKOUT=0",
+        # TODO: Test on device, shouldn't be needed anymore.
+        # "-DPICO_FLASH_SAFE_EXECUTE_PICO_SUPPORT_MULTICORE_LOCKOUT=0",
     ],
 )
 
