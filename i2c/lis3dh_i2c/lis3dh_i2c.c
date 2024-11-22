@@ -27,7 +27,7 @@
 const int ADDRESS = 0x18;
 const uint8_t CTRL_REG_1 = 0x20;
 const uint8_t CTRL_REG_4 = 0x23;
-const uint8_t TEMP_CFG_REG = 0xC0;
+const uint8_t TEMP_CFG_REG = 0x1F;
 
 #ifdef i2c_default
 
