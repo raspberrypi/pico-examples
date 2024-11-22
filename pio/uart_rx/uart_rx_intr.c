@@ -108,7 +108,8 @@ int main() {
     async_context_add_when_pending_worker(&async_context.core, &worker);
 
     // This will find a free pio and state machine for our program and load it for us
-    // We use pio_claim_free_sm_and_add_program_for_gpio_range so we can address gpios >= 32 if needed and supported by the hardware
+    // We use pio_claim_free_sm_and_add_program_for_gpio_range (for_gpio_range) variant
+    // so we will get a PIO instance suitable for addressing gpios >= 32 if needed and supported by the hardware
     bool success = pio_claim_free_sm_and_add_program_for_gpio_range(&uart_rx_program, &pio, &sm, &offset, PIO_RX_PIN, 1, true);
     hard_assert(success);
 

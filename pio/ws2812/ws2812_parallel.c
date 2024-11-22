@@ -290,7 +290,8 @@ int main() {
     uint offset;
 
     // This will find a free pio and state machine for our program and load it for us
-    // We use pio_claim_free_sm_and_add_program_for_gpio_range so we can address gpios >= 32 if needed and supported by the hardware
+    // We use pio_claim_free_sm_and_add_program_for_gpio_range (for_gpio_range) variant
+    // so we will get a PIO instance suitable for addressing gpios >= 32 if needed and supported by the hardware
     bool success = pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_parallel_program, &pio, &sm, &offset, WS2812_PIN_BASE, count_of(strips), true);
     hard_assert(success);
 
