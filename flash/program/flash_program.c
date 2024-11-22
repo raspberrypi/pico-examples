@@ -52,7 +52,8 @@ int main() {
     // Note that a whole number of sectors must be erased at a time.
     printf("\nErasing target region...\n");
 
-    // Flash is "execute in place" and so will be in use when any code runs, e.g. an interrupt handler or code running on a different core
+    // Flash is "execute in place" and so will be in use when any code that is stored in flash runs, e.g. an interrupt handler
+    // or code running on a different core.
     // Calling flash_range_erase or flash_range_program at the same time as flash is running code would cause a crash.
     // flash_safe_execute disables interrupts and tries to cooperate with the other core to ensure flash is not in use
     // See the documentation for flash_safe_execute and its assumptions and limitations
