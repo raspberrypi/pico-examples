@@ -1,5 +1,7 @@
+# This example is disabled as mbedtls uses too much stack, and Freertos SMP is problematic with
+# pico_cyw43_arch_lwip_threadsafe_background (nosys), where WiFi and LwIP activity is performed in an IRQ.
+# Prefer to use pico_cyw43_arch_lwip_sys_freertos instead, where WiFi and LwIP activity is performed in a thread.
 if (0)
-# Currently disabled as mbedtls uses too much stack
 add_executable(picow_freertos_http_client_nosys
         picow_freertos_http_client.c
         )
