@@ -35,8 +35,13 @@
 #define WS2812_PIN 2
 #endif
 
-static inline void put_pixel(uint32_t pixel_grb) {
-    pio_sm_put_blocking(pio0, 0, pixel_grb << 8u);
+// Check the pin is compatible with the platform
+#if WS2812_PIN >= NUM_BANK0_GPIOS
+#error Attempting to use a pin>=32 on a platform that does not support it
+#endif
+
+static inline void put_pixel(PIO pio, uint sm, uint32_t pixel_grb) {
+    pio_sm_put_blocking(pio, sm, pixel_grb << 8u);
 }
 
 static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
@@ -54,44 +59,44 @@ static inline uint32_t urgbw_u32(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
             (uint32_t) (b);
 }
 
-void pattern_snakes(uint len, uint t) {
+void pattern_snakes(PIO pio, uint sm, uint len, uint t) {
     for (uint i = 0; i < len; ++i) {
         uint x = (i + (t >> 1)) % 64;
         if (x < 10)
-            put_pixel(urgb_u32(0xff, 0, 0));
+            put_pixel(pio, sm, urgb_u32(0xff, 0, 0));
         else if (x >= 15 && x < 25)
-            put_pixel(urgb_u32(0, 0xff, 0));
+            put_pixel(pio, sm, urgb_u32(0, 0xff, 0));
         else if (x >= 30 && x < 40)
-            put_pixel(urgb_u32(0, 0, 0xff));
+            put_pixel(pio, sm, urgb_u32(0, 0, 0xff));
         else
-            put_pixel(0);
+            put_pixel(pio, sm, 0);
     }
 }
 
-void pattern_random(uint len, uint t) {
+void pattern_random(PIO pio, uint sm, uint len, uint t) {
     if (t % 8)
         return;
     for (uint i = 0; i < len; ++i)
-        put_pixel(rand());
+        put_pixel(pio, sm, rand());
 }
 
-void pattern_sparkle(uint len, uint t) {
+void pattern_sparkle(PIO pio, uint sm, uint len, uint t) {
     if (t % 8)
         return;
     for (uint i = 0; i < len; ++i)
-        put_pixel(rand() % 16 ? 0 : 0xffffffff);
+        put_pixel(pio, sm, rand() % 16 ? 0 : 0xffffffff);
 }
 
-void pattern_greys(uint len, uint t) {
+void pattern_greys(PIO pio, uint sm, uint len, uint t) {
     uint max = 100; // let's not draw too much current!
     t %= max;
     for (uint i = 0; i < len; ++i) {
-        put_pixel(t * 0x10101);
+        put_pixel(pio, sm, t * 0x10101);
         if (++t >= max) t = 0;
     }
 }
 
-typedef void (*pattern)(uint len, uint t);
+typedef void (*pattern)(PIO pio, uint sm, uint len, uint t);
 const struct {
     pattern pat;
     const char *name;
@@ -105,12 +110,18 @@ const struct {
 int main() {
     //set_sys_clock_48();
     stdio_init_all();
-    printf("WS2812 Smoke Test, using pin %d", WS2812_PIN);
+    printf("WS2812 Smoke Test, using pin %d\n", WS2812_PIN);
 
     // todo get free sm
-    PIO pio = pio0;
-    int sm = 0;
-    uint offset = pio_add_program(pio, &ws2812_program);
+    PIO pio;
+    uint sm;
+    uint offset;
+
+    // This will find a free pio and state machine for our program and load it for us
+    // We use pio_claim_free_sm_and_add_program_for_gpio_range (for_gpio_range variant)
+    // so we will get a PIO instance suitable for addressing gpios >= 32 if needed and supported by the hardware
+    bool success = pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &pio, &sm, &offset, WS2812_PIN, 1, true);
+    hard_assert(success);
 
     ws2812_program_init(pio, sm, offset, WS2812_PIN, 800000, IS_RGBW);
 
@@ -121,9 +132,12 @@ int main() {
         puts(pattern_table[pat].name);
         puts(dir == 1 ? "(forward)" : "(backward)");
         for (int i = 0; i < 1000; ++i) {
-            pattern_table[pat].pat(NUM_PIXELS, t);
+            pattern_table[pat].pat(pio, sm, NUM_PIXELS, t);
             sleep_ms(10);
             t += dir;
         }
     }
+
+    // This will free resources and unload our program
+    pio_remove_program_and_unclaim_sm(&ws2812_program, pio, sm, offset);
 }
