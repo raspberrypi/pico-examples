@@ -6,3 +6,5 @@ build
 build-*
 .DS_Store
 *.pdf
+# Ignore generated file
+pio/ws2812/generated/ws2812.pio.h 
