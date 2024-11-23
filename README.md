@@ -40,6 +40,13 @@ App|Description
 [dma_capture](adc/dma_capture) | Use the DMA to capture many samples from the ADC.
 [read_vsys](adc/read_vsys) | Demonstrates how to read VSYS to get the voltage of the power supply.
 
+### Binary Info
+
+App|Description
+---|---
+[blink_any](binary_info/blink_any) | Uses `bi_ptr` variables to create a configurable blink binary - see the separate [README](binary_info/README.md) for more details
+[hello_anything](binary_info/hello_anything) | Uses `bi_ptr` variables to create a configurable hello_world binary - see the separate [README](binary_info/README.md) for more details
+
 ### Bootloaders (RP2350 Only)
 App|Description
 ---|---
@@ -133,6 +140,7 @@ App|Description
 [pcf8523_i2c](i2c/pcf8523_i2c) | Read time and date values from a real time clock. Set current time and alarms on it.
 [ht16k33_i2c](i2c/ht16k33_i2c) | Drive a 4 digit 14 segment LED with an HT16K33.
 [slave_mem_i2c](i2c/slave_mem_i2c) | i2c slave example where the slave implements a 256 byte memory
+[slave_mem_i2c_burst](i2c/slave_mem_i2c) | i2c slave example where the slave implements a 256 byte memory. This version inefficiently writes each byte in a separate call to demonstrate read and write burst mode.
 
 ### Interpolator
 
@@ -170,7 +178,8 @@ App|Description
 ---|---
 [picow_access_point](pico_w/wifi/access_point) | Starts a WiFi access point, and fields DHCP requests.
 [picow_blink](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip).
-[picow_blink_slow_clock](pico_w/wifi/blink_slow_clock) | Blinks the on-board LED (which is connected via the WiFi chip) with a slower system clock to show how to reconfigure communication with the WiFi chip under those circumstances
+[picow_blink_slow_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a slower system clock to show how to reconfigure communication with the WiFi chip at run time under those circumstances
+[picow_blink_fast_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a faster system clock to show how to reconfigure communication with the WiFi chip at build time under those circumstances
 [picow_iperf_server](pico_w/wifi/iperf) | Runs an "iperf" server for WiFi speed testing.
 [picow_ntp_client](pico_w/wifi/ntp_client) | Connects to an NTP server to fetch and display the current time.
 [picow_tcp_client](pico_w/wifi/tcp_client) | A simple TCP client. You can run [python_test_tcp_server.py](pico_w/wifi/python_test_tcp/python_test_tcp_server.py) for it to connect to.

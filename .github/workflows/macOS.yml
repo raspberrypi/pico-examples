@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-12
+    runs-on: macos-latest
     steps:
       - name: Clean workspace
         run: |
@@ -18,12 +18,12 @@ jobs:
           mkdir -p "${{ github.workspace }}"
 
       - name: Checkout pico-examples
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: pico-examples
 
       - name: Checkout pico-sdk/develop
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: raspberrypi/pico-sdk
           ref: develop
