@@ -24,9 +24,9 @@ App| Description                                                                
 ---|----------------------------------------------------------------------------|---
 [hello_serial](hello_world/serial) | The obligatory Hello World program for Pico (Output over serial version)   |
 [hello_usb](hello_world/usb) | The obligatory Hello World program for Pico (Output over USB version)      | https://rptl.io/pico-hello-usb
-[blink](blink) | Blink an LED on and off. Works on both boards with regular LEDs and Pico W | https://rptl.io/pico-blink
-[blink_simple](blink_simple) | Blink an LED on and off. Does not work on Pico W.                          | https://rptl.io/pico-blink
-[picow_blink](pico_w/wifi/blink) | Blinks the Pico W on-board LED (which is connected via the WiFi chip).     | http://rptl.io/pico-w-blink
+[blink](blink) | Blink a LED on and off. Works on both boards with regular LEDs and boards like Pico W where the led is connected via the Wi-Fi chip | https://rptl.io/pico-blink
+[blink_simple](blink_simple) | Blink a LED on and off. Does not work on boards like Pico W where the led is connected via the Wi-Fi chip. | https://rptl.io/pico-blink
+[picow_blink](pico_w/wifi/blink) | Blinks the on-board LED on boards like Pico W where the led is connected via the Wi-Fi chip. | http://rptl.io/pico-w-blink
 
 ### ADC
 
@@ -170,9 +170,9 @@ App|Description
 [blinky](picoboard/blinky) | Blink "hello, world" in Morse code on Pico's LED
 [button](picoboard/button) | Use Pico's BOOTSEL button as a regular button input, by temporarily suspending flash access.
 
-### Pico W Networking
+### Pico Networking
 
-These examples are for the Pico W, and are only available for `PICO_BOARD=pico_w`
+These networking examples are only available if Wi-Fi is supported by the board.
 
 App|Description
 ---|---
@@ -192,7 +192,7 @@ App|Description
 
 #### FreeRTOS examples
 
-These are examples of integrating Pico W networking under FreeRTOS, and require you to set the `FREERTOS_KERNEL_PATH`
+These are examples of integrating Wi-Fi networking under FreeRTOS, and require you to set the `FREERTOS_KERNEL_PATH`
 to point to the FreeRTOS Kernel. See https://github.com/FreeRTOS/FreeRTOS-Kernel
 
 App|Description
@@ -205,9 +205,9 @@ App|Description
 [pico_freertos_httpd_nosys](pico_w/wifi/freertos/httpd) | Runs a LWIP HTTP server test app under FreeRTOS in NO_SYS=1 mode.
 [pico_freertos_httpd_sys](pico_w/wifi/freertos/httpd) | Runs a LWIP HTTP server test app under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode.
 
-### Pico W Bluetooth
+### Pico Bluetooth
 
-These examples are for the Pico W, and are only available for `PICO_BOARD=pico_w`.
+These Bluetooth examples are only available for boards that support Bluetooth.
 They are examples from the Blue Kitchen Bluetooth stack, see [here](https://bluekitchen-gmbh.com/btstack/#examples/examples/index.html) for a full description.
 
 By default, the Bluetooth examples are only built in one "mode" only (*background*, *poll*, or *freertos*), with the 
