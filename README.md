@@ -206,7 +206,6 @@ App|Description
 [picow_freertos_ntp_client_socket](pico_w/wifi/freertos/ntp_client_socket) | Connects to an NTP server using the LwIP Socket API with FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode.
 [pico_freertos_httpd_nosys](pico_w/wifi/freertos/httpd) | Runs a LWIP HTTP server test app under FreeRTOS in NO_SYS=1 mode.
 [pico_freertos_httpd_sys](pico_w/wifi/freertos/httpd) | Runs a LWIP HTTP server test app under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode.
-[picow_freertos_http_client_nosys](pico_w/wifi/freertos/http_client) | Demonstrates how to make a https request in NO_SYS=1 mode
 [picow_freertos_http_client_sys](pico_w/wifi/freertos/http_client) | Demonstrates how to make a https request in NO_SYS=0 (i.e. full FreeRTOS integration)
 
 ### Pico W Bluetooth
