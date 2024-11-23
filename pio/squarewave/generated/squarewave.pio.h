@@ -30,7 +30,7 @@ static const struct pio_program squarewave_program = {
     .instructions = squarewave_program_instructions,
     .length = 4,
     .origin = -1,
-    .pio_version = 0,
+    .pio_version = squarewave_pio_version,
 #if PICO_PIO_VERSION > 0
     .used_gpio_ranges = 0x0
 #endif
