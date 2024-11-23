@@ -43,11 +43,7 @@ function(add_subdirectory_exclude_platforms NAME)
 endfunction()
 
 # Add blink example
-if (PICO_CYW43_SUPPORTED AND NOT TARGET pico_cyw43_arch)
-    message("Wi-Fi driver is not available")
-else()
-    add_subdirectory_exclude_platforms(blink)
-endif()
+add_subdirectory_exclude_platforms(blink)
 add_subdirectory_exclude_platforms(blink_simple)
 
 # Add hello world example

@@ -1,3 +1,6 @@
+if (PICO_CYW43_SUPPORTED AND NOT TARGET pico_cyw43_arch)
+    return()
+endif()
 if (NOT PICO_CYW43_SUPPORTED)
     message("Only building blink_any for non W boards as PICO_CYW43_SUPPORTED is not set")
 endif()

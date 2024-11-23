@@ -1,3 +1,7 @@
+if (PICO_CYW43_SUPPORTED AND NOT TARGET pico_cyw43_arch)
+    return()
+endif()
+
 add_executable(picow_blink
         picow_blink.c
         )

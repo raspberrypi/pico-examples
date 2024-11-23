@@ -1,3 +1,8 @@
+if (PICO_CYW43_SUPPORTED AND NOT TARGET pico_cyw43_arch)
+    message("Skipping blink examples as Wi-Fi driver is not available")
+    return()
+endif()
+
 add_executable(blink
     blink.c
     )
