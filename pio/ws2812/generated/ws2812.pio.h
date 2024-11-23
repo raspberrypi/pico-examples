@@ -34,7 +34,7 @@ static const struct pio_program ws2812_program = {
     .instructions = ws2812_program_instructions,
     .length = 4,
     .origin = -1,
-    .pio_version = 0,
+    .pio_version = ws2812_pio_version,
 #if PICO_PIO_VERSION > 0
     .used_gpio_ranges = 0x0
 #endif
@@ -90,7 +90,7 @@ static const struct pio_program ws2812_parallel_program = {
     .instructions = ws2812_parallel_program_instructions,
     .length = 4,
     .origin = -1,
-    .pio_version = 0,
+    .pio_version = ws2812_parallel_pio_version,
 #if PICO_PIO_VERSION > 0
     .used_gpio_ranges = 0x0
 #endif
