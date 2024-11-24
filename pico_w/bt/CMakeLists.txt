@@ -6,7 +6,7 @@ set(BTSTACK_3RD_PARTY_PATH ${BTSTACK_ROOT}/3rd-party)
 set(BT_EXAMPLE_COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
 if (NOT PICO_EXTRAS_PATH)
-        message("Skipping some Pico W BTstack examples that require pico-extras")
+        message("Skipping some BTstack examples that require pico-extras")
 else()
         add_library(pico_btstack_audio_example INTERFACE)
         target_sources(pico_btstack_audio_example INTERFACE

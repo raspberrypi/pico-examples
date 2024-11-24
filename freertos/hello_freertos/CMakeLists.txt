@@ -11,10 +11,16 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     pico_stdlib
     )
 if(PICO_CYW43_SUPPORTED)
-    # For led support on pico_w
-    target_link_libraries(${TARGET_NAME} PRIVATE
-        pico_cyw43_arch_none
-    )
+    if (TARGET pico_cyw43_arch)
+        # For led support on Wi-Fi boards
+        target_link_libraries(${TARGET_NAME} PRIVATE
+            pico_cyw43_arch_none
+        )
+    else()
+        target_compile_definitions(${TARGET_NAME} PRIVATE
+            USE_LED=0
+            )
+    endif()
 endif()
 target_compile_definitions(${TARGET_NAME} PRIVATE
     configNUMBER_OF_CORES=1
@@ -34,9 +40,15 @@ target_link_libraries(${TARGET_NAME} PRIVATE
     pico_stdlib
     )
 if(PICO_CYW43_SUPPORTED)
-    # For led support on pico_w
-    target_link_libraries(${TARGET_NAME} PRIVATE
-        pico_cyw43_arch_none
-    )
+    if (TARGET pico_cyw43_arch)
+        # For led support on Wi-Fi boards
+        target_link_libraries(${TARGET_NAME} PRIVATE
+            pico_cyw43_arch_none
+        )
+    else()
+        target_compile_definitions(${TARGET_NAME} PRIVATE
+            USE_LED=0
+            )
+    endif()
 endif()
 pico_add_extra_outputs(${TARGET_NAME})
