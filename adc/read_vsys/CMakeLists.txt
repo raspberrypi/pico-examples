@@ -1,3 +1,8 @@
+if (PICO_CYW43_SUPPORTED AND NOT TARGET pico_cyw43_arch)
+    message("Skipping read_vsys as Wi-Fi driver is not available")
+    return()
+endif()
+
 add_library(power_status_adc INTERFACE)
 target_sources(power_status_adc INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/power_status.c

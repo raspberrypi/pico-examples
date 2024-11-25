@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
     if (NOT TARGET pico_cyw43_arch)
-        message("Skipping Pico W examples as support is not available")
+        message("Skipping Wi-Fi examples as support is not available")
     else()
 
         if (DEFINED ENV{WIFI_SSID} AND (NOT WIFI_SSID))
@@ -20,7 +20,7 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
 
         add_subdirectory(wifi)
         if (NOT TARGET pico_btstack_base)
-            message("Skipping Pico W Bluetooth examples as support is not available")
+            message("Skipping Bluetooth examples as support is not available")
         else()
             add_subdirectory(bt)
         endif()
