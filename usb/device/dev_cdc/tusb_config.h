@@ -1,5 +1,10 @@
-// TODO: why not #pragma once?
+/**
+ * Copyright (c) 2023 Raspberry Pi (Trading) Ltd.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
 
+// TODO: why not #pragma once?
 #ifndef _TUSB_CONFIG_H_
 #define _TUSB_CONFIG_H_
 

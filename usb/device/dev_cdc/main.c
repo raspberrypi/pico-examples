@@ -1,3 +1,9 @@
+/**
+ * Copyright (c) 2024 Raspberry Pi (Trading) Ltd.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
 #include <stdlib.h>
 #include <bsp/board_api.h>
 #include <tusb.h>
