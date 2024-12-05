@@ -1,6 +1,6 @@
 # Raspberry Pi Pico SDK Examples
 
-The Pico SDK default continues to be to build for RP2040 (PICO_PLATFORM=rp2040), so to build for RP2350, you need to pass
+By default, the Pico SDK targets builds for RP2040 (PICO_PLATFORM=rp2040). To build for RP2350 instead, pass
 `-DPICO_PLATFORM=rp2350` to CMake (or `-DPICO_PLATFORM=rp2350-riscv` for RISC-V).
 
 Most, but not all examples, currently work on RP2350 however you should be able to do a full build with any of the above platforms (PICO_PLATFORM=host however currently fails on some examples)
