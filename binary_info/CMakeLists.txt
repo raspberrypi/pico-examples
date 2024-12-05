@@ -1,0 +1,2 @@
+add_subdirectory_exclude_platforms(blink_any host)
+add_subdirectory_exclude_platforms(hello_anything host)

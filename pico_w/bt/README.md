@@ -1,4 +1,4 @@
-# Pico W Bluetooth Examples
+# Pico Bluetooth Examples
 
 The source for most of the Bluetooth examples is stored in `pico-sdk/lib/btstack/example`.
 There's a standalone example in `pico-examples/pico_w/bt/standalone`.

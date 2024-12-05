@@ -9,8 +9,8 @@ project(pico_examples C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-if (PICO_SDK_VERSION_STRING VERSION_LESS "2.0.0")
-    message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.0.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
+if (PICO_SDK_VERSION_STRING VERSION_LESS "2.1.0")
+    message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.1.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
 set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
@@ -59,6 +59,7 @@ endif()
 
 # Hardware-specific examples in subdirectories:
 add_subdirectory(adc)
+add_subdirectory(binary_info)
 add_subdirectory(bootloaders)
 add_subdirectory(clocks)
 add_subdirectory(cmake)

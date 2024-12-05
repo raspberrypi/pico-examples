@@ -16,16 +16,16 @@
 #define ws2812_wrap 3
 #define ws2812_pio_version 0
 
-#define ws2812_T1 2
-#define ws2812_T2 5
-#define ws2812_T3 3
+#define ws2812_T1 3
+#define ws2812_T2 3
+#define ws2812_T3 4
 
 static const uint16_t ws2812_program_instructions[] = {
             //     .wrap_target
-    0x6221, //  0: out    x, 1            side 0 [2] 
-    0x1123, //  1: jmp    !x, 3           side 1 [1] 
-    0x1400, //  2: jmp    0               side 1 [4] 
-    0xa442, //  3: nop                    side 0 [4] 
+    0x6321, //  0: out    x, 1            side 0 [3] 
+    0x1223, //  1: jmp    !x, 3           side 1 [2] 
+    0x1200, //  2: jmp    0               side 1 [2] 
+    0xa242, //  3: nop                    side 0 [2] 
             //     .wrap
 };
 
@@ -34,7 +34,7 @@ static const struct pio_program ws2812_program = {
     .instructions = ws2812_program_instructions,
     .length = 4,
     .origin = -1,
-    .pio_version = 0,
+    .pio_version = ws2812_pio_version,
 #if PICO_PIO_VERSION > 0
     .used_gpio_ranges = 0x0
 #endif
@@ -72,16 +72,16 @@ static inline void ws2812_program_init(PIO pio, uint sm, uint offset, uint pin, 
 #define ws2812_parallel_wrap 3
 #define ws2812_parallel_pio_version 0
 
-#define ws2812_parallel_T1 2
-#define ws2812_parallel_T2 5
-#define ws2812_parallel_T3 3
+#define ws2812_parallel_T1 3
+#define ws2812_parallel_T2 3
+#define ws2812_parallel_T3 4
 
 static const uint16_t ws2812_parallel_program_instructions[] = {
             //     .wrap_target
     0x6020, //  0: out    x, 32                      
-    0xa10b, //  1: mov    pins, !null            [1] 
-    0xa401, //  2: mov    pins, x                [4] 
-    0xa103, //  3: mov    pins, null             [1] 
+    0xa20b, //  1: mov    pins, !null            [2] 
+    0xa201, //  2: mov    pins, x                [2] 
+    0xa203, //  3: mov    pins, null             [2] 
             //     .wrap
 };
 
@@ -90,7 +90,7 @@ static const struct pio_program ws2812_parallel_program = {
     .instructions = ws2812_parallel_program_instructions,
     .length = 4,
     .origin = -1,
-    .pio_version = 0,
+    .pio_version = ws2812_parallel_pio_version,
 #if PICO_PIO_VERSION > 0
     .used_gpio_ranges = 0x0
 #endif
@@ -111,7 +111,6 @@ static inline void ws2812_parallel_program_init(PIO pio, uint sm, uint offset, u
     pio_sm_config c = ws2812_parallel_program_get_default_config(offset);
     sm_config_set_out_shift(&c, true, true, 32);
     sm_config_set_out_pins(&c, pin_base, pin_count);
-    sm_config_set_set_pins(&c, pin_base, pin_count);
     sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
     int cycles_per_bit = ws2812_parallel_T1 + ws2812_parallel_T2 + ws2812_parallel_T3;
     float div = clock_get_hz(clk_sys) / (freq * cycles_per_bit);

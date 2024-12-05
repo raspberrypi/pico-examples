@@ -19,9 +19,9 @@ App| Description                                                                
 ---|----------------------------------------------------------------------------|---
 [hello_serial](hello_world/serial) | The obligatory Hello World program for Pico (Output over serial version)   |
 [hello_usb](hello_world/usb) | The obligatory Hello World program for Pico (Output over USB version)      | https://rptl.io/pico-hello-usb
-[blink](blink) | Blink an LED on and off. Works on both boards with regular LEDs and Pico W | https://rptl.io/pico-blink
-[blink_simple](blink_simple) | Blink an LED on and off. Does not work on Pico W.                          | https://rptl.io/pico-blink
-[picow_blink](pico_w/wifi/blink) | Blinks the Pico W on-board LED (which is connected via the WiFi chip).     | http://rptl.io/pico-w-blink
+[blink](blink) | Blink a LED on and off. Works on both boards with regular LEDs and boards like Pico W where the led is connected via the Wi-Fi chip | https://rptl.io/pico-blink
+[blink_simple](blink_simple) | Blink a LED on and off. Does not work on boards like Pico W where the led is connected via the Wi-Fi chip. | https://rptl.io/pico-blink
+[picow_blink](pico_w/wifi/blink) | Blinks the on-board LED on boards like Pico W where the led is connected via the Wi-Fi chip. | http://rptl.io/pico-w-blink
 
 ### ADC
 
@@ -34,6 +34,13 @@ App|Description
 [microphone_adc](adc/microphone_adc) | Read analog values from a microphone and plot the measured sound amplitude.
 [dma_capture](adc/dma_capture) | Use the DMA to capture many samples from the ADC.
 [read_vsys](adc/read_vsys) | Demonstrates how to read VSYS to get the voltage of the power supply.
+
+### Binary Info
+
+App|Description
+---|---
+[blink_any](binary_info/blink_any) | Uses `bi_ptr` variables to create a configurable blink binary - see the separate [README](binary_info/README.md) for more details
+[hello_anything](binary_info/hello_anything) | Uses `bi_ptr` variables to create a configurable hello_world binary - see the separate [README](binary_info/README.md) for more details
 
 ### Bootloaders (RP235x Only)
 App|Description
@@ -128,6 +135,7 @@ App|Description
 [pcf8523_i2c](i2c/pcf8523_i2c) | Read time and date values from a real time clock. Set current time and alarms on it.
 [ht16k33_i2c](i2c/ht16k33_i2c) | Drive a 4 digit 14 segment LED with an HT16K33.
 [slave_mem_i2c](i2c/slave_mem_i2c) | i2c slave example where the slave implements a 256 byte memory
+[slave_mem_i2c_burst](i2c/slave_mem_i2c) | i2c slave example where the slave implements a 256 byte memory. This version inefficiently writes each byte in a separate call to demonstrate read and write burst mode.
 
 ### Interpolator
 
@@ -157,15 +165,16 @@ App|Description
 [blinky](picoboard/blinky) | Blink "hello, world" in Morse code on Pico's LED
 [button](picoboard/button) | Use Pico's BOOTSEL button as a regular button input, by temporarily suspending flash access.
 
-### Pico W Networking
+### Pico Networking
 
-These examples are for the Pico W, and are only available for `PICO_BOARD=pico_w`
+These networking examples are only available if Wi-Fi is supported by the board.
 
 App|Description
 ---|---
 [picow_access_point](pico_w/wifi/access_point) | Starts a WiFi access point, and fields DHCP requests.
 [picow_blink](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip).
-[picow_blink_slow_clock](pico_w/wifi/blink_slow_clock) | Blinks the on-board LED (which is connected via the WiFi chip) with a slower system clock to show how to reconfigure communication with the WiFi chip under those circumstances
+[picow_blink_slow_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a slower system clock to show how to reconfigure communication with the WiFi chip at run time under those circumstances
+[picow_blink_fast_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a faster system clock to show how to reconfigure communication with the WiFi chip at build time under those circumstances
 [picow_iperf_server](pico_w/wifi/iperf) | Runs an "iperf" server for WiFi speed testing.
 [picow_ntp_client](pico_w/wifi/ntp_client) | Connects to an NTP server to fetch and display the current time.
 [picow_tcp_client](pico_w/wifi/tcp_client) | A simple TCP client. You can run [python_test_tcp_server.py](pico_w/wifi/python_test_tcp/python_test_tcp_server.py) for it to connect to.
@@ -175,10 +184,12 @@ App|Description
 [picow_wifi_scan](pico_w/wifi/wifi_scan) | Scans for WiFi networks and prints the results.
 [picow_udp_beacon](pico_w/wifi/udp_beacon) | A simple UDP transmitter.
 [picow_httpd](pico_w/wifi/httpd) | Runs a LWIP HTTP server test app
+[picow_http_client](pico_w/wifi/http_client) | Demonstrates how to make http and https requests
+[picow_http_client_verify](pico_w/wifi/http_client) | Demonstrates how to make a https request with server authentication
 
 #### FreeRTOS examples
 
-These are examples of integrating Pico W networking under FreeRTOS, and require you to set the `FREERTOS_KERNEL_PATH`
+These are examples of integrating Wi-Fi networking under FreeRTOS, and require you to set the `FREERTOS_KERNEL_PATH`
 to point to the FreeRTOS Kernel. See https://github.com/FreeRTOS/FreeRTOS-Kernel
 
 App|Description
@@ -190,10 +201,11 @@ App|Description
 [picow_freertos_ntp_client_socket](pico_w/wifi/freertos/ntp_client_socket) | Connects to an NTP server using the LwIP Socket API with FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode.
 [pico_freertos_httpd_nosys](pico_w/wifi/freertos/httpd) | Runs a LWIP HTTP server test app under FreeRTOS in NO_SYS=1 mode.
 [pico_freertos_httpd_sys](pico_w/wifi/freertos/httpd) | Runs a LWIP HTTP server test app under FreeRTOS in NO_SYS=0 (i.e. full FreeRTOS integration) mode.
+[picow_freertos_http_client_sys](pico_w/wifi/freertos/http_client) | Demonstrates how to make a https request in NO_SYS=0 (i.e. full FreeRTOS integration)
 
-### Pico W Bluetooth
+### Pico Bluetooth
 
-These examples are for the Pico W, and are only available for `PICO_BOARD=pico_w`.
+These Bluetooth examples are only available for boards that support Bluetooth.
 They are examples from the Blue Kitchen Bluetooth stack, see [here](https://bluekitchen-gmbh.com/btstack/#examples/examples/index.html) for a full description.
 
 By default, the Bluetooth examples are only built in one "mode" only (*background*, *poll*, or *freertos*), with the 
@@ -363,8 +375,9 @@ These require you to set `PICO_ARM_TOOLCHAIN_PATH` and `PICO_RISCV_TOOLCHAIN_PAT
 
 App|Description
 ---|---
+[blink](universal/CMakeLists.txt#L126) | Same as the [blink](blink) example, but universal.
 [hello_universal](universal/hello_universal) | The obligatory Hello World program for Pico (USB and serial output). On RP2350 it will reboot to the other architecture after every 10 prints.
-[nuke_universal](universal/CMakeLists.txt#L107) | Same as the [nuke](flash/nuke) binary, but universal. On RP2350 runs as a packaged SRAM binary, so is written to flash and copied to SRAM by the bootloader
+[nuke_universal](universal/CMakeLists.txt#L132) | Same as the [nuke](flash/nuke) example, but universal. On RP2350 runs as a packaged SRAM binary, so is written to flash and copied to SRAM by the bootloader
 
 ### USB Device
 

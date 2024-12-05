@@ -133,6 +133,8 @@ invalid:
 static inline void quadrature_encoder_substep_program_init(PIO pio, uint sm, uint pin_A)
 {
 	uint pin_state, position, ints;
+	pio_gpio_init(pio, pin_A);
+	pio_gpio_init(pio, pin_A + 1);
 
 	pio_sm_set_consecutive_pindirs(pio, sm, pin_A, 2, false);
 	gpio_pull_up(pin_A);

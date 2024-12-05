@@ -11,7 +11,7 @@
  * \brief Get power source
  *
  * Returns whether battery powered
- * \note On Pico W must have called cyw43_arch_init
+ * \note On boards that support Wi-Fi you must have called cyw43_arch_init first
  *
  * \param battery_powered True if powered by battery, False if powered by USB or another means
  * \return Zero if the battery status can be determined, an error code otherwise \see pico_error_codes

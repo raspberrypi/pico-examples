@@ -4,6 +4,17 @@ add_executable(enc_bootloader
         aes.S
         )
 
+# Add command to update otp.json if privateaes.bin changes
+add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/otp.json
+    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_LIST_DIR}/update-key.cmake"
+    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin)
+# Copy that otp.json file to build directory
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/otp.json
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/otp.json" "${CMAKE_CURRENT_BINARY_DIR}/otp.json"
+    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/otp.json)
+add_custom_target(otp_json DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
+add_dependencies(enc_bootloader otp_json)
+
 # pull in common dependencies
 target_link_libraries(enc_bootloader pico_stdlib pico_rand)
 
@@ -30,8 +41,8 @@ function(add_linker_script target origin length)
             -Doutput_file:FILEPATH=${CMAKE_CURRENT_BINARY_DIR}/${target}.ld
             -P "${CMAKE_CURRENT_BINARY_DIR}/make_linker_script.cmake"
         DEPENDS ${PICO_LINKER_SCRIPT_PATH}/memmap_no_flash.ld)
-    add_custom_target(${target}.ld DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${target}.ld)
-    add_dependencies(${target} ${target}.ld)
+    add_custom_target(${target}_ld DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${target}.ld)
+    add_dependencies(${target} ${target}_ld)
     pico_set_linker_script(${target} ${CMAKE_CURRENT_BINARY_DIR}/${target}.ld)
 endfunction()
 
@@ -39,7 +50,6 @@ endfunction()
 add_linker_script(enc_bootloader "0x20070000" "64k")
 
 # configure otp output
-configure_file(${CMAKE_CURRENT_LIST_DIR}/otp.json ${CMAKE_CURRENT_BINARY_DIR}/otp.json COPYONLY)
 pico_set_otp_key_output_file(enc_bootloader ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
 
 # sign, hash, and clear SRAM
@@ -64,7 +74,7 @@ example_auto_set_url(enc_bootloader)
 
 # Example binary to load
 add_executable(hello_serial_enc
-        ../../hello_world/serial/hello_serial.c
+        hello_serial.c
         )
 
 # pull in common dependencies

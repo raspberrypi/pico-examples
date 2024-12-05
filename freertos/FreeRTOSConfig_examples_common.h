@@ -102,7 +102,7 @@
 #define configMAX_API_CALL_INTERRUPT_PRIORITY   [dependent on processor and application]
 */
 
-#if FREE_RTOS_KERNEL_SMP // set by the RP2040 SMP port of FreeRTOS
+#if FREE_RTOS_KERNEL_SMP // set by the RP2xxx SMP port of FreeRTOS
 /* SMP port only */
 #ifndef configNUMBER_OF_CORES
 #define configNUMBER_OF_CORES                   2
