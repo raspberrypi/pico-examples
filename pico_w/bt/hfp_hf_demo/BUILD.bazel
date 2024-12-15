@@ -1,0 +1,8 @@
+load("//pico_w/bt:picow_bt_example.bzl", "picow_bt_example")
+# TODO: Needs sco_demo_util.gatt.
+# picow_bt_example(
+#     extra_defines = [
+#         "PICO_AUDIO_I2S_DATA_PIN=9",
+#         "PICO_AUDIO_I2S_CLOCK_PIN_BASE=10",
+#     ],
+# )

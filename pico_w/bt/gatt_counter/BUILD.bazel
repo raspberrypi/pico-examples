@@ -1,0 +1,6 @@
+load("//pico_w/bt:picow_bt_example.bzl", "picow_bt_example")
+
+# Needs battery_service.gatt.
+# picow_bt_example(
+#     has_gatt_header = True,
+# )

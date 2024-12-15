@@ -1,0 +1,32 @@
+load("@pico-sdk//bazel/util:sdk_define.bzl", "pico_sdk_define")
+load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+
+package(default_visibility = [":__subpackages__"])
+
+pico_sdk_define(
+    name = "WIFI_PASSWORD_DEFINE",
+    define_name = "WIFI_PASSWORD",
+    from_flag = ":WIFI_PASSWORD",
+)
+
+pico_sdk_define(
+    name = "WIFI_SSID_DEFINE",
+    define_name = "WIFI_SSID",
+    from_flag = ":WIFI_SSID",
+)
+
+string_flag(
+    name = "WIFI_SSID",
+    build_setting_default = "",
+)
+
+string_flag(
+    name = "WIFI_PASSWORD",
+    build_setting_default = "",
+)
+
+cc_library(
+    name = "lwipopts_examples_common",
+    hdrs = ["lwipopts_examples_common.h"],
+    includes = ["."],
+)
