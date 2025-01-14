@@ -180,7 +180,19 @@ int main() {
     init_lut_map();
     // Read key directly from OTP - guarded reads will throw a bus fault if there are any errors
     uint16_t* otp_data = (uint16_t*)OTP_DATA_GUARDED_BASE;
-    init_key(rkey_s, (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS & 0x780)]));
+
+    // Temporary de-sharing - REMOVE THIS AND MODIFY ASM INSTEAD
+    uint8_t* shared_key_a = (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS & 0x780)]);
+    uint8_t* shared_key_b = (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS & 0x790)]);
+    uint8_t* shared_key_c = (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS & 0x7A0)]);
+    uint8_t* shared_key_d = (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS & 0x7B0)]);
+    uint8_t deshared_key[32];
+    for (int i=0; i < sizeof(deshared_key); i++) {
+        deshared_key[i] = shared_key_a[i] ^ shared_key_b[i] ^ shared_key_c[i] ^ shared_key_d[i];
+    }
+    init_key(rkey_s, deshared_key);
+
+    // init_key(rkey_s, (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS & 0x780)]));
     otp_hw->sw_lock[30] = 0xf;
     flush_reg();
     ctr_crypt_s(iv, (void*)SRAM_BASE, data_size/16);
