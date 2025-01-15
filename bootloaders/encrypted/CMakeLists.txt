@@ -46,8 +46,8 @@ function(add_linker_script target origin length)
     pico_set_linker_script(${target} ${CMAKE_CURRENT_BINARY_DIR}/${target}.ld)
 endfunction()
 
-# create linker script to run from 0x20070000
-add_linker_script(enc_bootloader "0x20070000" "64k")
+# create linker script to run from 0x20078000
+add_linker_script(enc_bootloader "0x20078000" "32k")
 
 # configure otp output
 pico_set_otp_key_output_file(enc_bootloader ${CMAKE_CURRENT_BINARY_DIR}/otp.json)

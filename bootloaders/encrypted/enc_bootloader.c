@@ -20,7 +20,7 @@ extern void flush_reg();
 volatile uint32_t systick_data[18]; // count, R0-R15,RETPSR
 
 extern void remap();
-extern uint32_t gen_rand();
+extern uint32_t gen_rand_sha();
 extern void init_key(uint8_t *rk_s, uint8_t *key);
 extern void gen_lut_inverse();
 extern void gen_lut_sbox();
@@ -30,15 +30,15 @@ extern int  ctr_crypt_s(uint8_t*iv,uint8_t*buf,int nblk);
 extern uint8_t rkey_s[480];
 extern uint8_t lut_a[256];
 extern uint8_t lut_b[256];
-extern uint32_t lut_a_map;
-extern uint32_t lut_b_map;
-extern uint32_t rstate[4];
+extern uint32_t lut_a_map[1];
+extern uint32_t lut_b_map[1];
+extern uint32_t rstate_sha[4],rstate_lfsr[2];
 
 static void init_lut_map() {
     int i;
-    for(i=0;i<256;i++) lut_b[i]=gen_rand()&0xff, lut_a[i]^=lut_b[i];
-    lut_a_map=0;
-    lut_b_map=0;
+    for(i=0;i<256;i++) lut_b[i]=gen_rand_sha()&0xff, lut_a[i]^=lut_b[i];
+    lut_a_map[0]=0;
+    lut_b_map[0]=0;
     remap();
 }
 
@@ -47,21 +47,14 @@ static __attribute__((aligned(4))) uint8_t workarea[4 * 1024];
 int main() {
     stdio_init_all();
 
-    #if RANDOMIZE
-        get_rand_128((rng_128_t*)rstate);   // fill rstate with 128 bits of random data
-    #else
-        rstate[0]=1223352428;
-        rstate[1]=1223352428;
-        rstate[2]=0x41414141;
-        rstate[3]=0x41414141;
-    #endif
+    get_rand_128((rng_128_t*)rstate_sha);   // fill rstate with 128 bits of random data
 
     // reset the RNG
     reset_block(RESETS_RESET_SHA256_BITS);
     unreset_block(RESETS_RESET_SHA256_BITS);
-    rstate[0]&=0xffffff00;    // bottom byte must be zero
+    rstate_sha[0]&=0xffffff00;    // bottom byte must be zero
 
-    printf("Rstate at address %x\n", rstate);
+    printf("Rstate at address %x\n", rstate_sha);
 
     printf("Entered bootloader code\n");
     int rc;
@@ -74,15 +67,13 @@ int main() {
     boot_info_t info;
     printf("Getting boot info\n");
     rc = rom_get_boot_info(&info);
-    uint32_t flash_update_base = 0;
     printf("Boot Type %x\n", info.boot_type);
 
     if (info.boot_type == BOOT_TYPE_FLASH_UPDATE) {
-        flash_update_base = info.reboot_params[0];
-        printf("Flash Update Base %x\n", flash_update_base);
+        printf("Flash Update Base %x\n", info.reboot_params[0]);
     }
 
-    rc = rom_pick_ab_partition(workarea, sizeof(workarea), 0, flash_update_base);
+    rc = rom_pick_ab_update_partition(workarea, sizeof(workarea), 0);
     if (rc < 0) {
         printf("Partition Table A/B choice failed %d - resetting\n", rc);
         reset_usb_boot(0, 0);
@@ -181,13 +172,15 @@ int main() {
     for (int i=0; i < 4; i++)
         printf("%08x\n", *(uint32_t*)(SRAM_BASE + i*4));
 
-    flush_reg();
-    #if !SBOX_VIA_INV
-        gen_lut_sbox();
-    #else
+    // flush_reg();
+    #if SBOX_VIA_INV
         gen_lut_inverse();
+    #else
+        gen_lut_sbox();
     #endif
+    printf("Gen lut done\n");
     init_lut_map();
+    printf("Init lut done\n");
     // Read key directly from OTP - guarded reads will throw a bus fault if there are any errors
     uint16_t* otp_data = (uint16_t*)OTP_DATA_GUARDED_BASE;
 
@@ -200,13 +193,15 @@ int main() {
     for (int i=0; i < sizeof(deshared_key); i++) {
         deshared_key[i] = shared_key_a[i] ^ shared_key_b[i] ^ shared_key_c[i] ^ shared_key_d[i];
     }
+    printf("OTP Read done\n");
     init_key(rkey_s, deshared_key);
+    printf("Init key done\n");
 
     // init_key(rkey_s, (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS & 0x780)]));
     otp_hw->sw_lock[30] = 0xf;
-    flush_reg();
+    // flush_reg();
     ctr_crypt_s(iv, (void*)SRAM_BASE, data_size/16);
-    flush_reg();
+    // flush_reg();
 
     printf("Post decryption image begins with\n");
     for (int i=0; i < 4; i++)
