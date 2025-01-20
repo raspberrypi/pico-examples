@@ -1,68 +1,70 @@
 #pragma once
-////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-// These options should be enabled in production because the security risk of not using them is too high
+// These options should be enabled because the security risk of not using them is too high
 // or because the time cost is very low so you may as well have them.
-// (Can be set to 0 for analysis/diagnosis purposes.)
+// They can be set to 0 for analysis or testing purposes.
 
-#define GEN_RAND_SHA         1         // use SHA256 hardware to generate some random numbers (disable for Qemu testing)
+#ifndef GEN_RAND_SHA
+#define GEN_RAND_SHA         1         // use SHA256 hardware to generate some random numbers
+#endif
                                        // Some RNG calls are hard coded to LFSR RNG, others to SHA RNG
                                        // Setting GEN_RAND_SHA to 0 has the effect of redirecting the latter to LFSR RNG
+#ifndef ST_SHAREC
 #define ST_SHAREC            1         // This creates a partial extra share at almost no extra cost
-
-#define IK_JITTER            1         // jitter timing in init_key? Need to keep this at 0 for analysis purposes, but change to 1 in production
-#define ST_JITTER            1         // jitter timing in decryption? Need to keep this at 0 for analysis purposes, but change to 1 in production
+#endif
+#ifndef ST_VPERM
 #define ST_VPERM             1         // insert random vertical permutations in state during de/encryption?
+#endif
+#ifndef CT_BPERM
 #define CT_BPERM             1         // process blocks in a random order in counter mode?
+#endif
+#ifndef RK_ROR
+#define RK_ROR               1         // store round key shares with random rotations within each word
+#endif
 
-#define RANDOMIZE            3         // 0 means RNG reset to the same thing on every call to *crypt_s; 3 means fully random
-                                       // Currently overridden at runtime by analysis code
+// The following options should be enabled to increase resistance to glitching attacks.
+
+#ifndef RC_CANARY
+#define RC_CANARY            1         // use rcp_canary feature
+#endif
+#ifndef RC_COUNT
+#define RC_COUNT             1         // use rcp_count feature
+#endif
+
+// Although enabling the following option likely has little theoretical benefit, in
+// practice randomising the timing of operations can make side-channel attacks very
+// much more effort to carry out. It can be disabled for analysis or testing purposes.
+
+#ifndef RC_JITTER
+#define RC_JITTER            1         // use random-delay versions of RCP instructions
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 // The following options can be adjusted, affecting the performance/security tradeoff
 
 // Period = X means that the operation in question occurs every X blocks, so higher = more performance and lower security.
-// No point in making them more than 16 or so, since the time taken by the subroutines would be negligible
+// No point in making them more than 16 or so, since the time taken by the subroutines would be negligible.
 // These must be a power of 2. Timings as of commit 24277d13
 //                                                                            RK_ROR=0    RK_ROR=1
 //                                        Baseline time per 16-byte block = {    14066       14336 }                          cycles
+#ifndef REFCHAFF_PERIOD
 #define REFCHAFF_PERIOD             1     // Extra cost per 16-byte block = {      462         462 }/REFCHAFF_PERIOD          cycles
+#endif
+#ifndef REMAP_PERIOD
 #define REMAP_PERIOD                4     // Extra cost per 16-byte block = {     4131        4131 }/REMAP_PERIOD             cycles
+#endif
+#ifndef REFROUNDKEYSHARES_PERIOD
 #define REFROUNDKEYSHARES_PERIOD    1     // Extra cost per 16-byte block = {     1107        1212 }/REFROUNDKEYSHARES_PERIOD cycles
+#endif
+#ifndef REFROUNDKEYHVPERMS_PERIOD
 #define REFROUNDKEYHVPERMS_PERIOD   1     // Extra cost per 16-byte block = {      936        1422 }/REFROUnDKEYVPERM_PERIOD  cycles
-
-// Setting this to X means that state vperm refreshing happens on the first X AES rounds only,
-// so lower = more performance and lower security.
-// The rationale for doing it this way is that later rounds should be protected by CT_BPERM
-// This can be from 0 to 14
-#define NUMREFSTATEVPERM            7     // Extra cost per 16-byte block =  80*NUMREFSTATEVPERM cycles
-
-#define RK_ROR                      1
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// Changing these options is not currently supported
-
-#define DEBUG                0         // for use in debugging with serial output (timing not repeatable)
-#define CHIPW                0         // change clock to 48MHz for use with CW hardware
-#define INCLUDE_ENCRYPT_CBC  0         // include code to perform encryption in CBC mode?
-#define INCLUDE_DECRYPT_CBC  0         // include code to perform decryption in CBC mode?
-#define INCLUDE_CRYPT_CTR    1         // include code to perform de/encryption in CTR mode?
-#define ROUND_TRIP_TEST      0         // do the glitch detection test in CBC mode where we re-encrypt each block and compare against original ciphertext?
-#define SBOX_VIA_INV         0         // compute (inverse) S-box values via a table of field inverses rather than via a direct table?
-#if ROUND_TRIP_TEST && !SBOX_VIA_INV
-#error Sorry, if you want to do the round-trip test then SBOX_VIA_INV must also be set
 #endif
 
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// derived values
-#define NEED_ROUNDS          (INCLUDE_ENCRYPT_CBC || (INCLUDE_DECRYPT_CBC && ROUND_TRIP_TEST) || INCLUDE_CRYPT_CTR)
-#define NEED_INV_ROUNDS      (INCLUDE_DECRYPT_CBC)
-#define NEED_VPERM           (ST_VPERM)
+// Setting NUMREFSTATEVPERM to X means that state vperm refreshing happens on the first X AES rounds only,
+// so lower = more performance and lower security.
+// The rationale for doing it this way is that later rounds should be protected by CT_BPERM.
+// NUMREFSTATEVPERM can be from 0 to 14.
+#ifndef NUMREFSTATEVPERM
+#define NUMREFSTATEVPERM            7     // Extra cost per 16-byte block =  80*NUMREFSTATEVPERM cycles
+#endif

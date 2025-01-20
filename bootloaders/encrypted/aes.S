@@ -2,35 +2,16 @@
 .cpu cortex-m33
 .thumb
 
+#include "config.h"
 #include "hardware/platform_defs.h"
 #include "hardware/regs/addressmap.h"
 #include "hardware/regs/sha256.h"
+#include "hardware/rcp.h"
 
-#include "config.h"
-
-.global delay
-.global isr_systick
-.extern systick_data
-
-.global gen_lut_inverse
 .global gen_lut_sbox
-.if NEED_INV_ROUNDS
-.global gen_lut_inv_sbox
-.endif
-
-.if INCLUDE_ENCRYPT_CBC
-.global cbc_encrypt_s
-.endif
-.if INCLUDE_DECRYPT_CBC
-.global cbc_decrypt_s
-.endif
-.if INCLUDE_CRYPT_CTR
 .global ctr_crypt_s
-.endif
-
 .global remap
 .global gen_rand_sha
-.global gen_irand
 .global init_key
 
 .global rkey_s
@@ -38,27 +19,116 @@
 .global lut_b,lut_b_map
 .global rstate_sha,rstate_lfsr
 
-.if CT_BPERM
-@ Use .data section here because everything is initialised to zero in a .bss section
-.section .data.aes
-.balign 16
-murmur3_constants:           @ Five constants used in murmur3_32 hash
-.word 0xcc9e2d51
-.word 0x1b873593
-.word 0xe6546b64
-.word 0x85ebca6b
-.word 0xc2b2ae35
+@ RCP macros
+
+#define CTAG0  0x2a
+#define CTAG1  0x2b
+#define CTAG2  0x2c
+#define CTAG3  0x2d @ not used
+#define CTAG4  0x2e
+#define CTAG5  0x30
+#define CTAG6  0x31
+#define CTAG7  0x32
+#define CTAG8  0x33
+#define CTAG9  0x34
+#define CTAG10 0x35 @ not used
+#define CTAG11 0x36
+#define CTAG12 0x37
+#define CTAG13 0x38
+#define CTAG14 0x39
+#define CTAG15 0x3a
+#define CTAG16 0x3b
+#define CTAG17 0x3c
+#define CTAG18 0x3d @ not used
+
+.macro SET_COUNT n
+.if RC_COUNT
+.if RC_JITTER
+ rcp_count_set \n
+.else
+ rcp_count_set_nodelay \n
 .endif
+.endif
+.endm
 
-@ Put workspace in the second scratch area (was .section .bss.aes)
-.section .scratch_y.aes
+.macro CHK_COUNT n
+.if RC_COUNT
+.if RC_JITTER
+ rcp_count_check \n
+.else
+ rcp_count_check_nodelay \n
+.endif
+.endif
+.endm
 
-@ Regardless of configuration, the code uses a single 256-entry LUT. If both
-@ encryption and decryption are enabled then this is a table of inverses
-@ of GF(2⁸) field elements, from which both the S-box and inverse S-box
-@ functions can be derived; otherwise it can be a simple inverse S-box
-@ table.
-@ In either case the LUT is represented as two shares, lut_a and lut_b,
+.macro GET_CANARY rx,tag
+.if RC_CANARY
+.if RC_JITTER
+ rcp_canary_get \rx,\tag
+.else
+ rcp_canary_get_nodelay \rx,\tag
+.endif
+.endif
+.endm
+
+.macro CHK_CANARY rx,tag
+.if RC_CANARY
+.if RC_JITTER
+ rcp_canary_check \rx,\tag
+.else
+ rcp_canary_check_nodelay \rx,\tag
+.endif
+.endif
+.endm
+
+.macro GET_CANARY_NJ rx,tag  @ with no jitter even if you ask for it (for situations where it would otherwise slow things down a lot)
+.if RC_CANARY
+ rcp_canary_get_nodelay \rx,\tag
+.endif
+.endm
+
+.macro CHK_CANARY_NJ rx,tag  @ with no jitter even if you ask for it
+.if RC_CANARY
+ rcp_canary_check_nodelay \rx,\tag
+.endif
+.endm
+
+.macro clear03 offset=0
+ getchaffaddress r0,\offset
+ ldmia r0,{r0-r3}
+.endm
+
+.macro clear03_preserve_r3 offset=0
+ getchaffaddress r0,\offset
+ ldmia r0!,{r1-r2}
+ ldmia r0!,{r1-r2}
+.endm
+
+.macro clear01 offset=0
+ getchaffaddress r0,\offset
+ ldmia r0,{r0,r1}
+.endm
+
+@ Put workspace in the second scratch area
+@ The "a"=allocatable attribute (and possibly the %progbits attribute) are necessary to store the murmur3 constants,
+@ otherwise they may end up silently replaced with 0 or 0xffffffff
+.section .scratch_y.aes,"a",%progbits
+
+@ chaff has to be at the start of scratch_y = 0x20081000 because this is assumed by the following macro, getchaffaddress
+@ (It seems ADR does not work, nor is it possible to assert that chaff==0x20081000)
+@ getchaffaddress is used by clear03 and clear01 and other sensitive cases which require the first load to be a random one
+@ chaff has to be 0 mod 16 for other reasons
+.macro getchaffaddress rx,offset=0
+@ ldr \rx,=(chaff+\offset)
+ mov \rx,#(0x1000+\offset)
+ movt \rx,#0x2008
+.endm
+chaff:
+.space 48
+
+@ Regardless of configuration, the code uses a single 256-entry LUT,
+@ which is a simple S-box table.
+@ The LUT is represented as two shares, lut_a and lut_b,
 @ whose values must be EORed. Furthermore, the contents of each share are
 @ scambled according to a 4-byte "map". The map comprises two bytes that
 @ are EORed into the addressing of the share, and two bytes that are
@@ -111,33 +181,25 @@ shareC:                      @ 8 mod 16
 .space 4
 statevperm:                  @ 12 mod 16
 .space 4                     @ vperm state rotation: only last two bits are operational; other bits random
-.balign 16
-chaff:                       @ Must be 0 mod 16;    This will be filled with random numbers to do barrier loads
-.space 48
+RKshareC:
+.space 4
 .balign 16
 
-@ Put main code in first scratch area (was .section .text.aes,"ax",%progbits)
+.if CT_BPERM
+.balign 16
+murmur3_constants:           @ Five constants used in murmur3_32 hash
+.word 0xcc9e2d51
+.word 0x1b873593
+.word 0xe6546b64
+.word 0x85ebca6b
+.word 0xc2b2ae35
+.endif
+
+@ Put main code in first scratch area
 .section .scratch_x.aes,"ax",%progbits
 
-.macro gpioput pin,state,reg1,reg2
- mov \reg1,#0xd0000000
- mov \reg2,#(1<<\pin)
- str \reg2,[\reg1,#32-8*\state]
-.endm
-
-.macro clear03 offset=0
- ldr r0,=(chaff+\offset)
- ldmia r0,{r0-r3}
-.endm
-
-.macro clear01 offset=0
- ldr r0,=(chaff+\offset)
- ldmia r0,{r0,r1}
- rev r0,r0
-.endm
-
 .if GEN_RAND_SHA
-@ random numbers using SHA256 hardware
+@ we need SHA256_SUM0_OFFSET==8 (see note below)
 .if SHA256_SUM0_OFFSET!=8
 .err
 .endif
@@ -146,9 +208,13 @@ chaff:                       @ Must be 0 mod 16;    This will be filled with ran
 @ Preserves r1-r13
 .balign 4
 gen_rand_sha:
+ push {r14}
+ GET_CANARY_NJ r14,CTAG1
  push {r1-r3,r14}
  bl gen_rand_sha_nonpres
- pop {r1-r3,r15}
+ pop {r1-r3,r14}
+ CHK_CANARY_NJ r14,CTAG1
+ pop {r15}
 
 @ Return single random word in r0
 @ Trashes r1-r3
@@ -205,11 +271,15 @@ gen_rand_sha_nonpres:
 .thumb_func
 .if !GEN_RAND_SHA
 gen_rand_sha:
-.endif
-gen_rand_lfsr:
+gen_rand_lfsr:               @ Not used
+ push {r14}
+ GET_CANARY_NJ r14,CTAG2
  push {r1,r2,r14}
  bl gen_rand_lfsr_nonpres
- pop {r1,r2,r15}
+ pop {r1,r2,r14}
+ CHK_CANARY_NJ r14,CTAG2
+ pop {r15}
+.endif
 
 @ Trashes r1,r2
 @ 12 cycles including branch = 12 cycles/word
@@ -219,103 +289,93 @@ gen_rand_sha_nonpres:
 .endif
 gen_rand_lfsr_nonpres:
  ldr r2,=rstate_lfsr
- ldr r0,[r2]
- ldr r1,=0x1d872b41         @ constant for a maximum-length sequence
+ ldmia r2,{r0-r1}           @ r0=state_in, r1=0x1d872b41=constant for a maximum-length sequence
  and r1,r1,r0,asr#31        @ will we be shifting out a 1? keep the constant, otherwise 0
  eor r0,r1,r0,lsl#1
  str r0,[r2]
  bx r14
 
-@ Return two random words in r0,r1
-@ Trashes r2,r3
-@ 16 cycles including branch = 8 cycles/word
-.balign 4
-gen_rand_lfsr2:
+.macro loadlfsr
  ldr r2,=rstate_lfsr
- ldmia r2,{r1,r3}                           @ r1=state_in, r3=0x1d872b41 = constant for a maximum-length sequence
- and r0,r3,r1,asr#31; eor r0,r0,r1,lsl#1    @ Get new state r0
- and r1,r3,r0,asr#31; eor r1,r1,r0,lsl#1    @ Get new state r1
- str r1,[r2]
- bx r14
+ ldmia r2,{r0-r1}           @ r0=lfsr_state, r1=lfsr_const=0x1d872b41 for a maximum-length sequence
+.endm
 
-@ Return four random words in r0-r3
-@ 27 cycles including branch = 6.75 cycles/word
-.balign 4
-gen_rand_lfsr4:
- push {r14}
- ldr r14,=rstate_lfsr
- ldmia r14,{r3,r14}                         @ r3=state_in, r14=0x1d872b41 = constant for a maximum-length sequence
- and r0,r14,r3,asr#31; eor r0,r0,r3,lsl#1   @ Get new state r0
- and r1,r14,r0,asr#31; eor r1,r1,r0,lsl#1   @ Get new state r1
- and r2,r14,r1,asr#31; eor r2,r2,r1,lsl#1   @ Get new state r2
- and r3,r14,r2,asr#31; eor r3,r3,r2,lsl#1   @ Get new state r3
- ldr r14,=rstate_lfsr
- str r3,[r14]
- pop {r15}
+.macro steplfsr
+ ands r3,r1,r0,asr#31       @ will we be shifting out a 1? keep the constant, otherwise 0
+ eors r0,r3,r0,lsl#1
+.endm
+
+.macro savelfsr
+ str r0,[r2]
+.endm
 
 .ltorg
 
 .balign 4
 .thumb_func
 makesmallperm:
- @ Make a uniformly random permutation of R0 bytes and stores the resulting byte array at R1
- @ Should be very uniform up to R0=10; maybe 11 or 12 are also OK. (10! << 2^32)
- @ To make it valid up to R0=256, move the bl gen_rand_sha inside the loop
- @ Uses inside-out method (slightly more efficient variant of Fisher-Yates)
- @ Trashes r0-r3
+@ Make a uniformly random permutation of R0 bytes and stores the resulting byte array at R1
+@ Should be very uniform up to R0=10; maybe 11 or 12 are also OK. (10! << 2^32)
+@ To make it valid up to R0=256, move the bl gen_rand_sha inside the loop
+@ Uses inside-out method (slightly more efficient variant of Fisher-Yates)
+@ Trashes r0-r3
 
+ push {r14}
+ GET_CANARY_NJ r14,CTAG4
  push {r4-r6,r14}
  movs r4,r1
  movs r6,r0
  movs r1,#0
  movs r2,#1
  bl gen_rand_sha
- 
 
 1:
- @ r1,r2=i,i+1,   i=0, 2, 4, ...
+@ r1,r2=i,i+1,   i=0, 2, 4, ...
  cmp r1,r6
  beq 2f
- 
+
  umull r0,r3,r0,r2
  ldrb r5,[r4,r3]
  strb r5,[r4,r1]
  strb r1,[r4,r3]
  adds r1,r1,#2
 
- @ r2,r1=i,i+1,   i=1, 3, 5, ...
+@ r2,r1=i,i+1,   i=1, 3, 5, ...
  cmp r2,r6
  beq 2f
- 
+
  umull r0,r3,r0,r1
  ldrb r5,[r4,r3]
  strb r5,[r4,r2]
  strb r2,[r4,r3]
  adds r2,r2,#2
- 
+
  b 1b
- 
+
 2:
- pop {r4-r6,r15}
+ pop {r4-r6,r14}
+ CHK_CANARY_NJ r14,CTAG4
+ pop {r15}
 
 .balign 4
 .thumb_func
 makeperm16:
- @ Make a random permutation of 16 things using the inside-out method (slightly more efficient variant of Fisher-Yates)
- @ Store it in the 16 bytes at perm16
- @ More efficient than calling makeperm with R0=16, R1=perm16 - fewer calls to gen_rand_sha
- @ Trashes r0-r5
+@ Make a random permutation of 16 things using the inside-out method (slightly more efficient variant of Fisher-Yates)
+@ Store it in the 16 bytes at perm16
+@ More efficient than calling makeperm with R0=16, R1=perm16 - fewer calls to gen_rand_sha
+@ Trashes r0-r5
 
- push {r14}
+ GET_CANARY r0,CTAG5
+ push {r0,r14}
  ldr r4,=perm16
  bl gen_rand_sha_nonpres
- 
- @ i=0
+
+@ i=0
  movs r1,#0
  movs r2,#1       @ r1,r2=i,i+1
  strb r1,[r4]
- 
- @ i=1
+
+@ i=1
  adds r1,r1,#2    @ r1,r2=i+1,i
  umull r0,r3,r0,r1
  ldrb r5,[r4,r3]
@@ -323,14 +383,14 @@ makeperm16:
  strb r2,[r4,r3]
 
 1:
- @ i=2, 4, 6, 8
+@ i=2, 4, 6, 8
  adds r2,r2,#2    @ r1,r2=i,i+1
  umull r0,r3,r0,r2
  ldrb r5,[r4,r3]
  strb r5,[r4,r1]
  strb r1,[r4,r3]
 
- @ i=3, 5, 7, 9
+@ i=3, 5, 7, 9
  adds r1,r1,#2    @ r1,r2=i+1,i
  umull r0,r3,r0,r1
  ldrb r5,[r4,r3]
@@ -339,19 +399,19 @@ makeperm16:
  strb r2,[r4,r3]
  bne 1b
 
- @ refresh random number after extracting 10! from it
- @ 10! and 16!/10! are both much less than 2^32, so the permutation will be extremely close to uniform
+@ refresh random number after extracting 10! from it
+@ 10! and 16!/10! are both much less than 2^32, so the permutation will be extremely close to uniform
  bl gen_rand_sha
 
 1:
- @ i=10, 12, 14
+@ i=10, 12, 14
  adds r2,r2,#2    @ r1,r2=i,i+1
  umull r0,r3,r0,r2
  ldrb r5,[r4,r3]
  strb r5,[r4,r1]
  strb r1,[r4,r3]
 
- @ i=11, 13, 15
+@ i=11, 13, 15
  adds r1,r1,#2    @ r1,r2=i+1,i
  umull r0,r3,r0,r1
  ldrb r5,[r4,r3]
@@ -360,59 +420,34 @@ makeperm16:
  strb r2,[r4,r3]
  bne 1b
 
- @ Finished making permutation
- pop {r15}
- 
-.balign 4
-.thumb_func
-gen_lut_inverse:
-@ set lut_a to be a table of GF(2⁸) inverses, using lut_b as temporary storage
-@ return r0=lut_a, r1=lut_b
- ldr r0,=lut_a
- ldr r1,=lut_b
-@ first set lut_a to be a table of antilogarithms, lut_b a table of logarithms
- mov r2,#0
- strb r2,[r0]                @ (*)
- mov r3,#1                   @ we maintain invariant that r2=log(r3)
-1:
- strb r2,[r0,r3]             @ log table
- strb r3,[r1,r2]             @ antilog table
- lsls r12,r3,#25
- it cs
- eorcs r12,r12,#0x1b000000   @ multiply by x
- eor r3,r3,r12,lsr#24        @ multiply by x+1 ("3"), which is a primitive element
- add r2,r2,#1
- cmp r2,#255
- bls 1b
- movs r2,#255
-1:
- ldrb r3,[r0,r2]             @ for each i≠0, find log,...
- eor r3,r3,#255              @ ... negate...
- ldrb r3,[r1,r3]             @ ... and antilog to get inverse
- strb r3,[r0,r2]
- subs r2,r2,#1
- bne 1b                      @ note that inverse(0)=0 by (*) above
+ pop {r0,r14}
+ CHK_CANARY r0,CTAG5
  bx r14
 
 .balign 4
 .thumb_func
 remap:
 @ do a random remap of the LUTs
-@ preserves r0-r11
- push {r0-r11,r14}
+@ preserves r0-r11; trashes r12
+ GET_CANARY r12,CTAG6
+ push {r0-r12,r14}
  bl gen_rand_sha_nonpres
  ldr r1,=lut_a
  bl remap_1
  bl gen_rand_sha_nonpres
  ldr r1,=lut_b
  bl remap_1
- pop {r0-r11,r15}
+ pop {r0-r12,r14}
+ CHK_CANARY r12,CTAG6
+ bx r14
+
 
 remap_1:
 @ r0: B0:xa B1:xb B2:ya B3:yb
 @ r1: array of 256 bytes, followed by a 4-byte map
 @ shuffle LUT share array such that new[i]=old[i^xa^xb]^ya^yb, update map according to r0
- push {r14}
+ GET_CANARY_NJ r6,CTAG7
+ push {r6,r14}
  mov r14,0x01010101
  ubfx r6,r0,#16,#8
  ubfx r7,r0,#24,#8
@@ -455,12 +490,13 @@ remap_1:
  str r8,[r1,r3]
  subs r2,r2,#4
  bpl 1b
- pop {r15}
-
+ pop {r6,r14}
+ CHK_CANARY_NJ r6,CTAG7
+ bx r14
 
 .if RK_ROR
 
-@ "refresh" shares of rkeys by random eor into both shares of each word
+@ "refresh" shares of rkeys by random eor into both shares of each word, and also randomise the single word RKshareC
 @ Trashes r0-r12
 @ If i = word number 0..3,
 @ Aptr=memory word pointer to block of 20 bytes containing H&V-rotated share A roundkey (similarly B), then
@@ -472,42 +508,55 @@ remap_1:
 ref_roundkey_shares_s:
  mov r11,#15                 @ there are 15 expanded keys
 ref_roundkey_shares_s_test:  @ entry point for test code to do fewer than 15 rounds
- push {r14}
  ldr r4,=rkey_s
+ loadlfsr
+ steplfsr                    @ r0=change in RKshareC
+ adr r2,RKshareCchange
+ str r0,[r2]
+ ldr r3,=RKshareC
+ ldr r5,[r3]
+ eors r5,r5,r0
+ str r5,[r3]
+ @ r0=lfsr_state, r1=lfsr_const, r4=roundkey_ptr, r11=roundcounter
+
 ref_roundkey_shares_s_loop:
  ldmia r4!,{r5-r8,r10}       @ r5-r8 = rkey shareA, r10=X_A=vperm+rotations of rkey shareA
 
-@ ldr r0,=chaff
-@ and r1,r11,#7
-@ add r0,r0,r1,lsl#2
-@ ldmia r0,{r0-r3}
-
  ldr r12,[r4,#16]            @ r12 = X_B=vperm+rotations of rkey shareB
- mov r0,r12,lsr#30
- sub r9,r0,r10,lsr#30        @ r9 = vperm_B - vperm_A (|junk)
- mov r0,r9,lsl#3             @ r0 = 8*(vperm_B - vperm_A) mod 32
- mov r12,r12,ror r0
- usub8 r12,r10,r12           @ r12 = X_A - (X_B ror r0)
- bl gen_rand_lfsr4
- eors r5,r5,r0; ands r9,r9,#3; ldr r10,[r4,r9,lsl#2]; ror r0,r0,r12; eor r10,r10,r0,ror#16; mov r12,r12,ror#8; str r10,[r4,r9,lsl#2]; adds r9,r9,#1
- eors r6,r6,r1; ands r9,r9,#3; ldr r10,[r4,r9,lsl#2]; ror r1,r1,r12; eor r10,r10,r1,ror#16; mov r12,r12,ror#8; str r10,[r4,r9,lsl#2]; adds r9,r9,#1
- eors r7,r7,r2; ands r9,r9,#3; ldr r10,[r4,r9,lsl#2]; ror r2,r2,r12; eor r10,r10,r2,ror#16; mov r12,r12,ror#8; str r10,[r4,r9,lsl#2]; adds r9,r9,#1
- eors r8,r8,r3; ands r9,r9,#3; ldr r10,[r4,r9,lsl#2]; ror r3,r3,r12; eor r10,r10,r3,ror#16;                    str r10,[r4,r9,lsl#2]
+ mov r2,r12,lsr#30           @ r2 = vpermB
+ sub r9,r2,r10,lsr#30        @ r9 = vpermB - vpermA (|junk)
+ mov r2,r9,lsl#3             @ r2 = 8*(vpermB - vpermA) mod 32
+ mov r12,r12,ror r2
+ usub8 r12,r10,r12           @ r12 = rotsA - (rotsB ror r2)
+
+ @ r2,r3,r10=workspace, r0=lfsr_state, r1=lfsr_const, r4=roundkeyB_ptr, r5-r8=roundkeyA, r9=vpermdiff, r10=rotsA, r11=roundcounter, r12=rotdiff
+ steplfsr; eors r5,r5,r0; ands r9,r9,#3; ldr r3,[r4,r9,lsl#2]; ror r2,r0,r12; eors r3,r3,r2,ror#16; mov r12,r12,ror#8; str r3,[r4,r9,lsl#2]; adds r9,r9,#1
+ steplfsr; eors r6,r6,r0; ands r9,r9,#3; ldr r3,[r4,r9,lsl#2]; ror r2,r0,r12; eors r3,r3,r2,ror#16; mov r12,r12,ror#8; str r3,[r4,r9,lsl#2]; adds r9,r9,#1
+ steplfsr; eors r7,r7,r0; ands r9,r9,#3; ldr r3,[r4,r9,lsl#2]; ror r2,r0,r12; eors r3,r3,r2,ror#16; mov r12,r12,ror#8; str r3,[r4,r9,lsl#2]; adds r9,r9,#1
+ steplfsr; eors r8,r8,r0; ands r9,r9,#3; ldr r3,[r4,r9,lsl#2]; ror r2,r0,r12; eors r3,r3,r2,ror#16;                    str r3,[r4,r9,lsl#2]
+
+ ldr r3,RKshareCchange
+ movs r2,#0
+ usub8 r10,r2,r10
+ ror r2,r3,r10; mov r10,r10,ror#8; eors r5,r5,r2
+ ror r2,r3,r10; mov r10,r10,ror#8; eors r6,r6,r2
+ ror r2,r3,r10; mov r10,r10,ror#8; eors r7,r7,r2
+ ror r2,r3,r10;                    eors r8,r8,r2
+
  subs r4,r4,#20
  stmia r4,{r5-r8}
  adds r4,r4,#40
  subs r11,r11,#1
- 
-@ ldr r0,=chaff
-@ add r1,r11,#3
-@ and r1,r1,#7
-@ add r0,r0,r1,lsl#2
-@ ldmia r0,{r0-r3}
- 
+
  bne ref_roundkey_shares_s_loop
+ ldr r2,=rstate_lfsr         @ restore rstate_lfsr
+ savelfsr                    @ Save lfsr_state
  clear03 24
 ref_roundkey_shares_s_exit:
- pop {r15}
+ bx r14
+ .balign 4
+RKshareCchange:
+ .space 4
 
 .balign 4
 .thumb_func
@@ -521,7 +570,8 @@ ref_roundkey_shares_s_exit:
 ref_roundkey_hvperms_s:
  movs r7,#30
 ref_roundkey_hvperms_s_test:  @ entry point for test code to do fewer than 30 key shares
- push {r14}
+ GET_CANARY r10,CTAG9
+ push {r10,r14}
  ldr r10,=rkey_s
 ref_roundkey_hvperms_s_loop:
  bl gen_rand_lfsr_nonpres     @ r0=new vperm high|rotations
@@ -541,50 +591,58 @@ ref_roundkey_hvperms_s_loop:
  bne ref_roundkey_hvperms_s_loop
  clear03 28
 ref_roundkey_hvperms_s_exit:  @ label exit point to be to able to specify to analysis code
- pop {r15}
+ pop {r10,r14}
+ CHK_CANARY r10,CTAG9
+ bx r14
 
 .else
 
-@ "refresh" shares of rkeys by random eor into both shares of each word
+@ "refresh" shares of rkeys by random eor into both shares of each word, and also randomise the single word RKshareC
 @ Trashes r0-r11
 .balign 4
 .thumb_func
 ref_roundkey_shares_s:
  mov r11,#15                 @ there are 15 expanded keys
 ref_roundkey_shares_s_test:  @ entry point for test code to do fewer than 15 rounds
- push {r14}
+ GET_CANARY r4,CTAG8
+ push {r4,r14}
  ldr r4,=rkey_s
+ loadlfsr
+ steplfsr                    @ r0=change in RKshareC
+ ldr r3,=RKshareC
+ ldr r5,[r3]
+ eors r5,r5,r0
+ str r5,[r3]
+ mov r10,r0
 ref_roundkey_shares_s_loop:
  ldmia r4!,{r5-r9}           @ r5-r8 = rkey shareA with vperm r9
 
-@ ldr r0,=chaff
-@ and r1,r11,#7
-@ add r0,r0,r1,lsl#2
-@ ldmia r0,{r0-r3}
+ @ clear03: would need to do this with, say r2,r3,r12 (reloading r2 later)
 
- ldr r10,[r4,#16]            @ rkey shareB has a vperm of r10>>30
- mov r10,r10,lsr#30
- sub r9,r10,r9,lsr#30        @ r9 = vperm_B - vperm_A (|junk)
- bl gen_rand_lfsr4
- eors r5,r5,r0; ands r9,r9,#3; ldr r10,[r4,r9,lsl#2]; eor r10,r10,r0,ror#16; str r10,[r4,r9,lsl#2]; adds r9,r9,#1
- eors r6,r6,r1; ands r9,r9,#3; ldr r10,[r4,r9,lsl#2]; eor r10,r10,r1,ror#16; str r10,[r4,r9,lsl#2]; adds r9,r9,#1
- eors r7,r7,r2; ands r9,r9,#3; ldr r10,[r4,r9,lsl#2]; eor r10,r10,r2,ror#16; str r10,[r4,r9,lsl#2]; adds r9,r9,#1
- eors r8,r8,r3; ands r9,r9,#3; ldr r10,[r4,r9,lsl#2]; eor r10,r10,r3,ror#16; str r10,[r4,r9,lsl#2]
+ ldr r3,[r4,#16]             @ rkey shareB has a vperm of r10>>30
+ movs r3,r3,lsr#30
+ sub r9,r3,r9,lsr#30         @ r9 = vperm_B - vperm_A (|junk)
+ @ r3,r12=workspace, r0=lfsr_state, r1=lfsr_const, r2=rstate_lfsr, r4=roundkeyB_ptr, r5-r8=roundkeyA, r9=vpermdiff, r10=RKshareCchange, r11=roundcounter
+
+ steplfsr; eors r5,r5,r0; and r9,r9,#3; eors r5,r5,r10; ldr r3,[r4,r9,lsl#2]; eors r3,r3,r0,ror#16; str r3,[r4,r9,lsl#2]; adds r9,r9,#1
+ steplfsr; eors r6,r6,r0; and r9,r9,#3; eors r6,r6,r10; ldr r3,[r4,r9,lsl#2]; eors r3,r3,r0,ror#16; str r3,[r4,r9,lsl#2]; adds r9,r9,#1
+ steplfsr; eors r7,r7,r0; and r9,r9,#3; eors r7,r7,r10; ldr r3,[r4,r9,lsl#2]; eors r3,r3,r0,ror#16; str r3,[r4,r9,lsl#2]; adds r9,r9,#1
+ steplfsr; eors r8,r8,r0; and r9,r9,#3; eors r8,r8,r10; ldr r3,[r4,r9,lsl#2]; eors r3,r3,r0,ror#16; str r3,[r4,r9,lsl#2]
+
  subs r4,r4,#20
  stmia r4,{r5-r8}
  adds r4,r4,#40
  subs r11,r11,#1
- 
-@ ldr r0,=chaff
-@ add r1,r11,#3
-@ and r1,r1,#7
-@ add r0,r0,r1,lsl#2
-@ ldmia r0,{r0-r3}
- 
+
+ @ clear03: would need to do this with, say r3,r5-r8
+
  bne ref_roundkey_shares_s_loop
+ savelfsr
  clear03 24
 ref_roundkey_shares_s_exit:
- pop {r15}
+ pop {r4,r14}
+ CHK_CANARY r4,CTAG8
+ bx r14
 
 .balign 4
 .thumb_func
@@ -593,7 +651,8 @@ ref_roundkey_shares_s_exit:
 ref_roundkey_hvperms_s:
  movs r7,#30
 ref_roundkey_hvperms_s_test:  @ entry point for test code to do fewer than 30 key shares
- push {r14}
+ GET_CANARY r0,CTAG9
+ push {r0,r14}
  bl gen_rand_lfsr_nonpres
  ldr r1,=rkey_s
 ref_roundkey_hvperms_s_loop:
@@ -619,51 +678,39 @@ ref_roundkey_hvperms_s_loop:
  bne ref_roundkey_hvperms_s_loop
  clear03 28
 ref_roundkey_hvperms_s_exit:  @ label exit point to be to able to specify to analysis code
- pop {r15}
+ pop {r0,r14}
+ CHK_CANARY r0,CTAG9
+ bx r14
 
 .endif
 
-.if NEED_VPERM
+.if ST_VPERM
 .balign 4
 .thumb_func
-vpermundo:
-@ Undo the effects of vperm rotation on share registers r4-r7, r8-r11
-@ Expect r1=statevperm (state rotations) on entry
-@ Trashes r0-r3,r12
- push {r14}
- ldr r1,=statevperm
- ldr r2,[r1]
- rsbs r0,r2,#0
- b vpermaddr0
-
-.balign 4
-.thumb_func
-refreshstatevperm:
-
-@ Rotate share registers r4-r7, r8-r11 (r4->r5-r6->r7->r4 etc.) by an addtional random amount and update the rotation at !r1
+@ Rotate share registers r4-r7, r8-r11 (r4->r5-r6->r7->r4 etc.) by an addtional amount
+@ given in the bottom two bits of R0 and update the rotation recorded at statevperm.
+@ On entry R1 must point to statevperm.
 @ Trashes r0-r3,r12
 @ Maintains r4=rorig(4+(-!r1)%4), r5=rorig(4+(1-!r1)%4), ...
 @           r8=rorig(8+(-!r1)%4), r9=rorig(8+(1-!r1)%4), ...
 @ Note: only low 2 bits of !r1 are used. The rest are random to add to the noise.
-
- push {r14}
- bl gen_rand_lfsr_nonpres
- ldr r1,=statevperm
+addstatevperm:
  ldr r2,[r1]
-vpermaddr0:
  adds r2,r2,r0
  str r2,[r1]
- 
+
  ldr r1,=shareA
  ands r0,r0,#3; str r4,[r1,r0,lsl#2]; adds r0,r0,#1
  ands r0,r0,#3; str r5,[r1,r0,lsl#2]; adds r0,r0,#1
  ands r0,r0,#3; str r6,[r1,r0,lsl#2]; adds r0,r0,#1
  ands r0,r0,#3; str r7,[r1,r0,lsl#2]; adds r0,r0,#1
  ldmia r1,{r4-r7}
- 
- ldr r12,=chaff               @ Overwrite temperorary storage with random numbers
- ldmia r12,{r2,r3,r12,r14}
- stmia r1,{r2,r3,r12,r14}
+
+ getchaffaddress r12          @ Overwrite temporary storage with random numbers
+ ldmia r12!,{r2,r3}
+ stmia r1!,{r2,r3}
+ ldmia r12!,{r2,r3}
+ stmia r1!,{r2,r3}
 
  ldr r1,=shareB
  ands r0,r0,#3; str r8, [r1,r0,lsl#2]; adds r0,r0,#1
@@ -671,20 +718,23 @@ vpermaddr0:
  ands r0,r0,#3; str r10,[r1,r0,lsl#2]; adds r0,r0,#1
  ands r0,r0,#3; str r11,[r1,r0,lsl#2]; adds r0,r0,#1
  ldmia r1,{r8-r11}
- 
- ldr r12,=chaff+16            @ Overwrite temperorary storage with random numbers
- ldmia r12,{r2,r3,r12,r14}
- stmia r1,{r2,r3,r12,r14}
 
-refreshstatevperm_exit:       @ label exit point to be to able to specify to analysis code
- pop {r15}
+ getchaffaddress r0,16        @ Overwrite temporary storage with random numbers
+ ldmia r0!,{r2,r3}
+ stmia r1!,{r2,r3}
+ ldmia r0!,{r2,r3}
+ stmia r1!,{r2,r3}
+
+addstatevperm_exit:           @ label exit point to be to able to specify to analysis code
+ bx r14
 .endif
 
 @ Switch from non-shared to shared state
 @ Trashes r0-r3,r12
 .balign 4
 ns_to_s:
- push {r14}
+ GET_CANARY r12,CTAG11
+ push {r12,r14}
 .if ST_SHAREC
  bl gen_rand_sha_nonpres                   @ Create state share C; all bytes the same
  ands r0,r0,#255
@@ -709,15 +759,14 @@ ns_to_s:
  eor r11,r12,r0,ror#16
 .if ST_VPERM
  bl gen_rand_sha_nonpres
-.endif
  ldr r1,=statevperm
  movs r2,#0
  str r2,[r1]
-.if ST_VPERM
- b vpermaddr0                              @ Tail call. Initialise state vperm with SHA RNG, refresh with LFSR RNG
-.else
- pop {r15}
+ bl addstatevperm                          @ Initialise state vperm with SHA RNG, refresh with LFSR RNG
 .endif
+ pop {r12,r14}
+ CHK_CANARY r12,CTAG11
+ bx r14
 
 @ Conjugate lut_a, lut_b with shareC
 @ I.e., EOR the input and output with shareC.
@@ -739,8 +788,7 @@ conjshareC:
  str r2,[r1,#0x100]
 .endif
  bx r14
- 
-.if NEED_ROUNDS
+
 .balign 4
 .thumb_func
 shift_rows_s:
@@ -793,67 +841,11 @@ shift_rows_s:
  eors r0,r10,r11             @ ta=state[2]^state[3]; ta&=0xff00ff00; state[2]^=ta;
  ands r0,r0,#0xff00ff00
  eors r10,r10,r0
- 
+
  eors r11,r11,r1             @                                       state[3]^=tb;
 
- clear01                     @ barrier 
+ clear01                     @ barrier
  bx r14
-.endif
-
-.if NEED_INV_ROUNDS
-.balign 4
-.thumb_func
-inv_shift_rows_s:
-@ first half is the same as shift_rows; halves could be done in opposite order for tail chain
- eors r0,r4,r6               @ ta=state[0]^state[2]; ta&=0xffff0000; state[0]^=ta; state[2]^=ta;
- lsrs r0,r0,#16
- lsls r0,r0,#16
- eors r4,r4,r0
- eors r6,r6,r0
- eors r0,r5,r7               @ ta=state[1]^state[3]; ta&=0xffff0000; state[1]^=ta; state[3]^=ta;
- lsrs r0,r0,#16
- lsls r0,r0,#16
- eors r5,r5,r0
- eors r7,r7,r0
-
- eors r1,r7,r4               @ tb=state[3]^state[0]; tb&=0xff00ff00;
- ands r1,r1,#0xff00ff00
- eors r0,r6,r7               @ ta=state[2]^state[3]; ta&=0xff00ff00; state[3]^=ta;
- ands r0,r0,#0xff00ff00
- eors r7,r7,r0
- eors r0,r5,r6               @ ta=state[1]^state[2]; ta&=0xff00ff00; state[2]^=ta;
- ands r0,r0,#0xff00ff00
- eors r6,r6,r0
- eors r0,r4,r5               @ ta=state[0]^state[1]; ta&=0xff00ff00; state[1]^=ta;
- ands r0,r0,#0xff00ff00
- eors r5,r5,r0
- eors r4,r4,r1               @                                       state[0]^=tb;
-
- eors r0,r8,r10              @ ta=state[0]^state[2]; ta&=0xffff0000; state[0]^=ta; state[2]^=ta;
- lsrs r0,r0,#16
- lsls r0,r0,#16
- eors r8,r8,r0
- eors r10,r10,r0
- eors r0,r9,r11              @ ta=state[1]^state[3]; ta&=0xffff0000; state[1]^=ta; state[3]^=ta;
- lsrs r0,r0,#16
- lsls r0,r0,#16
- eors r9,r9,r0
- eors r11,r11,r0
-
- eors r1,r11,r8              @ tb=state[3]^state[0]; tb&=0xff00ff00;
- ands r1,r1,#0xff00ff00
- eors r0,r10,r11             @ ta=state[2]^state[3]; ta&=0xff00ff00; state[3]^=ta;
- ands r0,r0,#0xff00ff00
- eors r11,r11,r0
- eors r0,r9,r10              @ ta=state[1]^state[2]; ta&=0xff00ff00; state[2]^=ta;
- ands r0,r0,#0xff00ff00
- eors r10,r10,r0
- eors r0,r8,r9               @ ta=state[0]^state[1]; ta&=0xff00ff00; state[1]^=ta;
- ands r0,r0,#0xff00ff00
- eors r9,r9,r0
- eors r8,r8,r1               @                                       state[0]^=tb;
- bx r14
-.endif
 
 @ multiply polynomial over GF(2⁸) by c(x) = 0x03x³ + 0x01x² + 0x01x + 0x02 modulo x⁴+1
 @ r0x00 is a register holding 0x00000000;  r0x1b is a register holding 0x1b1b1b1b
@@ -893,7 +885,6 @@ inv_shift_rows_s:
  eors \rx,\rt,\rw,ror#8      @ 14x ^ 9x ROL #8 ^ 13x ROL #16 ^ 11x ROL #24
 .endm
 
-.if NEED_ROUNDS
 .balign 4
 .thumb_func
 @ Trashes r0-r3,r12
@@ -912,113 +903,39 @@ mix_cols_s:
  mixcol r11,r0,r1,r2,r3
  ldmia r12!,{r0,r1}          @ overwrite  sensitive shareB-related quantities r0,r1 with random numbers
  bx r14
-.endif
-
-.if NEED_INV_ROUNDS
-.balign 4
-.thumb_func
-inv_mix_cols_s:
- push {r14}
- mov r12,#0x00000000
- mov r14,#0x1b1b1b1b
- invmixcol r4 ,r0,r1,r2,r3,r12,r14     @ apply invmixcol to each state word
- invmixcol r5 ,r0,r1,r2,r3,r12,r14
- invmixcol r6 ,r0,r1,r2,r3,r12,r14
- invmixcol r7 ,r0,r1,r2,r3,r12,r14
- invmixcol r8 ,r0,r1,r2,r3,r12,r14
- invmixcol r9 ,r0,r1,r2,r3,r12,r14
- invmixcol r10,r0,r1,r2,r3,r12,r14
- invmixcol r11,r0,r1,r2,r3,r12,r14
- pop {r15}
-.endif
-
-.if SBOX_VIA_INV
-@ bytewise EOR-convolution with constant 0x1f
-.macro conv_0x1f rx,rt,ru
- eors \rt,\rx,\rx,ror#31     @ t=x^ROL(x,1);
- eors \rt,\rt,\rt,ror#30     @ t=t^ROL(t,2);
- eors \rt,\rt,\rx,ror#28     @ t=t^ROL(x,4);     @ convolution with byte boundaries "trashed"
- ands \ru,\rx,#0xf0f0f0f0    @ u=x&0xf0f0f0f0;
- eors \ru,\ru,\ru,ror#31     @ u=u^ROL(u,1);
- eors \ru,\ru,\ru,ror#30     @ u=u^ROL(u,2);
- ands \ru,\ru,#0x87878787    @ u=u&0x87878787;   @ compensation for trashing
- eors \ru,\ru,\ru,ror#24     @ u=u^ROL(u,8);
- eors \rx,\rt,\ru,ror#7      @ t^=ROR(u,7);      @ with trashing fixed
-.endm
-
-@ bytewise EOR-convolution with constant 0x4a
-.macro conv_0x4a rx,rt,ru
- eors \rt,\rx,\rx,ror#30     @ t=x^ROL(x,2);
- eors \rt,\rt,\rx,ror#27     @ t=t^ROL(x,5);
- ands \ru,\rx,#0xf8f8f8f8    @ u=x&0xf8f8f8f8;
- eors \ru,\ru,\ru,ror#29     @ u=u^ROL(u,3);
- ands \ru,\ru,#0xc7c7c7c7    @ u=u&0xc7c7c7c7;
- eors \ru,\ru,\ru,ror#24     @ u=u^ROL(u,8);
- eors \rt,\rt,\ru,ror#6      @ t^=ROR(u,6);
- ands \ru,\rt,#0x80808080    @ t=rorbytes(t,7);
- uadd8 \rt,\rt,\rt
- orrs \rx,\rt,\ru,lsr#7
-.endm
-
-.balign 4
-.thumb_func
-map_sbox_s: @ (we're currently still under .if SBOX_VIA_INV) version of map_sbox_x that uses lutmap_state_s as a lookup into a table of inverses
- push {r14}
- bl lutmap_state_s           @ the S-box function is an inverse followed by an affine transformation:
- conv_0x1f r4 ,r0,r1         @ see https://en.wikipedia.org/wiki/Rijndael_S-box
- conv_0x1f r5 ,r0,r1
- conv_0x1f r6 ,r0,r1
- conv_0x1f r7 ,r0,r1
- conv_0x1f r8 ,r0,r1
- conv_0x1f r9 ,r0,r1
- conv_0x1f r10,r0,r1
- conv_0x1f r11,r0,r1
- eor r4 ,r4 ,#0xcacacaca     @ scramble the shares slightly: 0x63=0xca^0xa9 etc.
- eor r5 ,r5 ,#0xf5f5f5f5
- eor r6 ,r6 ,#0x0c0c0c0c
- eor r7 ,r7 ,#0xa2a2a2a2
- eor r8 ,r8 ,#0xa9a9a9a9
- eor r9 ,r9 ,#0x96969696
- eor r10,r10,#0x6f6f6f6f
- eor r11,r11,#0xc1c1c1c1
- pop {r15}
-
-.if NEED_INV_ROUNDS
-.balign 4
-.thumb_func
-inv_map_sbox_s: @ version that computes via tables of inverses
- push {r14}                  @ similarly, the inverse S-box is an affine transformation followed by an inverse
- conv_0x4a r4 ,r0,r1
- conv_0x4a r5 ,r0,r1
- conv_0x4a r6 ,r0,r1
- conv_0x4a r7 ,r0,r1
- conv_0x4a r8 ,r0,r1
- conv_0x4a r9 ,r0,r1
- conv_0x4a r10,r0,r1
- conv_0x4a r11,r0,r1
- eor r4 ,r4 ,#0xd1d1d1d1     @ scramble the shares slightly: 0x05=0xd1^0xd4 etc.
- eor r5 ,r5 ,#0x94949494
- eor r6 ,r6 ,#0xfcfcfcfc
- eor r7 ,r7 ,#0x3a3a3a3a
- eor r8 ,r8 ,#0xd4d4d4d4
- eor r9 ,r9 ,#0x91919191
- eor r10,r10,#0xf9f9f9f9
- eor r11,r11,#0x3f3f3f3f
- bl lutmap_state_s
- pop {r15}
-.endif
-
-.else
 
 .balign 4
 .thumb_func
 gen_lut_sbox:
 @ gen_lut_sbox sets both lut_a and lut_b to the S-box table and
 @ returns r0=lut_a+256, r1=lut_b+256
- push {r14}
- bl gen_lut_inverse          @ first generate the table of inverses in lut_a
-                             @ At this point r0=lut_a, r1=lut_b, lut_a[] contains inverses and lut_b[] contains other stuff
- mov r14,#256
+@ first set lut_a to be a table of GF(2⁸) inverses, using lut_b as temporary storage
+ ldr r0,=lut_a
+ ldr r1,=lut_b
+@ first set lut_a to be a table of antilogarithms, lut_b a table of logarithms
+ mov r2,#0
+ strb r2,[r0]                @ (*)
+ mov r3,#1                   @ we maintain invariant that r2=log(r3)
+1:
+ strb r2,[r0,r3]             @ log table
+ strb r3,[r1,r2]             @ antilog table
+ lsls r12,r3,#25
+ it cs
+ eorcs r12,r12,#0x1b000000   @ multiply by x
+ eor r3,r3,r12,lsr#24        @ multiply by x+1 ("3"), which is a primitive element
+ add r2,r2,#1
+ cmp r2,#255
+ bls 1b
+ movs r2,#255
+1:
+ ldrb r3,[r0,r2]             @ for each i≠0, find log,...
+ eor r3,r3,#255              @ ... negate...
+ ldrb r3,[r1,r3]             @ ... and antilog to get inverse
+ strb r3,[r0,r2]
+ subs r2,r2,#1
+ bne 1b                      @ note that inverse(0)=0 by (*) above
+@ At this point r0=lut_a, r1=lut_b, lut_a[] contains inverses and lut_b[] contains other stuff
+ mov r12,#256
 1:
  ldrb r2,[r0]
  eors r3,r2,r2,lsl#1         @ convolve byte with 0x1f
@@ -1028,29 +945,9 @@ gen_lut_sbox:
  eor r2,r2,#0x63             @ and add 0x63
  strb r2,[r0],#1             @ let lut_a[i]=sbox[i]
  strb r2,[r1],#1             @ let lut_b[i]=sbox[i]
- subs r14,r14,#1
+ subs r12,r12,#1
  bne 1b
- pop {r15}
-
-.if NEED_INV_ROUNDS
-.balign 4
-.thumb_func
-gen_lut_inv_sbox:
-@ set lut_a to the inverse S-box table
- push {r14}
- bl gen_lut_sbox             @ get the forwards S-box
- sub r0,r0,#256
- sub r1,r1,#256
- mov r2,#0
-1:
- ldrb r3,[r1],#1             @ get y=S-box(x)...
- strb r2,[r0,r3]             @ ... and store x at location y
- adds r2,r2,#1
- cmp r2,#255
- bls 1b
- pop {r15}
-.endif
-.endif
+ bx r14
 
 @ Lookup each byte of a word, Rtarg, in a table and replace Rtarg with the result (used for SBOX lookups)
 .macro subbytes Rtarg,Rtable,Rspare0,Rspare1,Rspare2,Rspare3
@@ -1068,25 +965,14 @@ gen_lut_inv_sbox:
  orr \Rtarg,\Rspare0,\Rspare2,lsl#16
 .endm
 
-@ if we are using direct S-box lookup then [inv_]map_sbox_s is the same as lutmap_state_s
-.if !SBOX_VIA_INV
+@ map all bytes of the state through the split LUT, lut_a and lut_b
+@ Trashes r0-r3,r12
 .balign 4
 .thumb_func
 map_sbox_s:
-.if NEED_INV_ROUNDS
-.thumb_func
-inv_map_sbox_s:
-.endif
-.endif
+ GET_CANARY r12,CTAG12
+ push {r12,r14}
 
-@ lutmap_state_s maps all bytes of the state through the split LUT, lut_a and lut_b
-@ This is either the whole of map_sbox_s (if SBOX_VIA_INV=0), or (if SBOX_VIA_INV=1) it's a subroutine called by map_sbox_s
-@ Trashes r0-r3,r12
-.balign 4
-lutmap_state_s:
-
- push {r14}
- 
  ldr r0,=shareA                 @ Write out state share A to memory
  stmia r0,{r4-r7}
  clear03                        @ barrier
@@ -1096,7 +982,7 @@ lutmap_state_s:
  clear03 4                      @ barrier
 
  bl makeperm16                  @ Rebuild random 16-way permutation. Maybe do this less frequently
- @ Now combine state shares A and B and apply the split sbox to each byte, in the order given by the above random permutation
+@ Now combine state shares A and B and apply the split sbox to each byte, in the order given by the above random permutation
 
  ldr r8,=lut_a
  ldr r9,=lut_b
@@ -1108,7 +994,7 @@ lutmap_state_s:
  eors r2,r1,r1,lsr#8
  uxtb r11,r2                    @ R11 = a0^a1^b0^b1
  movs r12,r1,lsr#16             @ R12 = c0^d0 | (c1^d1)<<8
- 
+
  ldr r4,=perm16
  ldr r5,=shareA
  ldr r6,=shareB
@@ -1131,30 +1017,24 @@ lutmap_state_s:
  strb r3,[r6,r7]                @ shareB'[perm[r0]^2] = lut_b[shareA[perm[r0]]^b0^b1^shareB[perm[r0]^2]]^c1^d1
  bpl 1b
  clear03 8                      @ barrier
- 
+
  ldmia r6,{r8-r11}              @ Read state share B back from memory
  clear03 12                     @ barrier
  ldmia r5,{r4-r7}               @ Read state share A back from memory
  clear03 16                     @ barrier
 
 @ Refresh state shares because luts only give imperfect share-by-value
- bl gen_rand_lfsr4
- eors r4,r4,r0; mov r12,#0; eors r8,r8,r0,ror#16              @ Barriers between each pair of eors to prevent implicit r4^r8 etc
- eors r5,r5,r1; mov r12,#0; eors r9,r9,r1,ror#16
- eors r6,r6,r2; mov r12,#0; eors r10,r10,r2,ror#16
- eors r7,r7,r3; mov r12,#0; eors r11,r11,r3,ror#16
 
- pop {r15}
+ loadlfsr
+ steplfsr; eors r4,r4,r0; mov r12,#0; eors r8,r8,r0,ror#16              @ Barriers between each pair of eors to prevent implicit r4^r8 etc
+ steplfsr; eors r5,r5,r0; mov r12,#0; eors r9,r9,r0,ror#16
+ steplfsr; eors r6,r6,r0; mov r12,#0; eors r10,r10,r0,ror#16
+ steplfsr; eors r7,r7,r0; mov r12,#0; eors r11,r11,r0,ror#16
+ savelfsr
 
-.macro jitter rx
-.if IK_JITTER
- rors \rx,\rx,#1
- bcc \@f
-\@:
-.else
-@ nothing
-.endif
-.endm
+ pop {r12,r14}
+ CHK_CANARY r12,CTAG12
+ bx r14
 
 .balign 4
 .thumb_func
@@ -1162,7 +1042,8 @@ randomisechaff:
 @ Randomise 48 bytes of chaff values (random load values)
 @ Uses 12 bytes of permscratch
 @ Trashes r0-3
- push {r14}
+ GET_CANARY r0,CTAG13
+ push {r0,r14}
  movs r0,#12
  ldr r1,=permscratch
  bl makesmallperm           @ Store the random words in a random order to make 2nd order attacks harder
@@ -1173,18 +1054,21 @@ randomisechaff:
  pop {r1}
  ldr r2,=permscratch
  ldrb r2,[r2,r1]
- ldr r3,=chaff
+ getchaffaddress r3
  str r0,[r3,r2,lsl#2]
  subs r1,r1,#1
  bpl 1b
- pop {r15}
+ pop {r0,r14}
+ CHK_CANARY r0,CTAG13
+ bx r14
 
 .balign 4
 refreshchaff:
 @ Update 48 bytes of chaff values (random load values) using faster RNG than used for randomisechaff
 @ Uses 12 bytes of permscratch
 @ Trashes r0-3,12
- push {r14}
+ GET_CANARY r0,CTAG14
+ push {r0,r14}
  movs r0,#12
  ldr r1,=permscratch
  bl makesmallperm           @ Update the random words in a random order to make 2nd order attacks harder
@@ -1201,14 +1085,17 @@ refreshchaff:
  str r0,[r3,r2,lsl#2]
  subs r1,r1,#1
  bpl 1b
- pop {r15}
+ pop {r0,r14}
+ CHK_CANARY r0,CTAG14
+ bx r14
 
 .balign 4
 .thumb_func
 @ Do sbox on the four bytes of the 4-way share r4-r7
 @ Trashes r0,r8-r12
 init_key_sbox:
- push {r1-r3,r14}
+ GET_CANARY r12,CTAG15
+ push {r1-r3,r12,r14}
  bl gen_rand_sha_nonpres; mov r8,r0
  bl gen_rand_sha_nonpres; mov r9,r0
  bl gen_rand_sha_nonpres; mov r10,r0
@@ -1220,7 +1107,7 @@ init_key_sbox:
  movs r5,#0
  movs r6,#0
  movs r7,#0
- 
+
  bl randomisechaff              @ Randomise block of memory mainly used for obscuring loads
 
  movs r0,#4
@@ -1251,45 +1138,45 @@ init_key_sbox:
  uxtb r11,r4                    @ R11 = a0^a1^b0^b1
  eor r10,r10,r11,lsl#8          @ R10 = a0^a1 | (a0^a1^b0^b1)<<8
  movs r12,r1,ror#16             @ R12 = c0^d0 | (c1^d1)<<8 | junk<<16 | junk<<24
- 
+
  ldr r1,=permscratch
  ldr r11,=chaff
- @ Using r1=permutedfourwaypointer, r2=lut_a, r3=lut_b, r7,r8=randomness, r10=(a0^a1)|(a0^a1^b0^b1)<<8, r11=chaff, r12=(c0^d0)|(c1^d1)<<8|junk
+@ Using r1=permutedfourwaypointer, r2=lut_a, r3=lut_b, r7,r8=randomness, r10=(a0^a1)|(a0^a1^b0^b1)<<8, r11=chaff, r12=(c0^d0)|(c1^d1)<<8|junk
 1:
  ands r5,r1,#12
  adds r5,r11,r5                 @ Align chaff address to r1
  ldr  r6,[r1],#4                @ r6 = fourway + perm[i] (i=0-3, loop iteration)
  ldr  r5,[r5]                   @ Random load to mask previous load
- 
+
  ands r9,r6,#12                 @ r9 = chaff address aligned to r6 mod 16
  add  r9,r11,r9
  ldrb r4,[r6,#0]
  ldr  r14,[r9,#0]               @ Random load to mask previous load
  eor  r4,r4,r10
  eor  r4,r4,r14,lsl#8           @ Add in some junk in bits 8-31
- 
+
  ldrb r5,[r6,#4]
  ldr  r14,[r9,#4]               @ Random load to mask previous load
  eors r4,r4,r5
  eor  r4,r4,r14,lsl#8           @ Add in some junk in bits 8-31
- 
+
  ldrb r5,[r6,#8]
  ldr  r14,[r9,#8]               @ Random load to mask previous load
  eors r4,r4,r5
  eor  r4,r4,r14,lsl#8           @ Add in some junk in bits 8-31
- 
+
  ldrb r5,[r6,#12]
  ldr  r14,[r9,#12]              @ Random load to mask previous load
  eors r4,r4,r5                  @ r4 = unsharedbyte[perm[i]]^a0^a1 | junk
  eor  r4,r4,r14,lsl#8           @ Add in some junk in bits 8-31
- 
+
  ands r14,r4,#255
  ldrb r5,[r2,r14]                @ r5 = lut_a[unsharedbyte[perm[i]]^a0^a1]
  and  r14,r4,#15
  add  r14,r14,#32
  ldrb r14,[r11,r14]             @ Random load to mask previous load (r2 and r11 are both 0 mod 16)
  eors r5,r5,r12                 @ r5 = lut_a[unsharedbyte[perm[i]]^a0^a1]^c0^d0 | junk<<8 | junk<<16 | junk<<24
- @ split r5 into two shares and store at [r6,#0] and [r6,#4]
+@ split r5 into two shares and store at [r6,#0] and [r6,#4]
  strb r7,[r6,#0]
  eors r5,r5,r7
  strb r5,[r6,#4]
@@ -1304,7 +1191,7 @@ init_key_sbox:
  add  r4,r11,#24
  ldrb r14,[r4,r14]              @ Random load to mask previous load (r3==8 and r11==0 mod 16)
  eor  r5,r5,r12,ror#8           @ r5 = lut_b[unsharedbyte[perm[i]]^b0^b1]^c1^d1 | junk<<8 | junk<<16 | junk<<24
- @ split r5 into two shares and store at [r6,#8] and [r6,#12]
+@ split r5 into two shares and store at [r6,#8] and [r6,#12]
  strb r8,[r6,#8]
  eors r5,r5,r8
  strb r5,[r6,#12]
@@ -1318,21 +1205,24 @@ init_key_sbox:
  ldr r0,=fourway
  ldmia r0,{r4-r7}               @ Load SBOXed values back into register r4-r7
  ldmia r11,{r8-r12,r14}         @ Random load to mask previous load and to obfuscate registers
- 
- pop {r1-r3,r15}
+
+ pop {r1-r3,r12,r14}
+ CHK_CANARY r12,CTAG15
+ bx r14
 
 .balign 4
 .thumb_func
 @ r1 = pointer to 4 x 4-way share (16 words); left unchanged
 @ r3 = rkey_s+40*roundkeynumber; advanced by 40
-@ Trashes r8-r11
+@ Trashes r8-r12
 @ If i = word number 0..3,
 @ Aptr=memory word pointer to block of 20 bytes containing H&V-rotated share A roundkey (similarly B), then
 @ vpermA=Aptr[4]>>30, vpermB=Bptr[4]>>30, and
-@ roundkey shareA(i) = Aptr[i+vpermA mod 4] ror ((i+vpermA mod 4)^th byte of Aptr[4])
-@ roundkey shareB(i) = Bptr[i+vpermB mod 4] ror ((i+vpermB mod 4)^th byte of Bptr[4])+16
+@ roundkey shareA(i) = Aptr[i+vpermA mod 4] ror #((i+vpermA mod 4)^th byte of Aptr[4])
+@ roundkey shareB(i) = Bptr[i+vpermB mod 4] ror #((i+vpermB mod 4)^th byte of Bptr[4])+16
 storeroundkey:
- push {r2,r14}
+ GET_CANARY r8,CTAG16
+ push {r2,r8,r14}
 
 @ eor two 4-way share components to make a component of a 2-way share
 @ Note that we load from 4-way share at a random address then convert to 2-way share and
@@ -1377,10 +1267,13 @@ storeroundkey:
  usub8 r2,r2,r0              @ r2=-hperms
 .endif
  mov r9,#4
+ ldr r12,=RKshareC
+ ldr r12,[r12]
 1:
  and r8,r8,#3
  adds r0,r1,r8,lsl#4
  ldmia r0,{r10,r11}
+ eor r10,r10,r12             @ Mix in RKshareC into round key shareB
 .if RK_ROR
  mov r10,r10,ror r2
  mov r11,r11,ror r2
@@ -1397,95 +1290,46 @@ storeroundkey:
  subs r1,r1,#8               @ Restore r1 = (r1 on entry)
  adds r3,r3,#4               @ Set     r3 = (r3 on entry) + 40
 
- pop {r2,r15}
+ pop {r2,r8,r14}
+ CHK_CANARY r8,CTAG16
+ bx r14
 
 .balign 4
 .thumb_func
 init_key:
-@ r0: rkeys_s (this input is ignored because it's defined here in the assembler file)
-@ r1: raw key data (32 bytes)
-@ rkeys_s is a 40*15=600-byte region
-@ each of the 15 round keys is represented as two 4-word regions rka[0..3] and rkb[0..3] (each of which is followed by a zero word),
-@ such that rk[i]=rka[i-r]^(rkb[i-r] ROR#16) gives the round keys, where r=!vpermkeyrot and i-r is interpreted in the relevant range, and i-r specifies mod 4
+@ On entry, r0 points to 4-way shared raw key data (128 bytes)
+@ The format is a0 b0 c0 d0 a1 b1 c1 d1 ... a7 b7 c7 d7
+@ That is, each word, K, of the original 256-bit key is expanded into four words whose exclusive OR is K.
+@
+@ On exit, rkeys_s, a 40*15=600-byte region, is filled as follows.
+@ Each of the 15 round keys is represented as two 5-word regions rka[0..4] and rkb[0..4],
+@ each of which consists of 4 words of round key followed by a word encoding vperm and rotation (RK_ROR) information.
+@ In addition a common share word, RKshareC, is set randomly.
+@ For a given round, rk[i] = the i^th word of the actual round key is given by:
+@ vpermA=rka[4]>>30
+@ vpermB=rkb[4]>>30
+@ rka_unrot[i] = rka[i+vpermA mod 4] ror #((i+vpermA mod 4)^th byte of rka[4])
+@ rkb_unrot[i] = rkb[i+vpermB mod 4] ror #((i+vpermB mod 4)^th byte of rkb[4])+16
+@ rk[i] = rka_unrot[i] ^ rkb_unrot[i] ^ RKshareC
 
- push {r4-r11,r14}
-
-.if IK_JITTER
- push {r0}
- bl gen_rand_sha
- mov r12,r0
- pop {r0}
-.endif
- jitter r12
-
- mov r5,r1                   @ Here and for the rawkey reading loop, R5=raw key data
-
- jitter r12
-
- @ Make lots of small perms so that it's harder for attacker to correlate permutation creation steps with the permutation's use
- @ Can use rkey_s space because it won't be used before init_key_expandloop
- ldr r1,=rkey_s
- movs r2,#64
-1:
- movs r0,#8
- push {r1,r2}
- bl makesmallperm            @ make a random permutation of 8 things (to randomise reading of key words)
- pop {r1,r2}
- adds r1,r1,#8
- subs r2,r2,#1
- bne 1b
- bl gen_rand_sha_nonpres                 @ Choose a random one of these 64 to use
- ands r0,r0,#63
- ldr r1,=rkey_s
- adds r7,r1,r0,lsl#3
-
-init_key_loadrawkey:
-
+ GET_CANARY r12,CTAG17
+ push {r4-r11,r12,r14}
+ 
+ mov r5,r0                   @ r5=4-way key input
  bl randomisechaff
-
-@ Loading the raw key and turning it into 4-way shares for round 0 and 1
- ldr r11,=chaff              @ This needs to have 48 bytes of chaff
- sub r0,r7,r11; ands r0,r0,#15; add r10,r11,r0    @ align r10 to r7 mod 16   (permutation array)
- sub r0,r5,r11; ands r0,r0,#15; add r11,r11,r0    @ align r11 to r5 mod 16   (raw key data)
- ldr r4,=rkey4way            @ 128 byte scratch space for 4-way shares, laid out in words as a0 b0 c0 d0 a1 b1 c1 d1 ... a7 b7 c7 d7
- movs r6,#7
-@ r4=rkey4way, r5=rawkeydata, r6=loopcounter, r7=permutationarray, r10,r11=zeroarray (same mod 16 alignment as r7,r5 resp)
-2:
-@ Do calls to gen_rand_sha before we have sensitive values, so that gen_rand_sha doesn't push them on the stack
- bl gen_rand_sha_nonpres; movs r8,r0
- bl gen_rand_sha_nonpres; movs r9,r0
- bl gen_rand_sha_nonpres; movs r1,r0
- bl gen_rand_sha                 @ r0,r1,r8,r9 are fresh random numbers
- ldrb r12,[r10,r6]           @ barrier to following load
- ldrb r2,[r7,r6]             @ r2 = perm8[r6] = which key word to load
- ldrb r12,[r10,r6]           @ barrier load to erase internal version of r2
- movs r14,r0,lsr#29          @ temporarily borrow some randomness to create a random address offset
- ldr  r12,[r11,r14,lsl#2]    @
- ldr  r3,[r11,r2,lsl#2]      @ barrier to following load (random value, same memory bank)
- ldr  r3,[r5,r2,lsl#2]       @ r3 = key word
- ldr  r12,[r11,r2,lsl#2]     @ barrier load to erase internal version of r3
- ldr  r12,[r11,r14,lsl#2]    @ erase internal address
- mov  r14,#0                 @ erase r14
- ldr  r12,[r11,#32]
- eor  r12,r12,r12
- eors r9,r3,r8               @ extra care: sacrifice random r9 to further mask this operation
- eors r3,r9,r0               @ r9=r0^r3^r8  (also has the effect of safely retiring the sensitive value r3)
- eors r3,r3,r1               @ r9=r0^r1^r3^r8 so r0,r1,r8,r9 is a 4-way share of r3
- adds r2,r4,r2,lsl#4
- stmia r2,{r0,r1,r3,r8}      @ Store 4-way share of this key word
- movs r0,#0                  @ Clear sensitive working values so they don't get used somehow (e.g., pushed onto the stack by gen_rand_sha)
- movs r1,#0
- movs r2,#0
- movs r3,#0
+ ldr r4,=rkey4way
+ movs r6,#8
+1:
+ ldmia r5!,{r0-r3}
+ stmia r4!,{r0-r3}
  subs r6,r6,#1
- bpl 2b
- mov r8,#0
- mov r9,#0
-
+ bne 1b
 
 @ Now raw key is stored in rkey4way[], construct 2-way share in rkey_s[] for
 @ the 128-bit roundkeys 0 and 1, then expand from 2 to 15 roundkeys.
-
+ bl gen_rand_sha_nonpres
+ ldr r12,=RKshareC
+ str r0,[r12]                @ Make RKshareC random word
  ldr r3,=rkey_s              @ r3=rkey_s
  ldr r1,=rkey4way            @ r1=rkey4way
  bl storeroundkey            @ Store round key 0 and advance r3 by 40
@@ -1495,7 +1339,7 @@ init_key_loadrawkey:
  ldmia r1!,{r4-r7}           @ r4-r7 = 4-way share of previous round key word
                              @ r1=rkey4way+128 on entry to main loop
  movs r2,#0                  @ r2=word counter (0-51), offset from word 8
-                             
+
 @ Note that r1-r3 are not sensitive values, so it's safe to stack
 @ them and conditionally branch on them.
 
@@ -1511,10 +1355,10 @@ init_key_loadrawkey:
 @   a7 b7 c7 d7                          a55 b55 c55 d55
 
 init_key_expandloop:
- @ r1 = pointer past one of eight 4-way shares of a roundkey word in the above cyclic buffer (r1=rkey4way+16i for i=1,...,8)
- @ r2 = round key word counter (0-51), offset from word 8 (counting expanded roundkey words)
- @ r3 = pointer to rkey_s+40*roundnumber = rkey_s+40*(2+[r2/4])
- @ r4-r7 = 4-way share of previous roundkey word
+@ r1 = pointer past one of eight 4-way shares of a roundkey word in the above cyclic buffer (r1=rkey4way+16i for i=1,...,8)
+@ r2 = round key word counter (0-51), offset from word 8 (counting expanded roundkey words)
+@ r3 = pointer to rkey_s+40*roundnumber = rkey_s+40*(2+[r2/4])
+@ r4-r7 = 4-way share of previous roundkey word
 
  tst r2,#7
  bne 1f
@@ -1556,382 +1400,75 @@ init_key_expandloop:
  cmp r2,#52
  bne init_key_expandloop
 
- pop {r4-r11,r15}
+ pop {r4-r11,r12,r14}
+ CHK_CANARY r12,CTAG17
+ bx r14
 
 @ Add the round key shares pointed to by r12 into the state shares
 @ Trashes r0-r3
 .balign 4
 addrkey_s:
 
- ldr r0,=statevperm
- ldr r0,[r0]                 @ r0=vperm state rotation in bottom two bits
- ldr r1,[r12,#16]            @ r1=vperm key rotation in top two bits
- rsbs r3,r0,r1,lsr#30
- @ Read shareA of roundkey, offset by vpermkeyrot-vpermstaterot, and eor it into shareA of state, offset by -vpermstaterot
-.if RK_ROR
- add r2,r12,#16
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; ldrb r1,[r2,r3]; rors r0,r0,r1; eors r4,r4,r0; adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; ldrb r1,[r2,r3]; rors r0,r0,r1; eors r5,r5,r0; adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; ldrb r1,[r2,r3]; rors r0,r0,r1; eors r6,r6,r0; adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; ldrb r1,[r2,r3]; rors r0,r0,r1; eors r7,r7,r0
+ ldr r0,=chaff               @ guaranteed 0 mod 16
+.if ST_VPERM
+ ldr r3,=statevperm
+ ldr r3,[r3]                 @ r3=vperm state rotation in bottom two bits
+ ldr r2,[r0,#12]             @ barrier load
 .else
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; eors r4,r4,r0; adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; eors r5,r5,r0; adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; eors r6,r6,r0; adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; eors r7,r7,r0
+ movs r3,#0
 .endif
- adds r12,r12,#20
+ bfi r0,r12,#0,#4            @ match chaff pointer (r0) to roundkey ptr (r12) mod 16
+ ldr r1,[r12,#16]            @ r1=vperm key rotation in top two bits
+ ldr r2,[r0,#16]             @ barrier load
 
- clear03                     @ barrier to clear internal load registers
+ rsbs r2,r3,r1,lsr#30        @ r2=vpermkeyrot-vpermstaterot
+@ Read shareA of roundkey, offset by vpermkeyrot-vpermstaterot, and eor it into shareA of state, offset by -vpermstaterot
+@ r1=rkeyArotdata, r2=vpermkeyrot-vpermstaterot, r3=statevperm, r4-r11=state, r12=roundkeyAptr
+.if RK_ROR
+ movs r0,r2,lsl#3
+ movs r1,r1,ror r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2];                   rors r0,r0,r1; eors r4,r4,r0; adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; movs r1,r1,ror#8; rors r0,r0,r1; eors r5,r5,r0; adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; movs r1,r1,ror#8; rors r0,r0,r1; eors r6,r6,r0; adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; movs r1,r1,ror#8; rors r0,r0,r1; eors r7,r7,r0
+.else
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r4,r4,r0; adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r5,r5,r0; adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r6,r6,r0; adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r7,r7,r0
+.endif
+ clear03_preserve_r3
+ add r12,r12,#20
+ @ r0=chaff+16, r3=statevperm, r4-r11=state, r12=roundkeyBptr
  
- ldr r0,=statevperm
- ldr r0,[r0]                 @ r0=vperm state rotation in bottom two bits
+ bfi r0,r12,#0,#4            @ match chaff pointer (r0) to roundkey ptr (r12) mod 16
  ldr r1,[r12,#16]            @ r1=vperm key rotation in top two bits
- rsbs r3,r0,r1,lsr#30
- @ Read shareB of roundkey, offset by vpermkeyrot-vpermstaterot, and eor it into shareB of state, offset by -vpermstaterot
+ ldr r2,[r0,#16]             @ barrier load
+ rsbs r2,r3,r1,lsr#30        @ r2=vpermkeyrot-vpermstaterot
+ ldr r3,=RKshareC            @ r3=common round key shareC
+ bfi r0,r3,#0,#4
+ ldr r3,[r3]
+ ldr r0,[r0]                 @ barrier load
+ 
+@ Read shareB of roundkey, offset by vpermkeyrot-vpermstaterot, and eor it into shareB of state, offset by -vpermstaterot
+@ r1=rkeyBrotdata, r2=vpermkeyrot-vpermstaterot, r3=RKshareC, r4-r11=state, r12=roundkeyB ptr
 .if RK_ROR
- add r2,r12,#16
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; ldrb r1,[r2,r3]; rors r0,r0,r1; eors r8,r8,r0;   adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; ldrb r1,[r2,r3]; rors r0,r0,r1; eors r9,r9,r0;   adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; ldrb r1,[r2,r3]; rors r0,r0,r1; eors r10,r10,r0; adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; ldrb r1,[r2,r3]; rors r0,r0,r1; eors r11,r11,r0
+ movs r0,r2,lsl#3
+ movs r1,r1,ror r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r8,r8,r3,ror#16;                     rors r0,r0,r1; eors r8,r8,r0;   adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r9,r9,r3,ror#16;   movs r1,r1,ror#8; rors r0,r0,r1; eors r9,r9,r0;   adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r10,r10,r3,ror#16; movs r1,r1,ror#8; rors r0,r0,r1; eors r10,r10,r0; adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r11,r11,r3,ror#16; movs r1,r1,ror#8; rors r0,r0,r1; eors r11,r11,r0
 .else
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; eors r8,r8,r0;   adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; eors r9,r9,r0;   adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; eors r10,r10,r0; adds r3,r3,#1
- ands r3,r3,#3; ldr r0,[r12,r3,lsl#2]; eors r11,r11,r0  
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r8,r8,r0;   eors r8,r8,r3,ror#16;   adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r9,r9,r0;   eors r9,r9,r3,ror#16;   adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r10,r10,r0; eors r10,r10,r3,ror#16; adds r2,r2,#1
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r11,r11,r0; eors r11,r11,r3,ror#16
 .endif
- adds r12,r12,#20
-
- clear03 20                  @ barrier to clear internal load registers
-
+ clear03
+ 
  bx r14
- 
-.if NEED_ROUNDS
 
-@ perform encryption rounds
-@ r4-r7, r8-r11: state
-@ Trashes r0-r3,r12
-.balign 4
-rounds_s:
- push {r14}
- mov r2,#0                   @ round counter
-rounds_s_mainloop:
- ldr r12,=rkey_s
- add r12,r12,r2,lsl#5        @ pointer to key shares for this round
- add r12,r12,r2,lsl#3
- push {r2}                   @ save round count
- bl addrkey_s
- bl map_sbox_s
- bl shift_rows_s
-.if ST_VPERM
- ldmia r13,{r2}              @ peek at stack to get round count
- cmp r2,#NUMREFSTATEVPERM
- bcs 1f
- bl refreshstatevperm        @ V shuffle of r4-r11
-1:
-.endif
- pop {r2}
- adds r2,r2,#1               @ increment round counter
- cmp r2,#14
- beq 2f                      @ break from loop? (last round has no mix_cols)
- push {r2}
- bl mix_cols_s
- pop {r2}
- b rounds_s_mainloop
-2:
- ldr r12,=rkey_s+14*40       @ final round key shares
- bl addrkey_s
- @eor r0,r4,r8;bl logword
- @eor r0,r5,r9;bl logword
- @eor r0,r6,r10;bl logword
- @eor r0,r7,r11;bl logword
- pop {r15}
-.endif
-
-.if NEED_INV_ROUNDS
-@ perform decryption rounds
-@ r4-r7, r8-r11: state
-@ preserves r0-r2
-.balign 4
-inv_rounds_s:
- push {r0-r2,r14}
- ldr r12,=rkey_s+14*40       @ final round key shares
- bl addrkey_s
- mov r2,#13                  @ round counter
- push {r2}
-.if ST_VPERM
- bl gen_rand_sha
- bl vperm                    @ V shuffle
- push {r0}
-.endif
- b 2f                        @ into middle of loop (last round has no mix_cols)
-1:
- push {r2}
-.if ST_VPERM
- bl gen_rand_sha
- bl vperm                    @ V shuffle
- push {r0}
-.endif
- bl inv_mix_cols_s
-2:
- bl inv_shift_rows_s
- bl inv_map_sbox_s
-.if ST_VPERM
- pop {r0}
- bl vperm                    @ undo V shuffle
-.endif
- pop {r2}
- ldr r12,=rkey_s
- add r12,r12,r2,lsl#5        @ pointer to key shares for this round
- add r12,r12,r2,lsl#3
- bl addrkey_s
- subs r2,r2,#1
- bpl 1b
- pop {r0-r2,r15}
-.endif
-
-.if INCLUDE_ENCRYPT_CBC
-.balign 4
-.thumb_func
-@ encrypt data in place
-@ r0: ivec
-@ r1: buf: starts with plaintext; ends up with ciphertext
-@ r2: number of blocks
-@ this implementation does not scramble the shares properly; consider a better implementation
-@ if security is required in encryption
-cbc_encrypt_s:
- push {r4-r11,r14}
- ldmia r0,{r4-r7}            @ load iv into share a
-2:
- ldmia r1,{r8-r11}           @ load plaintext into share b
- bl rounds_s
- eor r4,r4,r8                @ convert shared to non-shared
- eor r5,r5,r9
- eor r6,r6,r10
- eor r7,r7,r11
- stmia r1!,{r4-r7}
- subs r2,r2,#1
- bne 2b
- pop {r4-r11,r15}
-.endif
-
-.if INCLUDE_DECRYPT_CBC
-.balign 4
-.thumb_func
-@ decrypt data in place
-@ r0: ivec
-@ r1: buf
-@ r2: number of blocks
-@ return
-@ r0=0 OK
-@ r0=1: fault detected
-@ could be simplified to use more ldmia:s at the cost of another 8 words of stack
-cbc_decrypt_s:
- push {r4-r11,r14}
- ldmia r0,{r4-r7}            @ load IV
- bl ns_to_s
- push {r4-r11}               @ IV shares on the stack
-2:
- bl remap
- bl ref_round_keys_s         @ refresh the round keys
- ldmia r1,{r4-r7}            @ load the ciphertext
- bl ns_to_s                  @ convert to shares
- bl inv_rounds_s             @ do decryption rounds
-
-.if ROUND_TRIP_TEST
-
-@ compute plaintext {r4-r7}^{r8-r11}^{SP[0..3]}^{SP[4..7]}
-@ as shares {r4-r7}^{SP[0..3]}, {r8-r11}^{SP[4..7]}
- ldrd r0,r3,[r13,#0]
- eor r0,r0,r4
- eor r3,r3,r5
- strd r0,r3,[r13,#0]
- ldrd r0,r3,[r13,#8]
- eor r0,r0,r6
- eor r3,r3,r7
- strd r0,r3,[r13,#8]
- ldrd r0,r3,[r13,#16]
- eor r0,r0,r8
- eor r3,r3,r9
- strd r0,r3,[r13,#16]
- ldrd r0,r3,[r13,#24]
- eor r0,r0,r10
- eor r3,r3,r11
- strd r0,r3,[r13,#24]        @ plaintext_s now on the stack
- bl rounds_s                 @ restore original ciphertext (or we could have saved it)
-
- ldmia r1!,{r0,r3}           @ reload actual ciphertext and compare to check for faults
- eors r0,r0,r4
- eors r0,r0,r8
- bne 1f                      @ mismatch? could repeat this bne or add other protection against its being skipped
- eors r3,r3,r5
- eors r3,r3,r9
- bne 1f
- ldmia r1!,{r0,r3}
- eors r0,r0,r6
- eors r0,r0,r10
- bne 1f
- eors r3,r3,r7
- eors r3,r3,r11
- bne 1f
- subs r1,r1,#16
-
- pop {r0,r3}                 @ now EOR plaintext shares on stack to recover non-shared plaintext
- ldr r14,[sp,#8]
- eors r0,r0,r14
- ldr r14,[sp,#12]
- eors r3,r3,r14
- stmia r1!,{r0,r3}           @ overwrite ciphertext with plaintext
-
- pop {r0,r3}
- ldr r14,[sp,#8]
- eors r0,r0,r14
- ldr r14,[sp,#12]
- eors r3,r3,r14
- stmia r1!,{r0,r3}           @ overwrite ciphertext with plaintext
-
- add r13,#16                 @ first share of plaintext has now been popped; skip the other share
-
-.else
-
-@ compute plaintext {r4-r7}^{r8-r11}^{SP[0..3]}^{SP[4..7]}
-@ as shares {r4-r7}^{SP[0..3]}, {r8-r11}^{SP[4..7]}
- pop {r0,r3}
- eor r4,r0,r4
- eor r5,r3,r5
- pop {r0,r3}
- eor r6,r0,r6
- eor r7,r3,r7
- pop {r0,r3}
- eor r8,r0,r8
- eor r9,r3,r9
- pop {r0,r3}
- eor r10,r0,r10
- eor r11,r3,r11              @ now plaintext_s in r4-r11
- eor r8,r8,r4                @ convert to non-shared
- eor r9,r9,r5
- eor r10,r10,r6
- eor r11,r11,r7              @ now plaintext_ns in r8-r11
- ldmia r1,{r4-r7}            @ ciphertext_ns in r4-r7
- stmia r1!,{r8-r11}          @ overwrite ciphertext_ns with plaintext_ns
- bl ns_to_s                  @ convert non-shared ciphertext to shared
-
-.endif
-
- push {r4-r11}               @ push ciphertext_s, replacing iv or previous ciphertext_s on stack
- subs r2,r2,#1               @ count the blocks
- bne 2b
- add r13,#32
- mov r0,#0                   @ return OK status
- pop {r4-r11,r15}
-
-.if ROUND_TRIP_TEST
-1:
-@ fault here
- add r13,#32
- mov r0,#1                   @ return fault status
- pop {r4-r11,r15}
-.endif
-.endif
-
-@ Does mov r(i),#(0x80+i)*0x1010101 for i=flushfrom,flushfrom+1,...,12
-@ Assume 0 <= flushfrom <= 3
-@ Not possible to do this in a loop (or recursively) in gas without .altmacro?
-.macro flush_regs flushfrom
-.if \flushfrom<1
- mov r0,#0x80808080
-.endif
-.if \flushfrom<2
- mov r1,#0x81818181
-.endif
-.if \flushfrom<3
- mov r2,#0x83838383
-.endif
- mov r3,  #0x83838383
- mov r4,  #0x84848484
- mov r5,  #0x85858585
- mov r6,  #0x86868686
- mov r7,  #0x87878787
- mov r8,  #0x88888888
- mov r9,  #0x89898989
- mov r10, #0x8a8a8a8a
- mov r11, #0x8b8b8b8b
- mov r12, #0x8c8c8c8c
-.endm
-
-
-@ numargs is the number of arguments of the function-to-be-wrapped (i.e., excluding systick), assumed to be <=3
-.macro prewrap numargs
- push {r4-r12,r14}
-
-@ Reset DWT count registers
- mov r4,#0xe0000000
- add r4,r4,#0x1000
- add r4,r4,#4
- mov r5,#0
- mov r6,#0
- stmia r4!,{r5-r6}
- add r4,r4,#8
- stmia r4!,{r5-r6}
-
-@ Clear any possible pending SysTick interrupt status
- mov r4,#0xe0000000
- add r4,r4,#0xed00
- mov r5,#1<<25
- str r5,[r4,#4] @ ICSR at e000ed04
-
- isb sy
- dsb sy
-
-@ Allow SysTick interrupts, depending on r0=0 or 1 input
- mov r0,r0,lsl#1
- add r0,r0,#5
- mov r4,#0xe000e000
- str r0,[r4,#0x10] @ SysTick CSR
- 
- gpioput 16,1,r4,r5 @ ADC trigger high (starts power trace capture)
-
-@ Shift arguments down to remove systick argument
-.if \numargs>=1
- mov r0,r1
-.if \numargs>=2
- mov r1,r2
-.if \numargs>=3
- mov r2,r3
-.endif
-.endif
-.endif
-
-@ Set registers r\numargs - r12 to definite values
- flush_regs \numargs
-@ Set r3 back to non-sentinel value in case the test program never changes r3 or r12 which would confuse the auto-detect of start/end
- mov r3,#0
-
-.endm
-
-@ numreturn is the number of return values, assumed to be 0 or 1
-.macro postwrap numreturn
- gpioput 16,0,r1,r2 @ ADC trigger low
- flush_regs \numreturn
- mov r1,#0xe000e000
- mov r2,#4
- str r2,[r1,#0x10] @ Disable SysTick
- ldr r2,[r1,#0x18]
- ldr r1,=lastsystickcvr
- str r2,[r1]
-
-@ Get final DWT cycle count
- ldr r1,=0xe0001000
- ldr r2,[r1,#4]
- ldr r1,=lastdwtcount
- str r2,[r1]
- 
- pop {r4-r12,r15}
-.endm
-
-
-.if INCLUDE_CRYPT_CTR
 .balign 4
 .thumb_func
 @ de/encrypt data in place
@@ -1946,11 +1483,12 @@ cbc_decrypt_s:
 .endif
 
 ctr_crypt_s:
-
 @ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks
- push {r0,r4-r11,r14}
- 
+ GET_CANARY r12,CTAG0
+ push {r0,r4-r11,r12,r14}
+
  push {r0-r2}
+ SET_COUNT 93
 
 .if CT_BPERM
 @ Initialise 32 random numbers (which fit in half-words)
@@ -1967,44 +1505,41 @@ ctr_crypt_s:
  bl randomisechaff
  pop {r0-r2}
  movs r3,#0
+ CHK_COUNT 93
 
 ctr_crypt_mainloop:
-@ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
+ SET_COUNT 80
+@ here r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
 
 @ Do as much preparatory stuff as possible that doesn't involve the IV (to reduce interaction with it)
- push {r0-r2}
-
+ push {r0-r3}
 @ It's OK for execution time to depend on the block counter r3 ("public"), but not the block number (secret)
 
  tst r3,#(REFCHAFF_PERIOD-1)
  bne 1f
- push {r3}
  bl refreshchaff
- pop {r3}
- 1:
+1:
 
+ ldr r3,[r13,#12]            @ get block count off the stack
  tst r3,#(REMAP_PERIOD-1)
  bne 1f
- push {r3}
- bl remap                    @ shuffle the LUts
- pop {r3}
- 1:
+ bl remap                    @ shuffle the LUTs; this preserves R3
+1:
+ CHK_COUNT 80
 
  tst r3,#(REFROUNDKEYSHARES_PERIOD-1)
  bne 1f
- push {r3}
  bl ref_roundkey_shares_s    @ refresh the round key shares
- pop {r3}
- 1:
+1:
 
+ ldr r3,[r13,#12]            @ get block count off the stack
  tst r3,#(REFROUNDKEYHVPERMS_PERIOD-1)
  bne 1f
- push {r3}
  bl ref_roundkey_hvperms_s   @ refresh the round key vperms
- pop {r3}
- 1:
+1:
 
- pop {r0-r2}
+ CHK_COUNT 81
+ pop {r0-r3}
 @ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
 
 @ Now calculate r12 = block number-to-be-deciphered from r3 = block counter
@@ -2025,7 +1560,7 @@ ctr_crypt_mainloop:
  subs r7,r4,r5               @ r7=i-j
  and  r8,r7,r7,asr#31        @ r8=min(i-j,0)
  sub  r7,r7,r8,lsl#1         @ r7=|i-j|
- mla  r6,r6,r2,r7            @ r6=n(i+j)+|i-j|
+ mla  r6,r6,r2,r7            @ r6=n(i+j)+|i-j|, encodes the unordered pair {i,j}
  eors r6,r6,r1,lsl#27        @ mix with swap-or-not round counter to get different hash functions
 @ Now do murmur3_32 hash of r6
  mul  r6,r6,r9
@@ -2042,7 +1577,7 @@ ctr_crypt_mainloop:
  eors r6,r6,r6,lsr#16        @ not actually used here
 @ Now set i to j, conditional on the top bit of r6
  subs r7,r5,r4               @ r7=j-i
- ands r7,r7,r6,asr#31        @ r7=(j-1)*(top bit of r6)
+ ands r7,r7,r6,asr#31        @ r7=(j-i)*(top bit of r6)
  adds r4,r4,r7               @ r4=j if top bit of r6, else i
  subs r1,r1,#1
  bpl 1b
@@ -2051,6 +1586,7 @@ ctr_crypt_mainloop:
 .else
  mov r12,r3
 .endif
+ CHK_COUNT 82
 
 @ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter, r12=block to be deciphered
  push {r0-r3,r12}
@@ -2073,7 +1609,7 @@ processIV:                   @ non-target label to assist power analysis
  pop {r0-r3}                 @ may come from non-scratch memory and have its own internal registers, so we clear it using a
                              @ stack save/load. Either R13 is in non-scratch memory, in which case this works, or it isn't, in
                              @ which case it doesn't matter, because the only subsequent use of non-scratch memory is the stack.
- 
+
 @ Add in r9 in byte-big-endian, bit-little-endian (!) fashion, while trying to avoid rev operations
 @ as far as possible as these tend to expose (via power fluctuations) byte-level hamming weights.
 @ It's worth avoiding revs on r6, r5, r4, even at the cost of introducing a small timing dependency.
@@ -2092,14 +1628,54 @@ processIV:                   @ non-target label to assist power analysis
  rev r4,r4; sbcs r4,r4,#0; rev r4,r4
 1:
  clear01 16
- 
+ CHK_COUNT 83
+
 @ r4-r7 = IV for the current block
  bl ns_to_s                  @ convert IV+x to shares, which includes choosing and incorporating a random shareC
+ CHK_COUNT 84
  bl conjshareC               @ Add the effect of shareC to lut_a, lut_b
- bl rounds_s                 @ Do the 15 AES rounds on (key, state=IV+x), with the (shared) result in the state, R4-R11
- bl conjshareC               @ Undo the effect of shareC from lut_a, lut_b
+ CHK_COUNT 85
+@ now perform the 15 encryption rounds on (key, state=IV+x)
+@ here r4-r7, r8-r11: state
+ mov r2,#0                   @ round counter
+rounds_s_mainloop:
+ ldr r12,=rkey_s
+ add r12,r12,r2,lsl#5        @ pointer to key shares for this round
+ add r12,r12,r2,lsl#3
+ push {r2}                   @ save round count
+ bl addrkey_s
+ bl map_sbox_s
+ bl shift_rows_s
 .if ST_VPERM
- bl vpermundo                @ Undo vperm on the state shares
+ ldmia r13,{r2}              @ peek at stack to get round count
+ cmp r2,#NUMREFSTATEVPERM
+ bcs 1f
+ bl gen_rand_lfsr_nonpres
+ ldr r1,=statevperm
+ bl addstatevperm            @ V shuffle of r4-r11
+1:
+.endif
+ pop {r2}
+ adds r2,r2,#1               @ increment round counter
+ cmp r2,#14
+ beq 2f                      @ break from loop? (last round has no mix_cols)
+ push {r2}
+ bl mix_cols_s
+ pop {r2}
+ b rounds_s_mainloop
+2:
+ CHK_COUNT 86
+ ldr r12,=rkey_s+14*40       @ final round key shares
+ bl addrkey_s
+ CHK_COUNT 87
+ bl conjshareC               @ Undo the effect of shareC from lut_a, lut_b
+ CHK_COUNT 88
+.if ST_VPERM
+@ Undo the effects of vperm rotation recorded in statevperm
+ ldr r1,=statevperm
+ ldr r2,[r1]
+ rsbs r0,r2,#0
+ bl addstatevperm
 .endif
 
  pop {r0-r3,r12}
@@ -2113,6 +1689,7 @@ processIV:                   @ non-target label to assist power analysis
 .else
  movs r0,#0
 .endif
+ CHK_COUNT 89
  add r1,r1,r12,lsl#4         @ Temporarily r1 points to block-to-be-deciphered
  ldr r3,[r1]
  eors r3,r3,r4
@@ -2135,164 +1712,15 @@ processIV:                   @ non-target label to assist power analysis
  eors r3,r3,r0
  str r3,[r1,#12]
  sub r1,r1,r12,lsl#4         @ Restore r1 to point to start of buffer
- 
+ CHK_COUNT 90
+
  pop {r0,r3}                 @ Restore IV and block counter
 @ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
 
  adds r3,r3,#1
  cmp r3,r2
+ CHK_COUNT 91
  bne ctr_crypt_mainloop
- pop {r0,r4-r11,r15}
-
-.endif
-
-.section .text.debugging,"ax",%progbits
-
-@@@@@@@@@@@@@@@@@@@@@@@@@ test functions @@@@@@@@@@@@@@@@@@@@@@@@@
-
-@ .global test_v
-
-@@ .section .text.test_v,"ax",%progbits
-@ .macro fn
-@  ldr.n r0,=0x12345678
-@  ldr.n r0,=0xedcba987
-@ .endm
-@ .macro tenfn
-@  fn
-@  fn
-@  fn
-@  fn
-@  fn
-@  fn
-@  fn
-@  fn
-@  fn
-@  fn
-@ .endm
-@ .macro hundredfn
-@  tenfn
-@  tenfn
-@  tenfn
-@  tenfn
-@  tenfn
-@  tenfn
-@  tenfn
-@  tenfn
-@  tenfn
-@  tenfn
-@ .endm
-@
-@ .thumb_func
-@ test_v:
-@ .balign 4
-@ 1:
-@  hundredfn
-@  b 1b
-@  bx r14
-@ .ltorg
-
-@ switch from shared to non-shared state
-@ s_to_ns:
-@  eor r4,r4,r8
-@  eor r5,r5,r9
-@  eor r6,r6,r10
-@  eor r7,r7,r11
-@  bx r14
-
-.extern o8hex
-.extern osp
-.extern onl
-
-.thumb_func
-delay:
-.if CHIPW
- subs r0,r0,#3     @ we are clocked approximately three times slower
-.else
- subs r0,r0,#1
-.endif
- bcs delay
+ pop {r0,r4-r11,r12,r14}
+ CHK_CANARY r12,CTAG0
  bx r14
-
-
-.thumb_func
-isr_systick:
-
- @ Stop SysTick counting
- mov r0,#0xe000e000
- mov r1,#4
- str r1,[r0,#0x10] @ SysTick Control and Status Register
- 
- @ Clear any possible pending SysTick interrupt status due to SysTick count timing out during its own handler
- add r0,r0,#0xd00
- mov r1,#1<<25
- str r1,[r0,#4] @ ICSR at e000ed04
-
- gpioput 24,1,r2,r3 @ set GPIO24
- 
- ldr r0,=systick_data
- ldr r1,[r0]
- adds r1,r1,#1
- stmia r0!,{r1}
- 
- ldr r1,[r13,#0] @ r0..r2
- ldr r2,[r13,#4]
- ldr r3,[r13,#8]
- stmia r0!,{r1-r3}
- ldr r1,[r13,#12] @ r3
- stmia r0!,{r1,r4-r11}
- ldr r1,[r13,#16] @ r12
- ldr r3,[r13,#28] @ RETPSR
- ubfx r2,r3,#9,#1 @ SPREALIGN
- add r2,r13,r2,lsl#2 @ add 4 to SP if SPREALIGN set in RETPSR
- add r2,r2,#0x68 @ r13
- stmia r0!,{r1-r2}
-
- ldr r1,[r13,#20] @ r14
- ldr r2,[r13,#24] @ ReturnAddress
-@ RETPSR still in r3
- stmia r0!,{r1-r3}
-
-@ Store DWT counts CYCCNT, CPICNT, LSUCNT, FOLDCNT in sysdata[18-21]
- ldr r1,=0xe0001004
- ldmia r1!,{r2,r3}
- stmia r0!,{r2,r3}
- add r1,r1,#8
- ldmia r1!,{r2,r3}
- stmia r0!,{r2,r3}
-
- gpioput 24,0,r2,r3 @ clear GPIO24
-
- bx r14
-
-.balign 4
-.thumb_func
-@ Takes SHA256 of 64-bits (r0,r1) and stores the result at memory pointed to by r2 (32 bytes)
-@ This is used to generate random inputs (key and IV) to repeated instances of the crypt code.
-@ These random numbers are mimicked in powerpair.py which can then analyse the effect of these random inputs on the power signal.
-@ Preserves r0-r13
-gen_irand:
- push {r0-r8,r14}
- mov r8,r2
- ldr r4,=SHA256_BASE
- movw r2,#(1<<SHA256_CSR_BSWAP_LSB)+(1<<SHA256_CSR_START_LSB)
- str r2,[r4,#SHA256_CSR_OFFSET]        @ start SHA256 hardware
- str r0,[r4,#SHA256_WDATA_OFFSET]      @ 64-bit input in r0,r1
- str r1,[r4,#SHA256_WDATA_OFFSET]      @
- movs r2,#0x80                         @ End of message bit (with byte-swapped endianity) = start of message padding
- str r2,[r4,#SHA256_WDATA_OFFSET]
- movs r2,#12
- movs r3,#0
-1:
- str r3,[r4,#SHA256_WDATA_OFFSET]
- subs r2,r2,#1
- bne 1b
- mov r2,#0x40000000          @ Specifies message length =  64 bits (with byte-swapped endianity)
- str r2,[r4,#SHA256_WDATA_OFFSET]
-1:
- ldr r3,[r4,#SHA256_CSR_OFFSET]
- lsrs r3,r3,#SHA256_CSR_SUM_VLD_LSB+1
- bcc 1b                      @ wait for hardware to finish
- add r0,r4,#SHA256_SUM0_OFFSET
- ldmia r0,{r0-r7}
- stmia r8,{r0-r7}
- pop {r0-r8,r15}
