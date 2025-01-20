@@ -1427,15 +1427,15 @@ addrkey_s:
 .if RK_ROR
  movs r0,r2,lsl#3
  movs r1,r1,ror r0
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2];                   rors r0,r0,r1; eors r4,r4,r0; adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; movs r1,r1,ror#8; rors r0,r0,r1; eors r5,r5,r0; adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; movs r1,r1,ror#8; rors r0,r0,r1; eors r6,r6,r0; adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; movs r1,r1,ror#8; rors r0,r0,r1; eors r7,r7,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; adds r2,r2,#1;                   rors r0,r0,r1; eors r4,r4,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; adds r2,r2,#1; movs r1,r1,ror#8; rors r0,r0,r1; eors r5,r5,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; adds r2,r2,#1; movs r1,r1,ror#8; rors r0,r0,r1; eors r6,r6,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2];                movs r1,r1,ror#8; rors r0,r0,r1; eors r7,r7,r0
 .else
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r4,r4,r0; adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r5,r5,r0; adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r6,r6,r0; adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r7,r7,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; adds r2,r2,#1; eors r4,r4,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; adds r2,r2,#1; eors r5,r5,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; adds r2,r2,#1; eors r6,r6,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2];                eors r7,r7,r0
 .endif
  clear03_preserve_r3
  add r12,r12,#20
@@ -1455,15 +1455,15 @@ addrkey_s:
 .if RK_ROR
  movs r0,r2,lsl#3
  movs r1,r1,ror r0
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r8,r8,r3,ror#16;                     rors r0,r0,r1; eors r8,r8,r0;   adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r9,r9,r3,ror#16;   movs r1,r1,ror#8; rors r0,r0,r1; eors r9,r9,r0;   adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r10,r10,r3,ror#16; movs r1,r1,ror#8; rors r0,r0,r1; eors r10,r10,r0; adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r11,r11,r3,ror#16; movs r1,r1,ror#8; rors r0,r0,r1; eors r11,r11,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eor r8,r8,r3,ror#16;   adds r2,r2,#1;                   rors r0,r0,r1; eor r8,r8,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eor r9,r9,r3,ror#16;   adds r2,r2,#1; movs r1,r1,ror#8; rors r0,r0,r1; eor r9,r9,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eor r10,r10,r3,ror#16; adds r2,r2,#1; movs r1,r1,ror#8; rors r0,r0,r1; eor r10,r10,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eor r11,r11,r3,ror#16;                movs r1,r1,ror#8; rors r0,r0,r1; eor r11,r11,r0
 .else
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r8,r8,r0;   eors r8,r8,r3,ror#16;   adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r9,r9,r0;   eors r9,r9,r3,ror#16;   adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r10,r10,r0; eors r10,r10,r3,ror#16; adds r2,r2,#1
- ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eors r11,r11,r0; eors r11,r11,r3,ror#16
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eor r8,r8,r3,ror#16;   adds r2,r2,#1; eors r8,r8,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eor r9,r9,r3,ror#16;   adds r2,r2,#1; eors r9,r9,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eor r10,r10,r3,ror#16; adds r2,r2,#1; eors r10,r10,r0
+ ands r2,r2,#3; ldr r0,[r12,r2,lsl#2]; eor r11,r11,r3,ror#16;                eors r11,r11,r0
 .endif
  clear03
  
