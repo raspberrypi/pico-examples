@@ -1,7 +1,7 @@
 /**
  * @file gps_uart.c
  * @brief A GPS driver that parses NMEA sentences from a GPS module.
- * @author Yousef Yasser, Rasheed Atia, Seif Abbas
+ * @author Yousef Yasser, Rasheed Atia, Seifeldin Khaled
  * @date 2025-01-21
  */
 
@@ -243,7 +243,6 @@ int main()
 
     // sufficient waiting time required between each gps reading and the next one
     sleep_ms(30 * 1000);
-    tight_loop_contents();
   }
 
   return 0;
