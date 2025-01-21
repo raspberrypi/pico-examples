@@ -3,6 +3,8 @@
  * @brief A GPS driver that parses NMEA sentences from a GPS module.
  * @author Yousef Yasser, Rasheed Atia, Seifeldin Khaled
  * @date 2025-01-21
+ * 
+ * SPDX-License-Identifier: MIT
  */
 
 #include "hardware/uart.h"
