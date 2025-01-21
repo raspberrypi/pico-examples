@@ -6,7 +6,8 @@
 #include <string.h>
 #include <stdbool.h>
 
-
+// uart id and tx/rx pins could vary according to the microcontroller used
+// please refer to the datasheet
 #define UART_ID uart1
 #define BAUD_RATE 9600
 #define UART_TX_PIN 4
@@ -156,4 +157,35 @@ void process_gps_data(GPSData *gps_data)
             chars_read++;
         }
     }
+}
+
+int main()
+{
+  stdio_init_all();
+
+  uart_gps_init();
+
+  // recommended cold start waiting time (could vary based on the gps module)
+  sleep_ms(7 * 60 * 1000);
+
+  GPSData gps_data = {0};
+  
+  while (1)
+  {
+    process_gps_data(&gps_data);
+
+    if (gps_data.is_valid)
+    {
+      printf("GPS Location:\n");
+      printf("Latitude: %.6f\n", gps_data.latitude);
+      printf("Longitude: %.6f\n", gps_data.longitude);
+      gps_data.is_valid = false;
+    }
+
+    // sufficient waiting time required between each gps reading and the next one
+    sleep_ms(30 * 1000);
+    tight_loop_contents();
+  }
+
+  return 0;
 }
