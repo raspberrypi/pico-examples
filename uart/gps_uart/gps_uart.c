@@ -1,3 +1,10 @@
+/**
+ * @file gps_uart.c
+ * @brief A GPS driver that parses NMEA sentences from a GPS module.
+ * @author Yousef Yasser, Rasheed Atia, Seif Abbas
+ * @date 2025-01-21
+ */
+
 #include "hardware/uart.h"
 #include "pico/stdlib.h"
 
@@ -22,6 +29,12 @@ typedef struct
 } GPSData;
 
 
+/**
+ * @brief Initializes the UART interface for GPS communication.
+ *
+ * This function sets up the UART interface with the specified baud rate,
+ * configures the TX and RX pins, and enables the UART FIFO.
+ */
 void uart_gps_init()
 {
     uart_init(UART_ID, BAUD_RATE);
@@ -34,6 +47,16 @@ void uart_gps_init()
     uart_set_fifo_enabled(UART_ID, true);
 }
 
+
+/**
+ * @brief Validates the checksum of an NMEA sentence.
+ *
+ * This function calculates the checksum of the NMEA sentence and compares it
+ * with the checksum provided in the sentence. If they match, the sentence is valid.
+ *
+ * @param nmea_string The NMEA sentence to validate.
+ * @return true if the checksum is valid, false otherwise.
+ */
 bool validate_nmea_checksum(char *nmea_string)
 {
     int len = strlen(nmea_string);
@@ -71,6 +94,16 @@ bool validate_nmea_checksum(char *nmea_string)
     return is_valid;
 }
 
+
+/**
+ * @brief Converts an NMEA coordinate to decimal degrees.
+ *
+ * This function converts an NMEA-formatted coordinate (DDMM.MMMM) to
+ * decimal degrees (DD.DDDDDD).
+ *
+ * @param nmea_coord The NMEA coordinate string to convert.
+ * @param decimal_coord Pointer to store the converted decimal coordinate.
+ */
 void convert_nmea_to_decimal(char *nmea_coord, float *decimal_coord)
 {
     float degrees = atof(nmea_coord) / 100.0;
@@ -80,6 +113,17 @@ void convert_nmea_to_decimal(char *nmea_coord, float *decimal_coord)
     *decimal_coord = int_degrees + (minutes / 60.0);
 }
 
+
+/**
+ * @brief Parses an NMEA sentence and extracts GPS data.
+ *
+ * This function parses an NMEA sentence (currently only $GPRMC) and extracts
+ * latitude, longitude, and validity information. It also validates the checksum.
+ *
+ * @param nmea_string The NMEA sentence to parse.
+ * @param gps_data Pointer to the GPSData structure to store the parsed data.
+ * @return true if the sentence was successfully parsed, false otherwise.
+ */
 bool parse_nmea_gps(char *nmea_string, GPSData *gps_data)
 {
     if (!validate_nmea_checksum(nmea_string))
@@ -129,6 +173,15 @@ bool parse_nmea_gps(char *nmea_string, GPSData *gps_data)
     }
 }
 
+
+/**
+ * @brief Processes incoming GPS data from the UART interface.
+ *
+ * This function reads NMEA sentences from the UART interface, validates them,
+ * and updates the GPSData structure if a valid sentence is received.
+ *
+ * @param gps_data Pointer to the GPSData structure to store the parsed data.
+ */
 void process_gps_data(GPSData *gps_data)
 {
     char nmea_buffer[MAX_NMEA_LENGTH];
@@ -159,6 +212,12 @@ void process_gps_data(GPSData *gps_data)
     }
 }
 
+/**
+ * @brief Main function for the GPS driver example.
+ *
+ * This function initializes the UART interface, waits for the GPS module to
+ * cold start, and continuously processes and prints GPS data.
+ */
 int main()
 {
   stdio_init_all();
