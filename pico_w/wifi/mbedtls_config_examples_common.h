@@ -68,4 +68,7 @@
 #define MBEDTLS_PEM_PARSE_C
 #define MBEDTLS_BASE64_C
 
+// The following significantly speeds up mbedtls due to NIST optimizations.
+#define MBEDTLS_ECP_NIST_OPTIM
+
 #endif
