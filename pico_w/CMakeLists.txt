@@ -24,11 +24,5 @@ if (PICO_CYW43_SUPPORTED) # set by PICO_BOARD=pico_w
         else()
             add_subdirectory(bt)
         endif()
-
-        if (NOT TARGET picow_bt_example_no_cyw43_lwip_background)
-            message("Skipping Pico W Mqtt examples as support is not available")
-        else()
-            add_subdirectory(mqtt)
-        endif ()
     endif()
 endif()
