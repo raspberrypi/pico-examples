@@ -14,7 +14,9 @@
 #include "hardware/irq.h"
 #include "hardware/adc.h"
 #include "lwip/apps/mqtt.h"
+#include "lwip/apps/mqtt_priv.h" // needed to set hostname
 #include "lwip/dns.h"
+#include "lwip/altcp_tls.h"
 
 // Temperature
 #ifndef TEMPERATURE_UNITS
@@ -25,9 +27,9 @@
 #error Need to define MQTT_SERVER
 #endif
 
-// MQTT parameters
-#ifndef MQTT_PORT
-#define MQTT_PORT 1883
+// This file includes your client certificate for client server authentication
+#ifdef MQTT_CERT_INC
+#include MQTT_CERT_INC
 #endif
 
 typedef struct {
@@ -129,6 +131,14 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
 }
 
 static void start_client(MQTT_CLIENT_DATA_T *state) {
+#if LWIP_ALTCP && LWIP_ALTCP_TLS
+    const int port = MQTT_TLS_PORT;
+    printf("Using TLS\n");
+#else
+    const int port = MQTT_PORT;
+    printf("Warning: Not using TLS\n");
+#endif
+
     state->mqtt_client_inst = mqtt_client_new();
     if (!state->mqtt_client_inst) {
         panic("MQTT client instance creation error");
@@ -137,9 +147,13 @@ static void start_client(MQTT_CLIENT_DATA_T *state) {
     printf("Connecting to mqtt server at %s\n", ipaddr_ntoa(&state->mqtt_server_address));
 
     cyw43_arch_lwip_begin();
-    if (mqtt_client_connect(state->mqtt_client_inst, &state->mqtt_server_address, MQTT_PORT, mqtt_connection_cb, state, &state->mqtt_client_info) != ERR_OK) {
+    if (mqtt_client_connect(state->mqtt_client_inst, &state->mqtt_server_address, port, mqtt_connection_cb, state, &state->mqtt_client_info) != ERR_OK) {
         panic("MQTT broker connection error");
     }
+#if LWIP_ALTCP && LWIP_ALTCP_TLS
+    // This is important for MBEDTLS_SSL_SERVER_NAME_INDICATION
+    mbedtls_ssl_set_hostname(altcp_tls_context(state->mqtt_client_inst->conn), MQTT_SERVER);
+#endif
     mqtt_set_inpub_callback(state->mqtt_client_inst, mqtt_incoming_publish_cb, mqtt_incoming_data_cb, state);
     cyw43_arch_lwip_end();
 }
@@ -157,12 +171,17 @@ static void dns_found(const char *hostname, const ip_addr_t *ipaddr, void *arg) 
 
 int main(void) {
     stdio_init_all();
+    printf("mqtt client starting\n");
 
     adc_init();
     adc_set_temp_sensor_enabled(true);
     adc_select_input(4);
 
     static MQTT_CLIENT_DATA_T state;
+
+    if (cyw43_arch_init()) {
+        panic("Failed to inizialize CYW43");
+    }
 
     // Use board unique id for the client id
     static char client_id_buf[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
@@ -176,10 +195,23 @@ int main(void) {
     state.mqtt_client_info.client_user = NULL;
     state.mqtt_client_info.client_pass = NULL;
 #endif
-
-    if (cyw43_arch_init()) {
-        panic("Failed to inizialize CYW43");
-    }
+#if LWIP_ALTCP && LWIP_ALTCP_TLS
+    // TLS enabled
+#ifdef MQTT_CERT_INC
+    static const uint8_t ca_cert[] = TLS_ROOT_CERT;
+    static const uint8_t client_key[] = TLS_CLIENT_KEY;
+    static const uint8_t client_cert[] = TLS_CLIENT_CERT;
+    // This confirms the indentity of the server and the client
+    state.mqtt_client_info.tls_config = altcp_tls_create_config_client_2wayauth(ca_cert, sizeof(ca_cert),
+            client_key, sizeof(client_key), NULL, 0, client_cert, sizeof(client_cert));
+#if ALTCP_MBEDTLS_AUTHMODE != MBEDTLS_SSL_VERIFY_REQUIRED
+    WARN_printf("Warning: tls without verification is insecure\n");
+#endif
+#else
+    state->client_info.tls_config = altcp_tls_create_config_client(NULL, 0);
+    WARN_printf("Warning: tls without a certificate is insecure\n");
+#endif
+#endif
 
     cyw43_arch_enable_sta_mode();
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
