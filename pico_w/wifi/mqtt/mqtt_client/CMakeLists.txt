@@ -1,28 +1,35 @@
+# Define the host name of the MQTT server in an environment variable or pass it to cmake,
+# e.g. cmake -DMQTT_SERVER=myserver ..
 
+if (DEFINED ENV{MQTT_SERVER} AND (NOT MQTT_SERVER))
+    set(MQTT_SERVER $ENV{MQTT_SERVER})
+    message("Using MQTT_SERVER from environment ('${MQTT_SERVER}')")
+endif()
+if (NOT MQTT_SERVER)
+    return()
+endif()
 
-add_executable(mqttApp
+# Define the name of an MQTT broker/server to enable this example
+set(MQTT_SERVER "${MQTT_SERVER}" CACHE INTERNAL "MQTT server for examples")
+
+set(TARGET_NAME mqtt_client)
+
+add_executable(${TARGET_NAME}
         mqtt_client.c
         )
-target_link_libraries(mqttApp
+target_link_libraries(${TARGET_NAME}
         pico_stdlib
         hardware_adc
         pico_cyw43_arch_lwip_threadsafe_background
         pico_lwip_mqtt
 )
-
-set(PICO_BOARD pico_w CACHE STRING "Board type")
-# Pull in Raspberry Pi Pico SDK (must be before project)
-if (PICO_SDK_VERSION_STRING VERSION_LESS "1.4.0")
-    message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.4.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
-endif()
-
-pico_set_program_name(mqttApp "mqttApp")
-pico_set_program_version(mqttApp "0.1")
-pico_enable_stdio_uart(mqttApp 1)
-pico_enable_stdio_usb(mqttApp 1)
-target_include_directories(mqttApp PRIVATE
+target_include_directories(${TARGET_NAME} PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required
+        ${CMAKE_CURRENT_LIST_DIR}/../.. # for our common lwipopts or any other standard includes, if required
 )
-
-pico_add_extra_outputs(mqttApp)
+target_compile_definitions(${TARGET_NAME} PRIVATE
+        WIFI_SSID=\"${WIFI_SSID}\"
+        WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
+        MQTT_SERVER=\"${MQTT_SERVER}\"
+        )
+pico_add_extra_outputs(${TARGET_NAME})
