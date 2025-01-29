@@ -169,6 +169,13 @@ int main(void) {
     pico_get_unique_board_id_string(client_id_buf, sizeof(client_id_buf));
     state.mqtt_client_info.client_id = client_id_buf;
     state.mqtt_client_info.keep_alive = 60; // Keep alive in sec
+#if defined(MQTT_USERNAME) && defined(MQTT_PASSWORD)
+    state.mqtt_client_info.client_user = MQTT_USERNAME;
+    state.mqtt_client_info.client_pass = MQTT_PASSWORD;
+#else
+    state.mqtt_client_info.client_user = NULL;
+    state.mqtt_client_info.client_pass = NULL;
+#endif
 
     if (cyw43_arch_init()) {
         panic("Failed to inizialize CYW43");
