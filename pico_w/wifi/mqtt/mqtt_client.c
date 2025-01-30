@@ -39,7 +39,22 @@ typedef struct {
     char topic[100];
     uint32_t len;
     ip_addr_t mqtt_server_address;
+    bool connect_done;
+    int subscribe_count;
+    bool stop_client;
 } MQTT_CLIENT_DATA_T;
+
+#ifndef DEBUG_printf
+#ifndef NDEBUG
+#define DEBUG_printf printf
+#else
+#define DEBUG_printf(...)
+#endif
+#endif
+
+#ifndef INFO_printf
+#define INFO_printf printf
+#endif
 
 /* References for this implementation:
  * raspberry-pi-pico-c-sdk.pdf, Section '4.1.1. hardware_adc'
@@ -83,9 +98,39 @@ static void publish_temperature(MQTT_CLIENT_DATA_T *state) {
         // Publish temperature on /temperature topic
         char temp_str[16];
         snprintf(temp_str, sizeof(temp_str), "%.2f", temperature);
-        printf("Publishing %s to %s\n", temp_str, temperature_key);
+        INFO_printf("Publishing %s to %s\n", temp_str, temperature_key);
         mqtt_publish(state->mqtt_client_inst, temperature_key, temp_str, strlen(temp_str), 0, 0, NULL, NULL);
     }
+}
+
+static void sub_request_cb(void *arg, err_t err) {
+    MQTT_CLIENT_DATA_T* state = (MQTT_CLIENT_DATA_T*)arg;
+    if (err != 0) {
+        panic("subscribe request failed %d", err);
+    }
+    state->subscribe_count++;
+}
+
+static void unsub_request_cb(void *arg, err_t err) {
+    MQTT_CLIENT_DATA_T* state = (MQTT_CLIENT_DATA_T*)arg;
+    if (err != 0) {
+        panic("unsubscribe request failed %d", err);
+    }
+    state->subscribe_count--;
+    assert(state->subscribe_count >= 0);
+
+    // Stop if requested
+    if (state->subscribe_count <= 0 && state->stop_client) {
+        mqtt_disconnect(state->mqtt_client_inst);
+    }
+}
+
+static void sub_unsub_topics(MQTT_CLIENT_DATA_T* state, bool sub) {
+    mqtt_request_cb_t cb = sub ? sub_request_cb : unsub_request_cb;
+    mqtt_sub_unsub(state->mqtt_client_inst, "/led", 0, cb, state, sub);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/print", 0, cb, state, sub);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/ping", 0, cb, state, sub);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/exit", 0, cb, state, sub);
 }
 
 static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
@@ -94,20 +139,28 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
     state->len = len;
     state->data[len] = '\0';
 
-    printf("Topic: %s, Message: %s\n", state->topic, state->data);
-
+    DEBUG_printf("Topic: %s, Message: %s\n", state->topic, state->data);
     if (strcmp(state->topic, "/led") == 0)
     {
         if (lwip_stricmp((const char *)state->data, "On") == 0)
             control_led(state, true);
         else if  (lwip_stricmp((const char *)state->data, "Off") == 0)
             control_led(state, false);
+    } else if (strcmp(state->topic, "/print") == 0) {
+        INFO_printf("%.*s\n", len, data);
+    } else if (strcmp(state->topic, "/ping") == 0) {
+        char buf[11];
+        snprintf(buf, sizeof(buf), "%u", to_ms_since_boot(get_absolute_time()) / 1000);
+        mqtt_publish(state->mqtt_client_inst, "/pong", buf, strlen(buf), 0, 0, NULL, NULL);
+    } else if (strcmp(state->topic, "/exit") == 0) {
+        state->stop_client = true; // stop the client when ALL subscriptions are stopped
+        sub_unsub_topics(state, false); // unsubscribe
     }
 }
 
 static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len) {
-    MQTT_CLIENT_DATA_T* mqtt_client = (MQTT_CLIENT_DATA_T*)arg;
-    strncpy(mqtt_client->topic, topic, sizeof(mqtt_client->topic));
+    MQTT_CLIENT_DATA_T* state = (MQTT_CLIENT_DATA_T*)arg;
+    strncpy(state->topic, topic, sizeof(state->topic));
 }
 
 static void temperature_worker_fn(async_context_t *context, async_at_time_worker_t *worker) {
@@ -118,14 +171,20 @@ static void temperature_worker_fn(async_context_t *context, async_at_time_worker
 static async_at_time_worker_t temperature_worker = { .do_work = temperature_worker_fn };
 
 static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection_status_t status) {
+    MQTT_CLIENT_DATA_T* state = (MQTT_CLIENT_DATA_T*)arg;
     if (status == MQTT_CONNECT_ACCEPTED) {
-        mqtt_sub_unsub(client, "/led", 0, NULL, arg, 1);
-        printf("Connected to the /led topic successfully\n");
+        state->connect_done = true;
+        sub_unsub_topics(state, true); // subscribe;
 
         // Publish temperature every 10 sec if it's changed
-        temperature_worker.user_data = arg;
+        temperature_worker.user_data = state;
         async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &temperature_worker, 0);
-    } else {
+    } else if (status == MQTT_CONNECT_DISCONNECTED) {
+        if (!state->connect_done) {
+            panic("Failed to connect to mqtt server");
+        }
+    }
+    else {
         panic("Unexpected status");
     }
 }
@@ -133,18 +192,18 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
 static void start_client(MQTT_CLIENT_DATA_T *state) {
 #if LWIP_ALTCP && LWIP_ALTCP_TLS
     const int port = MQTT_TLS_PORT;
-    printf("Using TLS\n");
+    INFO_printf("Using TLS\n");
 #else
     const int port = MQTT_PORT;
-    printf("Warning: Not using TLS\n");
+    INFO_printf("Warning: Not using TLS\n");
 #endif
 
     state->mqtt_client_inst = mqtt_client_new();
     if (!state->mqtt_client_inst) {
         panic("MQTT client instance creation error");
     }
-    printf("IP address of this device %s\n", ipaddr_ntoa(&(netif_list->ip_addr)));
-    printf("Connecting to mqtt server at %s\n", ipaddr_ntoa(&state->mqtt_server_address));
+    INFO_printf("IP address of this device %s\n", ipaddr_ntoa(&(netif_list->ip_addr)));
+    INFO_printf("Connecting to mqtt server at %s\n", ipaddr_ntoa(&state->mqtt_server_address));
 
     cyw43_arch_lwip_begin();
     if (mqtt_client_connect(state->mqtt_client_inst, &state->mqtt_server_address, port, mqtt_connection_cb, state, &state->mqtt_client_info) != ERR_OK) {
@@ -171,7 +230,7 @@ static void dns_found(const char *hostname, const ip_addr_t *ipaddr, void *arg) 
 
 int main(void) {
     stdio_init_all();
-    printf("mqtt client starting\n");
+    INFO_printf("mqtt client starting\n");
 
     adc_init();
     adc_set_temp_sensor_enabled(true);
@@ -217,7 +276,7 @@ int main(void) {
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
         panic("Failed to connect");
     }
-    printf("\nConnected to Wifi\n");
+    INFO_printf("\nConnected to Wifi\n");
 
     // We are not in a callback so locking is needed when calling lwip
     // Make a DNS request for the MQTT server IP address
@@ -232,10 +291,11 @@ int main(void) {
         panic("dns request failed");
     }
 
-    while (true) {
+    while (!state.connect_done || mqtt_client_is_connected(state.mqtt_client_inst)) {
         cyw43_arch_poll();
         cyw43_arch_wait_for_work_until(make_timeout_time_ms(10000));
     }
 
+    INFO_printf("mqtt client exiting\n");
     return 0;
 }
