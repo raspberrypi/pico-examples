@@ -56,6 +56,29 @@ typedef struct {
 #define INFO_printf printf
 #endif
 
+#ifndef ERROR_printf
+#define ERROR_printf printf
+#endif
+
+// how often to measure our temperature
+#define TEMP_WORKER_TIME_S 10
+
+// keep alive in seconds
+#define MQTT_KEEP_ALIVE_S 60
+
+// qos passed to mqtt_subscribe
+// At most once (QoS 0)
+// At least once (QoS 1)
+// Exactly once (QoS 2)
+#define MQTT_SUBSCRIBE_QOS 1
+#define MQTT_PUBLISH_QOS 1
+#define MQTT_PUBLISH_RETAIN 0
+
+// topic used for last will and testament
+#define MQTT_WILL_TOPIC "/online"
+#define MQTT_WILL_MSG "0"
+#define MQTT_WILL_QOS 1
+
 /* References for this implementation:
  * raspberry-pi-pico-c-sdk.pdf, Section '4.1.1. hardware_adc'
  * pico-examples/adc/adc_console/adc_console.c */
@@ -76,6 +99,12 @@ static float read_onboard_temperature(const char unit) {
     return -1.0f;
 }
 
+static void pub_request_cb(__unused void *arg, err_t err) {
+    if (err != 0) {
+        ERROR_printf("pub_request_cb failed %d", err);
+    }
+}
+
 static void control_led(MQTT_CLIENT_DATA_T *state, bool on) {
     // Publish state on /state topic and on/off led board
     const char* message = on ? "On" : "Off";
@@ -86,7 +115,7 @@ static void control_led(MQTT_CLIENT_DATA_T *state, bool on) {
 
     char state_topic[128];
     snprintf(state_topic, sizeof(state_topic), "%s/state", state->topic);
-    mqtt_publish(state->mqtt_client_inst, state_topic, message, strlen(message), 0, 0, NULL, NULL);
+    mqtt_publish(state->mqtt_client_inst, state_topic, message, strlen(message), MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
 }
 
 static void publish_temperature(MQTT_CLIENT_DATA_T *state) {
@@ -99,7 +128,7 @@ static void publish_temperature(MQTT_CLIENT_DATA_T *state) {
         char temp_str[16];
         snprintf(temp_str, sizeof(temp_str), "%.2f", temperature);
         INFO_printf("Publishing %s to %s\n", temp_str, temperature_key);
-        mqtt_publish(state->mqtt_client_inst, temperature_key, temp_str, strlen(temp_str), 0, 0, NULL, NULL);
+        mqtt_publish(state->mqtt_client_inst, temperature_key, temp_str, strlen(temp_str), MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
     }
 }
 
@@ -127,10 +156,10 @@ static void unsub_request_cb(void *arg, err_t err) {
 
 static void sub_unsub_topics(MQTT_CLIENT_DATA_T* state, bool sub) {
     mqtt_request_cb_t cb = sub ? sub_request_cb : unsub_request_cb;
-    mqtt_sub_unsub(state->mqtt_client_inst, "/led", 0, cb, state, sub);
-    mqtt_sub_unsub(state->mqtt_client_inst, "/print", 0, cb, state, sub);
-    mqtt_sub_unsub(state->mqtt_client_inst, "/ping", 0, cb, state, sub);
-    mqtt_sub_unsub(state->mqtt_client_inst, "/exit", 0, cb, state, sub);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/led", MQTT_SUBSCRIBE_QOS, cb, state, sub);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/print", MQTT_SUBSCRIBE_QOS, cb, state, sub);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/ping", MQTT_SUBSCRIBE_QOS, cb, state, sub);
+    mqtt_sub_unsub(state->mqtt_client_inst, "/exit", MQTT_SUBSCRIBE_QOS, cb, state, sub);
 }
 
 static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t flags) {
@@ -151,7 +180,7 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
     } else if (strcmp(state->topic, "/ping") == 0) {
         char buf[11];
         snprintf(buf, sizeof(buf), "%u", to_ms_since_boot(get_absolute_time()) / 1000);
-        mqtt_publish(state->mqtt_client_inst, "/pong", buf, strlen(buf), 0, 0, NULL, NULL);
+        mqtt_publish(state->mqtt_client_inst, "/pong", buf, strlen(buf), MQTT_PUBLISH_QOS, MQTT_PUBLISH_RETAIN, pub_request_cb, state);
     } else if (strcmp(state->topic, "/exit") == 0) {
         state->stop_client = true; // stop the client when ALL subscriptions are stopped
         sub_unsub_topics(state, false); // unsubscribe
@@ -166,7 +195,7 @@ static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len
 static void temperature_worker_fn(async_context_t *context, async_at_time_worker_t *worker) {
     MQTT_CLIENT_DATA_T* state = (MQTT_CLIENT_DATA_T*)worker->user_data;
     publish_temperature(state);
-    async_context_add_at_time_worker_in_ms(context, worker, 10000); // repeat in 10s
+    async_context_add_at_time_worker_in_ms(context, worker, TEMP_WORKER_TIME_S * 1000);
 }
 static async_at_time_worker_t temperature_worker = { .do_work = temperature_worker_fn };
 
@@ -175,6 +204,11 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
     if (status == MQTT_CONNECT_ACCEPTED) {
         state->connect_done = true;
         sub_unsub_topics(state, true); // subscribe;
+
+        // indicate online
+        if (state->mqtt_client_info.will_topic) {
+            mqtt_publish(state->mqtt_client_inst, state->mqtt_client_info.will_topic, "1", 1, MQTT_WILL_QOS, true, pub_request_cb, state);
+        }
 
         // Publish temperature every 10 sec if it's changed
         temperature_worker.user_data = state;
@@ -246,7 +280,7 @@ int main(void) {
     static char client_id_buf[PICO_UNIQUE_BOARD_ID_SIZE_BYTES * 2 + 1];
     pico_get_unique_board_id_string(client_id_buf, sizeof(client_id_buf));
     state.mqtt_client_info.client_id = client_id_buf;
-    state.mqtt_client_info.keep_alive = 60; // Keep alive in sec
+    state.mqtt_client_info.keep_alive = MQTT_KEEP_ALIVE_S; // Keep alive in sec
 #if defined(MQTT_USERNAME) && defined(MQTT_PASSWORD)
     state.mqtt_client_info.client_user = MQTT_USERNAME;
     state.mqtt_client_info.client_pass = MQTT_PASSWORD;
@@ -254,6 +288,10 @@ int main(void) {
     state.mqtt_client_info.client_user = NULL;
     state.mqtt_client_info.client_pass = NULL;
 #endif
+    state.mqtt_client_info.will_topic = MQTT_WILL_TOPIC;
+    state.mqtt_client_info.will_msg = MQTT_WILL_MSG;
+    state.mqtt_client_info.will_qos = MQTT_WILL_QOS;
+    state.mqtt_client_info.will_retain = true;
 #if LWIP_ALTCP && LWIP_ALTCP_TLS
     // TLS enabled
 #ifdef MQTT_CERT_INC
