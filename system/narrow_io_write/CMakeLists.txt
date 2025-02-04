@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(narrow_io_write C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 add_executable(narrow_io_write
         narrow_io_write.c
         )

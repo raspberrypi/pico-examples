@@ -1,10 +1,19 @@
 cmake_minimum_required(VERSION 3.12)
 
-# Pull in SDK (must be before project)
-include(pico_sdk_import.cmake)
-include(pico_extras_import_optional.cmake)
+if (NOT CMAKE_PROJECT_NAME)
+    # Pull in SDK (must be before project)
+    include(${CMAKE_CURRENT_LIST_DIR}/pico_sdk_import.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/pico_extras_import_optional.cmake)
 
-project(pico_examples C CXX ASM)
+    pico_is_top_level_project(PICO_EXAMPLES_TOP_LEVEL_PROJECT)
+
+    if (PICO_EXAMPLES_TOP_LEVEL_PROJECT)
+        project(pico_examples C CXX ASM)
+    else()
+        # Go back to individual example for project
+        return()
+    endif()
+endif()
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
@@ -13,7 +22,7 @@ if (PICO_SDK_VERSION_STRING VERSION_LESS "2.1.0")
     message(FATAL_ERROR "Raspberry Pi Pico SDK version 2.1.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
 endif()
 
-set(PICO_EXAMPLES_PATH ${PROJECT_SOURCE_DIR})
+set(PICO_EXAMPLES_PATH ${CMAKE_CURRENT_LIST_DIR})
 
 # If you want debug output from USB (pass -DPICO_STDIO_USB=1) this ensures you don't lose any debug output while USB is set up
 if (NOT DEFINED PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS)
@@ -23,7 +32,7 @@ endif()
 # Initialize the SDK
 pico_sdk_init()
 
-include(example_auto_set_url.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/example_auto_set_url.cmake)
 
 function(add_subdirectory_exclude_platforms NAME)
     if (ARGN)
@@ -42,13 +51,6 @@ function(add_subdirectory_exclude_platforms NAME)
     add_subdirectory(${NAME})
 endfunction()
 
-# Add blink example
-add_subdirectory_exclude_platforms(blink)
-add_subdirectory_exclude_platforms(blink_simple)
-
-# Add hello world example
-add_subdirectory_exclude_platforms(hello_world)
-
 add_compile_options(-Wall
         -Wno-format          # int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
         -Wno-unused-function # we have some for the docs that aren't called
@@ -57,34 +59,43 @@ if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
     add_compile_options(-Wno-maybe-uninitialized)
 endif()
 
-# Hardware-specific examples in subdirectories:
-add_subdirectory(adc)
-add_subdirectory(binary_info)
-add_subdirectory(bootloaders)
-add_subdirectory(clocks)
-add_subdirectory(cmake)
-add_subdirectory(dcp)
-add_subdirectory(divider)
-add_subdirectory(dma)
-add_subdirectory(flash)
-add_subdirectory(gpio)
-add_subdirectory(hstx)
-add_subdirectory(i2c)
-add_subdirectory(interp)
-add_subdirectory(multicore)
-add_subdirectory(otp)
-add_subdirectory(picoboard)
-add_subdirectory(pico_w)
-add_subdirectory(pio)
-add_subdirectory(pwm)
-add_subdirectory(reset)
-add_subdirectory(rtc)
-add_subdirectory(spi)
-add_subdirectory(system)
-add_subdirectory(timer)
-add_subdirectory(uart)
-add_subdirectory(universal)
-add_subdirectory(usb)
-add_subdirectory(watchdog)
-add_subdirectory(sha)
-add_subdirectory(freertos)
+if (PICO_EXAMPLES_TOP_LEVEL_PROJECT)
+    # Add blink example
+    add_subdirectory_exclude_platforms(blink)
+    add_subdirectory_exclude_platforms(blink_simple)
+
+    # Add hello world example
+    add_subdirectory_exclude_platforms(hello_world)
+
+    # Hardware-specific examples in subdirectories:
+    add_subdirectory(adc)
+    add_subdirectory(binary_info)
+    add_subdirectory(bootloaders)
+    add_subdirectory(clocks)
+    add_subdirectory(cmake)
+    add_subdirectory(dcp)
+    add_subdirectory(divider)
+    add_subdirectory(dma)
+    add_subdirectory(flash)
+    add_subdirectory(gpio)
+    add_subdirectory(hstx)
+    add_subdirectory(i2c)
+    add_subdirectory(interp)
+    add_subdirectory(multicore)
+    add_subdirectory(otp)
+    add_subdirectory(picoboard)
+    add_subdirectory(pico_w)
+    add_subdirectory(pio)
+    add_subdirectory(pwm)
+    add_subdirectory(reset)
+    add_subdirectory(rtc)
+    add_subdirectory(spi)
+    add_subdirectory(system)
+    add_subdirectory(timer)
+    add_subdirectory(uart)
+    add_subdirectory(universal)
+    add_subdirectory(usb)
+    add_subdirectory(watchdog)
+    add_subdirectory(sha)
+    add_subdirectory(freertos)
+endif()

@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(quadrature_encoder C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 add_executable(pio_quadrature_encoder)
 
 pico_generate_pio_header(pio_quadrature_encoder ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)

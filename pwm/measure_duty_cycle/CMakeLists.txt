@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(measure_duty_cycle C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 add_executable(pwm_measure_duty_cycle
         measure_duty_cycle.c
         )

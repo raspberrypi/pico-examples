@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../../../CMakeLists.txt)
+    project(httpd C CXX ASM)
+    include(../../../../CMakeLists.txt)
+endif()
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_LIST_DIR})
 
 add_executable(pico_freertos_httpd_nosys

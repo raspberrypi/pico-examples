@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(read_vsys C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 add_library(power_status_adc INTERFACE)
 target_sources(power_status_adc INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/power_status.c

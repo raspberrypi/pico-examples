@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(onboard_temperature C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 add_executable(onboard_temperature onboard_temperature.c)
 
 target_link_libraries(onboard_temperature pico_stdlib hardware_adc)

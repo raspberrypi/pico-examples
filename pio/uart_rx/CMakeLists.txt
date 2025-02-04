@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(uart_rx C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 add_executable(pio_uart_rx)
 
 pico_generate_pio_header(pio_uart_rx ${CMAKE_CURRENT_LIST_DIR}/uart_rx.pio)

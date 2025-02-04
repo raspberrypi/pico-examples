@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../../CMakeLists.txt)
+    project(dev_lowlevel C CXX ASM)
+    include(../../../CMakeLists.txt)
+endif()
+
 add_executable(dev_lowlevel
         dev_lowlevel.c
         )

@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../../CMakeLists.txt)
+    project(tcp_client C CXX ASM)
+    include(../../../CMakeLists.txt)
+endif()
+
 if (NOT TEST_TCP_SERVER_IP)
     message("Skipping tcp_client example as TEST_TCP_SERVER_IP is not defined")
 else()

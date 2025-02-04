@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(ws2812 C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 add_executable(pio_ws2812)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/generated)

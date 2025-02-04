@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(multicore_doorbell C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 add_executable(multicore_doorbell
         multicore_doorbell.c
         )

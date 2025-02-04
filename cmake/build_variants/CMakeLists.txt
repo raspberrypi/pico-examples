@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(build_variants C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 # 1 Create an INTERFACE library aggregating all the common parts of the application
 add_library(common_stuff INTERFACE)
 

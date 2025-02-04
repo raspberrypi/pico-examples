@@ -1,3 +1,11 @@
+cmake_minimum_required(VERSION 3.12)
+
+if (NOT CMAKE_PROJECT_NAME)
+    include(../../CMakeLists.txt)
+    project(hello_48MHz C CXX ASM)
+    include(../../CMakeLists.txt)
+endif()
+
 add_executable(hello_48MHz
         hello_48MHz.c
         )
