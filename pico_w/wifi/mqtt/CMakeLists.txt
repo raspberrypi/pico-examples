@@ -6,6 +6,7 @@ if (DEFINED ENV{MQTT_SERVER} AND (NOT MQTT_SERVER))
     message("Using MQTT_SERVER from environment ('${MQTT_SERVER}')")
 endif()
 if (NOT MQTT_SERVER)
+    message("Skipping MQTT example as MQTT_SERVER is not defined")
     return()
 endif()
 # Define the name of an MQTT broker/server to enable this example
@@ -32,7 +33,7 @@ if (NOT MQTT_CERT_INC)
     set(MQTT_CERT_INC mqtt_client.inc)
 endif()
 
-set(TARGET_NAME mqtt_client)
+set(TARGET_NAME picow_mqtt_client)
 add_executable(${TARGET_NAME}
     mqtt_client.c
     )
