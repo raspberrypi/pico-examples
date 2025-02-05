@@ -306,9 +306,17 @@ int main() {
 
     cyw43_arch_enable_ap_mode(ap_name, password, CYW43_AUTH_WPA2_AES_PSK);
 
+    #if LWIP_IPV6
+    #define IP(x) ((x).u_addr.ip4)
+    #else
+    #define IP(x) (x)
+    #endif
+
     ip4_addr_t mask;
-    IP4_ADDR(ip_2_ip4(&state->gw), 192, 168, 4, 1);
-    IP4_ADDR(ip_2_ip4(&mask), 255, 255, 255, 0);
+    IP(state->gw).addr = PP_HTONL(CYW43_DEFAULT_IP_AP_ADDRESS);
+    IP(mask).addr = PP_HTONL(CYW43_DEFAULT_IP_MASK);
+
+    #undef IP
 
     // Start the dhcp server
     dhcp_server_t dhcp_server;
