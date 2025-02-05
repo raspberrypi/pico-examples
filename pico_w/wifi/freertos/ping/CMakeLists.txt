@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../../../CMakeLists.txt)
-    project(ping C CXX ASM)
-    include(../../../../CMakeLists.txt)
-endif()
-
 if (EXISTS ${PICO_LWIP_CONTRIB_PATH}/apps/ping/ping.c)
     add_executable(picow_freertos_ping_nosys
             picow_freertos_ping.c

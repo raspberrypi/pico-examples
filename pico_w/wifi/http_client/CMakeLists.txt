@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../../CMakeLists.txt)
-    project(http_client C CXX ASM)
-    include(../../../CMakeLists.txt)
-endif()
-
 pico_add_library(example_lwip_http_util NOFLAG)
 target_sources(example_lwip_http_util INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/example_http_client_util.c

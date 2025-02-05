@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(lcd_uart C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(lcd_uart
         lcd_uart.c
         )

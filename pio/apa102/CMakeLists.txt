@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(apa102 C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(pio_apa102)
 
 pico_generate_pio_header(pio_apa102 ${CMAKE_CURRENT_LIST_DIR}/apa102.pio)

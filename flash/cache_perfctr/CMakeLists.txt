@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(cache_perfctr C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(flash_cache_perfctr
         flash_cache_perfctr.c
         )

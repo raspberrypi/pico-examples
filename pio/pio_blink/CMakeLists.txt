@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(pio_blink C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(pio_blink)
 
 # by default the header is generated into the build dir

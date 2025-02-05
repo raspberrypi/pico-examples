@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../../CMakeLists.txt)
-    project(host_cdc_msc_hid C CXX ASM)
-    include(../../../CMakeLists.txt)
-endif()
-
 cmake_minimum_required(VERSION 3.13)
 
 add_executable(host_cdc_msc_hid)

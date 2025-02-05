@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(pa1010d_i2c C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(pa1010d_i2c
         pa1010d_i2c.c
         )

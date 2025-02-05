@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../../CMakeLists.txt)
-    project(ir_loopback C CXX ASM)
-    include(../../../CMakeLists.txt)
-endif()
-
 add_executable (pio_ir_loopback ir_loopback.c)
 
 # link the executable using the IR transmit and receive libraries

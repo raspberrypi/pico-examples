@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(mma8451_i2c C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(mma8451_i2c
         mma8451_i2c.c
         )

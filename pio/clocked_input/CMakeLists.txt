@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(clocked_input C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(pio_clocked_input)
 
 pico_generate_pio_header(pio_clocked_input ${CMAKE_CURRENT_LIST_DIR}/clocked_input.pio)

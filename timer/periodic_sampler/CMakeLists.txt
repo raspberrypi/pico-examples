@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(periodic_sampler C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 if (NOT PICO_TIME_NO_ALARM_SUPPORT)
     add_executable(periodic_sampler
             periodic_sampler.c

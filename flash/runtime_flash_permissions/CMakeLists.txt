@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(runtime_flash_permissions C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(runtime_flash_permissions
         runtime_flash_permissions.c
         )

@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(st7789_lcd C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(pio_st7789_lcd)
 
 pico_generate_pio_header(pio_st7789_lcd ${CMAKE_CURRENT_LIST_DIR}/st7789_lcd.pio)

@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(hello_interp C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 if (TARGET hardware_interp)
     add_executable(hello_interp
             hello_interp.c

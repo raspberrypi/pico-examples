@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(spi_dma C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(spi_dma
         spi_dma.c
         )

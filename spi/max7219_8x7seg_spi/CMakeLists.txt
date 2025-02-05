@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(max7219_8x7seg_spi C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 add_executable(max7219_8x7seg_spi
         max7219_8x7seg_spi.c
         )

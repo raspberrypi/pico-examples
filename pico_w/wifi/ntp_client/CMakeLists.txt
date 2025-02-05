@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../../CMakeLists.txt)
-    project(ntp_client C CXX ASM)
-    include(../../../CMakeLists.txt)
-endif()
-
 add_executable(picow_ntp_client_background
         picow_ntp_client.c
         )

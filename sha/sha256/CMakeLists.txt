@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(sha256 C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 if (NOT TARGET hardware_sha256)
     return()
 endif()

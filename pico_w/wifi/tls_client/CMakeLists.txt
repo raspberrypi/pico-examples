@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../../CMakeLists.txt)
-    project(tls_client C CXX ASM)
-    include(../../../CMakeLists.txt)
-endif()
-
 add_executable(picow_tls_client_background
         picow_tls_client.c
         tls_common.c

@@ -1,11 +1,3 @@
-cmake_minimum_required(VERSION 3.12)
-
-if (NOT CMAKE_PROJECT_NAME)
-    include(../../CMakeLists.txt)
-    project(usb C CXX ASM)
-    include(../../CMakeLists.txt)
-endif()
-
 if (TARGET tinyusb_device)
     add_executable(hello_usb
             hello_usb.c
