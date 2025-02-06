@@ -12,15 +12,17 @@
 
 #define FLAG_VALUE 123
 
+typedef int32_t (*func_ptr_t)(int32_t);
+
 void core1_entry() {
     while (1) {
         // Function pointer is passed to us via the FIFO
         // We have one incoming int32_t as a parameter, and will provide an
         // int32_t return value by simply pushing it back on the FIFO
         // which also indicates the result is ready.
-        int32_t (*func)() = (int32_t(*)()) multicore_fifo_pop_blocking();
+        func_ptr_t func = (func_ptr_t) multicore_fifo_pop_blocking();
         int32_t p = multicore_fifo_pop_blocking();
-        int32_t result = (*func)(p);
+        int32_t result = func(p);
         multicore_fifo_push_blocking(result);
     }
 }
