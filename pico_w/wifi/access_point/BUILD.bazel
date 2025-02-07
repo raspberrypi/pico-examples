@@ -1,0 +1,60 @@
+load("@rules_platform//platform_data:defs.bzl", "platform_data")
+
+package(default_visibility = ["//visibility:private"])
+
+cc_library(
+    name = "lwip_config",
+    hdrs = ["lwipopts.h"],
+    includes = ["."],
+    deps = ["//pico_w/wifi:lwipopts_examples_common"],
+)
+
+cc_binary(
+    name = "access_point",
+    includes = [
+        "dhcpserver",
+        "dnsserver",
+    ],
+    srcs = [
+        "dhcpserver/dhcpserver.c",
+        "dhcpserver/dhcpserver.h",
+        "dnsserver/dnsserver.c",
+        "dnsserver/dnsserver.h",
+        "picow_access_point.c",
+    ],
+    deps = [
+        "@pico-sdk//src/rp2_common/pico_stdlib",
+        "@pico-sdk//src/rp2_common/pico_cyw43_arch:pico_cyw43_arch_lwip_threadsafe_background",
+        "@pico-sdk//src/rp2_common/hardware_vreg",
+        "@pico-sdk//src/rp2_common/hardware_clocks",
+
+    ],
+)
+
+platform_data(
+    name = "access_point_pico_w.elf",
+    platform = ":test_pico_w",
+    target = ":access_point",
+)
+
+platform_data(
+    name = "access_point_pico2_w.elf",
+    platform = ":test_pico2_w",
+    target = ":access_point",
+)
+
+platform(
+    name = "test_pico_w",
+    parents = ["//pico_w:test_pico_w"],
+    flags = [
+        "--@pico-sdk//bazel/config:PICO_LWIP_CONFIG=//pico_w/wifi/access_point:lwip_config",
+    ],
+)
+
+platform(
+    name = "test_pico2_w",
+    parents = ["//pico_w:test_pico2_w"],
+    flags = [
+        "--@pico-sdk//bazel/config:PICO_LWIP_CONFIG=//pico_w/wifi/access_point:lwip_config",
+    ],
+)

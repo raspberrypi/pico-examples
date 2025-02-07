@@ -1,0 +1,19 @@
+package(default_visibility = [":__subpackages__"])
+
+platform(
+    name = "test_pico_w",
+    parents = ["@pico-sdk//bazel/platform:rp2040"],
+    flags = [
+        "--@pico-sdk//bazel/config:PICO_BOARD=pico_w",
+        "--@pico-sdk//bazel/config:PICO_MULTICORE_ENABLED=False",
+    ],
+)
+
+platform(
+    name = "test_pico2_w",
+    parents = ["@pico-sdk//bazel/platform:rp2350"],
+    flags = [
+        "--@pico-sdk//bazel/config:PICO_BOARD=pico2_w",
+        "--@pico-sdk//bazel/config:PICO_MULTICORE_ENABLED=False",
+    ],
+)

@@ -1,0 +1,11 @@
+load("//pico_w/bt:picow_bt_example.bzl", "picow_bt_example")
+load("@pico-sdk//bazel:pico_btstack_make_gatt_header.bzl", "pico_btstack_make_gatt_header")
+
+pico_btstack_make_gatt_header(
+    name = "spp_and_gatt_streamer_hdr",
+    src = "@btstack//:example/spp_and_gatt_streamer.gatt",
+)
+
+picow_bt_example(
+    extra_deps = [":spp_and_gatt_streamer_hdr"],
+)

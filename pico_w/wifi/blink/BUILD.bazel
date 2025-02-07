@@ -1,0 +1,58 @@
+load("@rules_platform//platform_data:defs.bzl", "platform_data")
+load("@pico-sdk//bazel/util:transition.bzl", "extra_copts_for_all_deps")
+
+package(default_visibility = ["//visibility:private"])
+
+cc_binary(
+    name = "picow_blink",
+    srcs = [
+        "picow_blink.c",
+    ],
+    deps = [
+        "@pico-sdk//src/rp2_common/pico_stdlib",
+        "@pico-sdk//src/rp2_common/pico_cyw43_arch:pico_cyw43_arch_none",
+    ],
+)
+
+cc_binary(
+    name = "picow_blink_slow_clock_actual",
+    srcs = [
+        "picow_blink_slow_clock.c",
+    ],
+    deps = [
+        "@pico-sdk//src/rp2_common/pico_stdlib",
+        "@pico-sdk//src/rp2_common/pico_cyw43_arch:pico_cyw43_arch_none",
+    ],
+)
+
+extra_copts_for_all_deps(
+    name = "picow_blink_slow_clock",
+    src = ":picow_blink_slow_clock_actual",
+    extra_copts = [
+        "-DCYW43_PIO_CLOCK_DIV_DYNAMIC=1",
+    ],
+)
+
+platform_data(
+    name = "picow_blink_pico_w.elf",
+    platform = "//pico_w:test_pico_w",
+    target = ":picow_blink",
+)
+
+platform_data(
+    name = "picow_blink_pico2_w.elf",
+    platform = "//pico_w:test_pico2_w",
+    target = ":picow_blink",
+)
+
+platform_data(
+    name = "picow_blink_slow_clock_pico_w.elf",
+    platform = "//pico_w:test_pico_w",
+    target = ":picow_blink_slow_clock",
+)
+
+platform_data(
+    name = "picow_blink_slow_clock_pico2_w.elf",
+    platform = "//pico_w:test_pico2_w",
+    target = ":picow_blink_slow_clock",
+)
