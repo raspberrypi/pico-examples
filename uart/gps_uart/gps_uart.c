@@ -30,6 +30,14 @@ typedef struct
     bool is_valid;
 } GPSData;
 
+#if 0
+#define DEBUG_printf printf
+#else
+#define DEBUG_printf(...)
+#endif
+
+#define INFO_printf printf
+#define ERROR_printf printf
 
 /**
  * @brief Initializes the UART interface for GPS communication.
@@ -62,19 +70,19 @@ void uart_gps_init()
 bool validate_nmea_checksum(char *nmea_string)
 {
     int len = strlen(nmea_string);
-    printf("Checksum Validation - String Length: %d\n", len);
-    printf("Full NMEA String: %s", nmea_string);
+    DEBUG_printf("Checksum Validation - String Length: %d\n", len);
+    INFO_printf("Full NMEA String: %s", nmea_string);
 
     if (len < 7)
     {
-        printf("Invalid: Too short (< 7 chars)\n");
+        ERROR_printf("Invalid: Too short (< 7 chars)\n");
         return false;
     }
 
     char *checksum_ptr = strchr(nmea_string, '*');
     if (!checksum_ptr)
     {
-        printf("Invalid: No checksum marker (*) found\n");
+        ERROR_printf("Invalid: No checksum marker (*) found\n");
         return false;
     }
 
@@ -87,12 +95,13 @@ bool validate_nmea_checksum(char *nmea_string)
     char hex_checksum[3];
     snprintf(hex_checksum, sizeof(hex_checksum), "%02X", calculated_checksum);
 
-    printf("Calculated Checksum: %s\n", hex_checksum);
-    printf("Received Checksum: %s\n", checksum_ptr + 1);
+    DEBUG_printf("Calculated Checksum: %s\n", hex_checksum);
+    DEBUG_printf("Received Checksum: %s\n", checksum_ptr + 1);
 
     bool is_valid = strncmp(hex_checksum, checksum_ptr + 1, 2) == 0;
-    printf("Checksum Validation: %s\n", is_valid ? "VALID" : "INVALID");
-
+    if (!is_valid) {
+        ERROR_printf("Checksum Validation: INVALID\n");
+    }
     return is_valid;
 }
 
@@ -130,7 +139,7 @@ bool parse_nmea_gps(char *nmea_string, GPSData *gps_data)
 {
     if (!validate_nmea_checksum(nmea_string))
     {
-        printf("Invalid NMEA Checksum\n");
+        ERROR_printf("Invalid NMEA Checksum\n");
         return false;
     }
 
@@ -209,7 +218,7 @@ void process_gps_data(GPSData *gps_data)
 
             if (parse_nmea_gps(nmea_buffer, gps_data))
             {
-                printf("Valid GPS Data Received\n");
+                INFO_printf("Valid GPS Data Received\n");
             }
             break;
         }
@@ -233,16 +242,16 @@ int main()
   uart_gps_init();
 
   GPSData gps_data = {0};
-  
+
+  INFO_printf("Waiting for NMEA data\n");
   while (1)
   {
     process_gps_data(&gps_data);
 
     if (gps_data.is_valid)
     {
-      printf("GPS Location:\n");
-      printf("Latitude: %.6f\n", gps_data.latitude);
-      printf("Longitude: %.6f\n", gps_data.longitude);
+      INFO_printf("Latitude: %.6f\n", gps_data.latitude);
+      INFO_printf("Longitude: %.6f\n", gps_data.longitude);
       gps_data.is_valid = false;
     }
   }
