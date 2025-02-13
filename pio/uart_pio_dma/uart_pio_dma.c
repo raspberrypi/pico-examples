@@ -104,49 +104,53 @@ int main()
     uart_init(HARD_UART_INST, SERIAL_BAUD);
 #endif
 
-// setup pio for rx
 #if USE_PIO_FOR_RX
+    // setup pio for rx
     if (!pio_claim_free_sm_and_add_program_for_gpio_range(&uart_rx_mini_program, &pio_hw_rx, &pio_sm_rx, &offset_rx, GPIO_RX, 1, true)) {
         panic("failed to allocate pio for rx");
     }
     uart_rx_mini_program_init(pio_hw_rx, pio_sm_rx, offset_rx, GPIO_RX, SERIAL_BAUD);
 #else
+    // setup the rx gpio for the uart hardware
     gpio_set_function(GPIO_RX, GPIO_FUNC_UART);
 #endif
 
-// setup pio for tx
 #if USE_PIO_FOR_TX
+    // setup pio for tx
     if (!pio_claim_free_sm_and_add_program_for_gpio_range(&uart_tx_program, &pio_hw_tx, &pio_sm_tx, &offset_tx, GPIO_TX, 1, true)) {
         panic("failed to allocate pio for tx");
     }
     uart_tx_program_init(pio_hw_tx, pio_sm_tx, offset_tx, GPIO_TX, SERIAL_BAUD);
 #else
+    // setup the tx gpio for the uart hardware
     gpio_set_function(GPIO_TX, GPIO_FUNC_UART);
 #endif
 
-// setup pio interrupt
 #if USE_PIO_FOR_RX
+    // check the pio irq is available
     if (irq_get_exclusive_handler(pio_get_irq_num(pio_hw_rx, PIO_IRQ_TO_USE))) {
         panic("PIO IRQ in use");
     }
 #if USE_DMA_FOR_RX
+    // add a shared pio handler
     irq_add_shared_handler(pio_get_irq_num(pio_hw_rx, PIO_IRQ_TO_USE), pio_irq_handler, PIO_IRQ_PRIORITY);
     pio_set_irqn_source_enabled(pio_hw_rx, PIO_IRQ_TO_USE, pis_sm0_rx_fifo_not_empty + pio_sm_rx, true);
     irq_set_enabled(pio_get_irq_num(pio_hw_rx, PIO_IRQ_TO_USE), true);
 #endif
 #endif
 
-// add dma handler
 #if USE_DMA_FOR_RX || USE_DMA_FOR_TX
+    // check the dma irq is available
     if (irq_get_exclusive_handler(dma_get_irq_num(DMA_IRQ_TO_USE))) {
         panic("DMA IRQ in use");
     }
+    // add a shared dma handler
     irq_add_shared_handler(dma_get_irq_num(DMA_IRQ_TO_USE), dma_irq_handler, DMA_IRQ_PRIORITY);
     irq_set_enabled(dma_get_irq_num(DMA_IRQ_TO_USE), true);
 #endif
 
-// Setup dma for read
 #if USE_DMA_FOR_RX
+    // Setup dma for read
     dma_channel_rx = dma_claim_unused_channel(false);
     if (dma_channel_rx < 0) {
         panic("No free dma channels");
@@ -159,19 +163,19 @@ int main()
     // enable irq for rx
     dma_irqn_set_channel_enabled(DMA_IRQ_TO_USE, dma_channel_rx, true);
 #if USE_PIO_FOR_RX
-    // read from pio fifo
+    // setup dma to read from pio fifo
     channel_config_set_dreq(&config_rx, pio_get_dreq(pio_hw_rx, pio_sm_rx, false));
     // 8-bit read from the uppermost byte of the FIFO, as data is left-justified so need to add 3. Don't forget the cast!
     dma_channel_configure(dma_channel_rx, &config_rx, buffer_rx, (io_rw_8*)&pio_hw_rx->rxf[pio_sm_rx] + 3, read_size, true); // dma started
 #else
-    // read from uart hardware
+    // setup dma to read from uart hardware
     channel_config_set_dreq(&config_rx, uart_get_dreq(HARD_UART_INST, false));
     dma_channel_configure(dma_channel_rx, &config_rx, buffer_rx, &uart_get_hw(HARD_UART_INST)->dr, read_size, true); // dma started
 #endif
 #endif
 
-// setup dma for write
 #if USE_DMA_FOR_TX
+    // setup dma for write
     dma_channel_tx = dma_claim_unused_channel(false);
     if (dma_channel_tx < 0) {
         panic("No free dma channels");
@@ -183,19 +187,19 @@ int main()
     // enable irq for tx
     dma_irqn_set_channel_enabled(DMA_IRQ_TO_USE, dma_channel_tx, true);
 #if USE_PIO_FOR_RX
-    // write to pio fifo
+    // setup dma to write to pio fifo
     channel_config_set_dreq(&config_tx, pio_get_dreq(pio_hw_tx, pio_sm_tx, true));
     dma_channel_configure(dma_channel_tx, &config_tx, &pio_hw_rx->txf[pio_sm_tx], buffer_tx, sizeof(buffer_tx) - 1, true); // dma started
 #else
-    // write to uart hardware
+    // setup dma to write to uart hardware
     channel_config_set_dreq(&config_tx, uart_get_dreq(HARD_UART_INST, true));
     dma_channel_configure(dma_channel_tx, &config_tx, &uart_get_hw(HARD_UART_INST)->dr, buffer_tx, sizeof(buffer_tx) - 1, true); // dma started
 #endif
 #endif
 
-// send data
 #if USE_DMA_FOR_TX
-    dma_channel_wait_for_finish_blocking(dma_channel_tx); // wait for tx
+    // Just wait for dma tx to finish
+    dma_channel_wait_for_finish_blocking(dma_channel_tx);
 #elif USE_PIO_FOR_TX
     // write to the pio fifo
     int count_pio_tx = 0;
@@ -203,12 +207,12 @@ int main()
         uart_tx_program_putc(pio_hw_tx, pio_sm_tx, buffer_tx[count_pio_tx++]);
     }
 #else
+    // write to the uart
     uart_puts(HARD_UART_INST, buffer_tx);
 #endif
 
-// Receive the data
 #if USE_DMA_FOR_RX
-    // wait for dma rx
+    // Just wait for dma rx to finish
     dma_channel_wait_for_finish_blocking(dma_channel_rx);
 #elif USE_PIO_FOR_RX
     // read from the pio fifo
@@ -217,14 +221,14 @@ int main()
         buffer_rx[count_pio_rx++] = uart_rx_program_getc(pio_hw_rx, pio_sm_rx);
     }
 #else
-    // use the uart hardware
+    // read from the uart
     int count_uart_rx = 0;
     while(count_uart_rx < sizeof(buffer_tx) - 1) {
         buffer_rx[count_uart_rx++] = uart_getc(HARD_UART_INST);
     }
 #endif
 
-    // check
+    // check the buffer we received
     if (memcmp(buffer_rx, buffer_tx, sizeof(buffer_tx) - 1) == 0) {
         printf("Test passed\n");
     } else {
