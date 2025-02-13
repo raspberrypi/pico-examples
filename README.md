@@ -8,14 +8,15 @@ on getting up and running.
 ##### Notes on different boards and platforms (RP2040 / RP2350) 
 
 The majority of examples are applicable to both RP2040 and RP2350 based boards,
-however certain examples that use chip specific functionality will only build on that platform.
-Equally, for instance, Wi-Fi and Bluetooth examples will only build on a board that includes Wi-Fi and Bluetooth support.
+however certain examples that use chip-specific functionality will only build on that platform.
+Similarly, Wi-Fi and Bluetooth examples will only build on a board that includes Wi-Fi and Bluetooth support.
 
-Board and platform information are passed to the CMake build via the `PICO_PLATFORM` and `PICO_BOARD` variables.
+Platform and board information are passed to the CMake build via the `PICO_PLATFORM` and `PICO_BOARD` variables.
 For more information see the "Platform and Board Configuration" chapter of 
 the [Raspberry Pi Pico-series C/C++ SDK](https://rptl.io/pico-c-sdk) book
 
 Information on which examples are not being built is output during the CMake configuration step.
+
 ### First Examples
 
 App| Description                                                                | Link to prebuilt UF2
