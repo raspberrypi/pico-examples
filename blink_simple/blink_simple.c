@@ -10,6 +10,10 @@
 #define LED_DELAY_MS 250
 #endif
 
+#ifndef PICO_DEFAULT_LED_PIN
+#warning blink_simple example requires a board with a regular LED
+#endif
+
 // Initialize the GPIO for the LED
 void pico_led_init(void) {
 #ifdef PICO_DEFAULT_LED_PIN

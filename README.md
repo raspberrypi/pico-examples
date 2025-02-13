@@ -1,18 +1,21 @@
 # Raspberry Pi Pico SDK Examples
 
-By default, the Pico SDK targets builds for RP2040 (PICO_PLATFORM=rp2040). To build for RP2350 instead, pass
-`-DPICO_PLATFORM=rp2350` to CMake (or `-DPICO_PLATFORM=rp2350-riscv` for RISC-V). Alternatively, in many cases, you can rely
-on the board configuration to set the platform for you. For example, passing `-DPICO_BOARD=pico2` will automatically select RP2350.
-
-Most, but not all examples, currently work on RP2350 however you should be able to do a full build with any of the above platforms (PICO_PLATFORM=host however currently fails on some examples)
-
-For RISC-V compilation, you should take a compiler from here: https://www.embecosm.com/resources/tool-chain-downloads/#riscv-stable
-
-
 ## Getting started
 
 See [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started) and the README in the [pico-sdk](https://github.com/raspberrypi/pico-sdk) for information
 on getting up and running.
+
+##### Notes on different boards and platforms (RP2040 / RP2350) 
+
+The majority of examples are applicable to both RP2040 and RP2350 based boards,
+however certain examples that use chip-specific functionality will only build on that platform.
+Similarly, Wi-Fi and Bluetooth examples will only build on a board that includes Wi-Fi and Bluetooth support.
+
+Platform and board information are passed to the CMake build via the `PICO_PLATFORM` and `PICO_BOARD` variables.
+For more information see the "Platform and Board Configuration" chapter of 
+the [Raspberry Pi Pico-series C/C++ SDK](https://rptl.io/pico-c-sdk) book
+
+Information on which examples are not being built is output during the CMake configuration step.
 
 ### First Examples
 
@@ -187,6 +190,7 @@ App|Description
 [picow_httpd](pico_w/wifi/httpd) | Runs a LWIP HTTP server test app
 [picow_http_client](pico_w/wifi/http_client) | Demonstrates how to make http and https requests
 [picow_http_client_verify](pico_w/wifi/http_client) | Demonstrates how to make a https request with server authentication
+[picow_mqtt_client](pico_w/wifi/mqtt) | Demonstrates how to implement an MQTT client application
 
 #### FreeRTOS examples
 
@@ -425,6 +429,14 @@ App|Description
 App|Description
 ---|---
 [dev_lowlevel](usb/device/dev_lowlevel) | A USB Bulk loopback implemented with direct access to the USB hardware (no TinyUSB)
+
+#### Custom CDC with SDK stdio
+
+This example demonstrates how to use the TinyUSB CDC device library to create two USB serial ports, and assign one of them to the SDK for stdio.
+
+App|Description
+---|---
+[dev_cdc](usb/device/dev_cdc) | A USB CDC device example with two serial ports, one of which is used for stdio. The example exposes two serial ports over USB to the host. The first port is used for stdio, and the second port is used for a simple echo loopback. You can connect to the second port and send some characters, and they will be echoed back on the first port while you will receive a "OK\r\n" message on the second port indicating that the data was received.
 
 ### USB Host
 
