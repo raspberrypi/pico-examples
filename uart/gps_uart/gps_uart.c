@@ -232,9 +232,6 @@ int main()
 
   uart_gps_init();
 
-  // recommended cold start waiting time (could vary based on the gps module)
-  sleep_ms(7 * 60 * 1000);
-
   GPSData gps_data = {0};
   
   while (1)
@@ -248,9 +245,6 @@ int main()
       printf("Longitude: %.6f\n", gps_data.longitude);
       gps_data.is_valid = false;
     }
-
-    // sufficient waiting time required between each gps reading and the next one
-    sleep_ms(30 * 1000);
   }
 
   return 0;
