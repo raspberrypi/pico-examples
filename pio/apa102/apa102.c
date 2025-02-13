@@ -62,7 +62,7 @@ int main() {
         for (int i = 0; i < N_LEDS; ++i) {
             put_rgb888(pio, sm,
                        wave_table[(i + t) % TABLE_SIZE],
-                       wave_table[(2 * i + 3 * 2) % TABLE_SIZE],
+                       wave_table[(2 * i + 3 * t) % TABLE_SIZE],
                        wave_table[(3 * i + 4 * t) % TABLE_SIZE]
             );
         }
