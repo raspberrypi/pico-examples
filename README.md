@@ -12,10 +12,15 @@ however certain examples that use chip-specific functionality will only build on
 Similarly, Wi-Fi and Bluetooth examples will only build on a board that includes Wi-Fi and Bluetooth support.
 
 Platform and board information are passed to the CMake build via the `PICO_PLATFORM` and `PICO_BOARD` variables.
-For more information see the "Platform and Board Configuration" chapter of 
-the [Raspberry Pi Pico-series C/C++ SDK](https://rptl.io/pico-c-sdk) book
 
-Information on which examples are not being built is output during the CMake configuration step.
+By default, the Pico SDK targets builds for RP2040 (`PICO_PLATFORM=rp2040`). To build for RP2350 instead, pass
+`-DPICO_PLATFORM=rp2350` to CMake (or `-DPICO_PLATFORM=rp2350-riscv` for RISC-V). Alternatively, in many cases, you can rely
+on the board configuration to set the platform for you. For example, passing `-DPICO_BOARD=pico2` will automatically select `PICO_PLATFORM=rp2350`.
+
+For more information see the "Platform and Board Configuration" chapter of 
+the [Raspberry Pi Pico-series C/C++ SDK](https://rptl.io/pico-c-sdk) book.
+
+Information on which examples are not being built is displayed during the CMake configuration step.
 
 ### First Examples
 
