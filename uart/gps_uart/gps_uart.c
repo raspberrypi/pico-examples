@@ -154,7 +154,7 @@ bool parse_nmea_gps(char *nmea_string, GPSData *gps_data)
     }
 
     // Check if we have enough tokens and data is valid
-    if (token_count >= 12 && strcmp(tokens[2], "A") == 0)
+    if (token_count >= 7 && strcmp(tokens[2], "A") == 0)
     {
         if (strlen(tokens[3]) > 0)
         {
@@ -173,6 +173,7 @@ bool parse_nmea_gps(char *nmea_string, GPSData *gps_data)
         gps_data->is_valid = true;
         return true;
     }
+    return false;
 }
 
 
@@ -189,9 +190,16 @@ void process_gps_data(GPSData *gps_data)
     char nmea_buffer[MAX_NMEA_LENGTH];
     int chars_read = 0;
 
-    while (uart_is_readable(UART_ID) && chars_read < MAX_NMEA_LENGTH - 1)
+    while (true)
     {
+        // string too long
+        if (chars_read >= MAX_NMEA_LENGTH - 1)
+            break;
         char received_char = uart_getc(UART_ID);
+        // ignore zero bytes
+        if (received_char == 0) {
+            continue;
+        }
         nmea_buffer[chars_read] = received_char;
 
         // NMEA strings are terminated by a newline character
@@ -203,8 +211,6 @@ void process_gps_data(GPSData *gps_data)
             {
                 printf("Valid GPS Data Received\n");
             }
-
-            chars_read = 0;
             break;
         }
         else
