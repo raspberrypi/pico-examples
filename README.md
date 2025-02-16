@@ -19,12 +19,29 @@ See [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-starte
 on getting up and running.
 
 ## Docker build and copy uf2 files back to host machine
-- `mkdir -p build`
-- `docker build -t pico-examples . && docker run -d pico-examples sleep infinity`
-- `docker container exec $(docker ps -alq) mkdir -p /workspace/pico-examples/build/uf2files`
-- `docker container exec $(docker ps -alq) find /workspace/pico-examples/build -name "*.uf2" -exec cp {} /workspace/pico-examples/build/uf2files \;`
-- `docker cp $(docker ps -alq):/workspace/pico-examples/build/uf2files/. ./build/`
-- `docker container stop $(docker ps -alq)`
+
+Build for a specific board by passing the board type as a build argument. Supported boards include:
+- pico
+- pico_w
+```bash
+# Create build directory
+mkdir -p build
+
+# Build Docker image (default is pico if --build-arg not specified)
+docker build -t pico-examples --build-arg PICO_BOARD=pico .
+
+# Run container for file copying
+docker run -d --name pico-build pico-examples sleep infinity
+
+# Copy UF2 files from container to host
+docker container exec pico-build mkdir -p /workspace/pico-examples/build/uf2files
+docker container exec pico-build find /workspace/pico-examples/build -name "*.uf2" -exec cp {} /workspace/pico-examples/build/uf2files \;
+docker cp pico-build:/workspace/pico-examples/build/uf2files/. ./build/
+
+# Stop and remove container
+docker container stop pico-build
+docker container rm pico-build
+```
 
 ### First Examples
 

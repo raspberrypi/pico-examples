@@ -1,6 +1,10 @@
 # Use Ubuntu as base image
 FROM ubuntu:22.04
 
+# Define build argument with default value
+ARG PICO_BOARD=pico
+ENV PICO_BOARD=${PICO_BOARD}
+
 # Avoid timezone prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -32,8 +36,7 @@ COPY . /workspace/pico-examples/
 WORKDIR /workspace/pico-examples
 RUN mkdir build
 WORKDIR /workspace/pico-examples/build
-RUN cmake .. -DPICO_BOARD=pico_w
+RUN cmake .. -DPICO_BOARD=${PICO_BOARD}
 RUN make -j$(nproc)
 
-# Set default command to build
 CMD ["make", "-j4"]
