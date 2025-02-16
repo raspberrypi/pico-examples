@@ -18,6 +18,14 @@ For RISC-V compilation, you should take a compiler from here: https://www.embeco
 See [Getting Started with the Raspberry Pi Pico](https://rptl.io/pico-get-started) and the README in the [pico-sdk](https://github.com/raspberrypi/pico-sdk) for information
 on getting up and running.
 
+## Docker build and copy uf2 files back to host machine
+- `mkdir -p build`
+- `docker build -t pico-examples . && docker run -d pico-examples sleep infinity`
+- `docker container exec $(docker ps -alq) mkdir -p /workspace/pico-examples/build/uf2files`
+- `docker container exec $(docker ps -alq) find /workspace/pico-examples/build -name "*.uf2" -exec cp {} /workspace/pico-examples/build/uf2files \;`
+- `docker cp $(docker ps -alq):/workspace/pico-examples/build/uf2files/. ./build/`
+- `docker container stop $(docker ps -alq)`
+
 ### First Examples
 
 App| Description                                                                | Link to prebuilt UF2
