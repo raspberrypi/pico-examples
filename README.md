@@ -23,6 +23,8 @@ on getting up and running.
 Build for a specific board by passing the board type as a build argument. Supported boards include:
 - pico
 - pico_w
+- pico2
+- pico2_w
 ```bash
 # Create build directory
 mkdir -p build
