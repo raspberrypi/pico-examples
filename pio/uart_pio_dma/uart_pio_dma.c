@@ -14,18 +14,27 @@
 #include "uart_rx.pio.h"
 #include "uart_tx.pio.h"
 
-// Sends data via GPIO 4 and receives it on GPIO 5
-// Connect these pins with a wire
+// ------- USER CONFIGURATION -----
+
+// Send data via GPIO 4 and receives it on GPIO 5
+// *** You must conect these pins with a wire ***
 #define GPIO_TX 4
 #define GPIO_RX 5
 
+// Use PIO instead of real UART for receiving data
+#define USE_PIO_FOR_RX 1
+
+// Use DMA rather than polling when receiving data
+#define USE_DMA_FOR_RX 1
+
+// Use PIO instead of real UART for sending data
+#define USE_PIO_FOR_TX 1
+
+// Use DMA rather than polling when sending data
+#define USE_DMA_FOR_TX 1
+
 #define SERIAL_BAUD 921600
 #define HARD_UART_INST uart1
-
-#define USE_PIO_FOR_RX 1
-#define USE_DMA_FOR_RX 1
-#define USE_PIO_FOR_TX 1
-#define USE_DMA_FOR_TX 1
 
 #ifndef DMA_IRQ_PRIORITY
 #define DMA_IRQ_PRIORITY PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY
@@ -37,6 +46,8 @@
 
 #define PIO_IRQ_TO_USE 0
 #define DMA_IRQ_TO_USE 0
+// --------------------------------
+
 
 // dma channels
 static uint dma_channel_rx;
