@@ -24,8 +24,12 @@
  *
  *  When RGBW is used with urgb_u32(), the White channel will be ignored (off).
  *
+ * Some strips only support 400Khz.
+ *
+ * Set IS_800KHz to false if your strip is like that.
  */
 #define IS_RGBW false
+#define IS_800KHz true
 #define NUM_PIXELS 150
 
 #ifdef PICO_DEFAULT_WS2812_PIN
@@ -142,7 +146,11 @@ int main() {
     bool success = pio_claim_free_sm_and_add_program_for_gpio_range(&ws2812_program, &pio, &sm, &offset, WS2812_PIN, 1, true);
     hard_assert(success);
 
+#if IS_800KHz
     ws2812_program_init(pio, sm, offset, WS2812_PIN, 800000, IS_RGBW);
+#else
+    ws2812_program_init(pio, sm, offset, WS2812_PIN, 400000, IS_RGBW);
+#endif
 
     int t = 0;
     while (1) {
