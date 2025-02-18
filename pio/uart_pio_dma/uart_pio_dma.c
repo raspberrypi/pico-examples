@@ -138,7 +138,7 @@ int main()
 #endif
 
 #if USE_PIO_FOR_RX && USE_DMA_FOR_RX
-    // add a shared pio handler to print some status
+    // add a shared irq handler to print some status
     irq_add_shared_handler(pio_get_irq_num(pio_hw_rx, PIO_IRQ_TO_USE), pio_irq_handler, PIO_IRQ_PRIORITY);
     pio_set_irqn_source_enabled(pio_hw_rx, PIO_IRQ_TO_USE, pio_get_rx_fifo_not_empty_interrupt_source(pio_sm_rx), true);
     irq_set_enabled(pio_get_irq_num(pio_hw_rx, PIO_IRQ_TO_USE), true);
