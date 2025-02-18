@@ -126,24 +126,14 @@ int main()
     gpio_set_function(GPIO_TX, GPIO_FUNC_UART);
 #endif
 
-#if USE_PIO_FOR_RX
-    // check the pio irq is available
-    if (irq_get_exclusive_handler(pio_get_irq_num(pio_hw_rx, PIO_IRQ_TO_USE))) {
-        panic("PIO IRQ in use");
-    }
-#if USE_DMA_FOR_RX
-    // add a shared pio handler
+#if USE_PIO_FOR_RX && USE_DMA_FOR_RX
+    // add a shared pio handler to print some status
     irq_add_shared_handler(pio_get_irq_num(pio_hw_rx, PIO_IRQ_TO_USE), pio_irq_handler, PIO_IRQ_PRIORITY);
-    pio_set_irqn_source_enabled(pio_hw_rx, PIO_IRQ_TO_USE, pis_sm0_rx_fifo_not_empty + pio_sm_rx, true);
+    pio_set_irqn_source_enabled(pio_hw_rx, PIO_IRQ_TO_USE, pio_get_rx_fifo_not_empty_interrupt_source(pio_sm_rx), true);
     irq_set_enabled(pio_get_irq_num(pio_hw_rx, PIO_IRQ_TO_USE), true);
-#endif
 #endif
 
 #if USE_DMA_FOR_RX || USE_DMA_FOR_TX
-    // check the dma irq is available
-    if (irq_get_exclusive_handler(dma_get_irq_num(DMA_IRQ_TO_USE))) {
-        panic("DMA IRQ in use");
-    }
     // add a shared dma handler
     irq_add_shared_handler(dma_get_irq_num(DMA_IRQ_TO_USE), dma_irq_handler, DMA_IRQ_PRIORITY);
     irq_set_enabled(dma_get_irq_num(DMA_IRQ_TO_USE), true);
