@@ -17,10 +17,10 @@
 #define squarewave_wrap_pio_version 0
 
 static const uint16_t squarewave_wrap_program_instructions[] = {
-    0xe081, //  0: set    pindirs, 1                 
+    0xe081, //  0: set    pindirs, 1
             //     .wrap_target
-    0xe101, //  1: set    pins, 1                [1] 
-    0xe100, //  2: set    pins, 0                [1] 
+    0xe101, //  1: set    pins, 1                [1]
+    0xe100, //  2: set    pins, 0                [1]
             //     .wrap
 };
 
