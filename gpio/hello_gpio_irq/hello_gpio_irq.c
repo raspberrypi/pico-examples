@@ -23,6 +23,7 @@ int main() {
     stdio_init_all();
 
     printf("Hello GPIO IRQ\n");
+    gpio_init(2);
     gpio_set_irq_enabled_with_callback(2, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_callback);
 
     // Wait forever
