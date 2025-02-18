@@ -18,10 +18,10 @@
 
 static const uint16_t squarewave_program_instructions[] = {
             //     .wrap_target
-    0xe081, //  0: set    pindirs, 1                 
-    0xe101, //  1: set    pins, 1                [1] 
-    0xe000, //  2: set    pins, 0                    
-    0x0001, //  3: jmp    1                          
+    0xe081, //  0: set    pindirs, 1
+    0xe101, //  1: set    pins, 1                [1]
+    0xe000, //  2: set    pins, 0
+    0x0001, //  3: jmp    1
             //     .wrap
 };
 

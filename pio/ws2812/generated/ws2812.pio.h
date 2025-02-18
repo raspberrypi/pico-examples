@@ -22,10 +22,10 @@
 
 static const uint16_t ws2812_program_instructions[] = {
             //     .wrap_target
-    0x6321, //  0: out    x, 1            side 0 [3] 
-    0x1223, //  1: jmp    !x, 3           side 1 [2] 
-    0x1200, //  2: jmp    0               side 1 [2] 
-    0xa242, //  3: nop                    side 0 [2] 
+    0x6321, //  0: out    x, 1            side 0 [3]
+    0x1223, //  1: jmp    !x, 3           side 1 [2]
+    0x1200, //  2: jmp    0               side 1 [2]
+    0xa242, //  3: nop                    side 0 [2]
             //     .wrap
 };
 
@@ -78,10 +78,10 @@ static inline void ws2812_program_init(PIO pio, uint sm, uint offset, uint pin, 
 
 static const uint16_t ws2812_parallel_program_instructions[] = {
             //     .wrap_target
-    0x6020, //  0: out    x, 32                      
-    0xa20b, //  1: mov    pins, !null            [2] 
-    0xa201, //  2: mov    pins, x                [2] 
-    0xa203, //  3: mov    pins, null             [2] 
+    0x6020, //  0: out    x, 32
+    0xa20b, //  1: mov    pins, ~null            [2]
+    0xa201, //  2: mov    pins, x                [2]
+    0xa203, //  3: mov    pins, null             [2]
             //     .wrap
 };
 
