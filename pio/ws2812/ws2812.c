@@ -17,7 +17,7 @@
  *  Take into consideration if your WS2812 is a RGB or RGBW variant.
  *
  *  If it is RGBW, you need to set IS_RGBW to true and provide 4 bytes per 
- *  pixel (Red, Green, Blue, White) and use urgbw_u32().
+ *  pixel (Red, Green, Blue, White) and use urgb_u32() or urgbw_u32().
  *
  *  If it is RGB, set IS_RGBW to false and provide 3 bytes per pixel (Red,
  *  Green, Blue) and use urgb_u32().
@@ -40,6 +40,7 @@
 #error Attempting to use a pin>=32 on a platform that does not support it
 #endif
 
+#ifndef IS_RGBW
 static inline void put_pixel(PIO pio, uint sm, uint32_t pixel_grb) {
     pio_sm_put_blocking(pio, sm, pixel_grb << 8u);
 }
@@ -50,14 +51,32 @@ static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
             ((uint32_t) (g) << 16) |
             (uint32_t) (b);
 }
+#else
+static inline void put_pixel(PIO pio, uint sm, uint32_t pixel_grb) {
+    pio_sm_put_blocking(pio, sm, pixel_grb);
+}
 
-static inline uint32_t urgbw_u32(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
+static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
+    return
+            ((uint32_t) (r) << 8) |
+            ((uint32_t) (g) << 16) |
+            (uint32_t) (b);
+}
+
+/*
+ * NOTE: 
+ * This code here is unused in this example, however can be usefull if you want to set the white brightness too.
+ * Keeping it here for later reference.
+ * You may remove __attribute__((unused)) in case you use it.
+ */
+static inline uint32_t __attribute__((unused)) urgbw_u32(uint8_t r, uint8_t g, uint8_t b, uint8_t w) {
     return
             ((uint32_t) (r) << 8) |
             ((uint32_t) (g) << 16) |
             ((uint32_t) (w) << 24) |
             (uint32_t) (b);
 }
+#endif
 
 void pattern_snakes(PIO pio, uint sm, uint len, uint t) {
     for (uint i = 0; i < len; ++i) {
@@ -91,7 +110,7 @@ void pattern_greys(PIO pio, uint sm, uint len, uint t) {
     uint max = 100; // let's not draw too much current!
     t %= max;
     for (uint i = 0; i < len; ++i) {
-        put_pixel(pio, sm, t * 0x10101);
+        put_pixel(pio, sm, t * 0x1010101);
         if (++t >= max) t = 0;
     }
 }
