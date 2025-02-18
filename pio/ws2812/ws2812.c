@@ -69,7 +69,7 @@ static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
 
 /*
  * NOTE: 
- * This code here is unused in this example, however can be usefull if you want to set the white brightness too.
+ * This code here is unused in this example, however can be useful if you want to set the white brightness too.
  * Keeping it here for later reference.
  * You may remove __attribute__((unused)) in case you use it.
  */
@@ -131,11 +131,9 @@ const struct {
 };
 
 int main() {
-    //set_sys_clock_48();
     stdio_init_all();
     printf("WS2812 Smoke Test, using pin %d\n", WS2812_PIN);
 
-    // todo get free sm
     PIO pio;
     uint sm;
     uint offset;
