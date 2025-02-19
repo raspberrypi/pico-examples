@@ -4,17 +4,12 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
-// TODO: why not #pragma once?
 #ifndef _TUSB_CONFIG_H_
 #define _TUSB_CONFIG_H_
 
 #ifdef __cplusplus
  extern "C" {
 #endif
-
-#define CFG_TUSB_MCU            (OPT_MCU_RP2040)
-#define CFG_TUSB_OS             (OPT_OS_PICO)
-#define CFG_TUSB_DEBUG          (0)
 
 #define CFG_TUD_ENABLED         (1)
 
