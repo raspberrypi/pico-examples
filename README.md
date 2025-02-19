@@ -442,7 +442,7 @@ This example demonstrates how to use the TinyUSB CDC device library to create tw
 
 App|Description
 ---|---
-[dev_cdc](usb/device/dev_cdc) | A USB CDC device example with two serial ports, one of which is used for stdio. The example exposes two serial ports over USB to the host. The first port is used for stdio, and the second port is used for a simple echo loopback. You can connect to the second port and send some characters, and they will be echoed back on the first port while you will receive a "OK\r\n" message on the second port indicating that the data was received.
+[dev_multi_cdc](usb/device/dev_multi_cdc) | A USB CDC device example with two serial ports, one of which is used for stdio. The example exposes two serial ports over USB to the host. The first port is used for stdio, and the second port is used for a simple echo loopback. You can connect to the second port and send some characters, and they will be echoed back on the first port while you will receive a "OK\r\n" message on the second port indicating that the data was received.
 
 ### USB Host
 
