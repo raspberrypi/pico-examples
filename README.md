@@ -196,6 +196,7 @@ App|Description
 [picow_http_client](pico_w/wifi/http_client) | Demonstrates how to make http and https requests
 [picow_http_client_verify](pico_w/wifi/http_client) | Demonstrates how to make a https request with server authentication
 [picow_mqtt_client](pico_w/wifi/mqtt) | Demonstrates how to implement a MQTT client application
+[picow_coap](pico_w/wifi/mqtt) | Demonstrates how to implment a COAP client
 
 #### FreeRTOS examples
 
