@@ -22,6 +22,11 @@ void pio_i2c_resume_after_error(PIO pio, uint sm) {
     pio_interrupt_clear(pio, sm);
 }
 
+// Disable autopush of read I2C bytes, which is useful when only writing to
+// the I2C bus and we don't want to bother with cleaning the RX FIFO. But be
+// careful because this isn't synchronized to the state machine program and in
+// a race condition can leave its input shift counter in an unexpected state,
+// shifting any subsequently read bytes by an unexpected number of bits.
 void pio_i2c_rx_enable(PIO pio, uint sm, bool en) {
     if (en)
         hw_set_bits(&pio->sm[sm].shiftctrl, PIO_SM0_SHIFTCTRL_AUTOPUSH_BITS);

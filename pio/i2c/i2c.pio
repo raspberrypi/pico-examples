@@ -48,6 +48,10 @@ do_nack:
 
 do_byte:
     set x, 7                   ; Loop 8 times
+    mov isr, null              ; Set ISR and input shift counter to zero. This
+                               ; helps fix a race condition when autopush is
+                               ; disabled and re-enabled, which can leave the
+                               ; counter in an inconsistent state.
 bitloop:
     out pindirs, 1         [7] ; Serialise write data (all-ones if reading)
     nop             side 1 [2] ; SCL rising edge
