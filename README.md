@@ -86,6 +86,12 @@ App|Description
 [channel_irq](dma/channel_irq) | Use an IRQ handler to reconfigure a DMA channel, in order to continuously drive data through a PIO state machine.
 [sniff_crc](dma/sniff_crc) | Use the DMA engine's 'sniff' capability to calculate a CRC32 on a data buffer.
 
+### Encrypted
+
+App|Description
+---|---
+[hello_encrypted](encrypted/hello_encrypted) | Create a self-decrypting binary.
+
 ### HSTX (RP235x Only)
 
 App|Description
