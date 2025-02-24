@@ -19,11 +19,7 @@ pico_set_binary_version(hello_encrypted MAJOR 7 MINOR 3)
 # set tbyb (optional)
 # target_compile_definitions(hello_encrypted PRIVATE PICO_CRT0_IMAGE_TYPE_TBYB=1)
 
-# Add command to update otp.json if privateaes.bin changes
-add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/otp.json
-    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_LIST_DIR}/update-key.cmake"
-    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin)
-# Copy that otp.json file to build directory
+# Copy otp.json file to build directory
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/otp.json
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/otp.json" "${CMAKE_CURRENT_BINARY_DIR}/otp.json"
     DEPENDS ${CMAKE_CURRENT_LIST_DIR}/otp.json)

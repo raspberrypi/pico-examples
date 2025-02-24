@@ -4,11 +4,7 @@ add_executable(enc_bootloader
         aes.S
         )
 
-# Add command to update otp.json if privateaes.bin changes
-add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/otp.json
-    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_LIST_DIR}/update-key.cmake"
-    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin)
-# Copy that otp.json file to build directory
+# Copy otp.json file to build directory
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/otp.json
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/otp.json" "${CMAKE_CURRENT_BINARY_DIR}/otp.json"
     DEPENDS ${CMAKE_CURRENT_LIST_DIR}/otp.json)
