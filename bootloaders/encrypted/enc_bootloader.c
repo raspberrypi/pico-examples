@@ -16,50 +16,16 @@
 
 #include "config.h"
 
-volatile uint32_t systick_data[18]; // count, R0-R15,RETPSR
+#define OTP_KEY_PAGE 30
 
-extern void remap();
-extern uint32_t gen_rand_sha();
-extern void init_key(uint8_t *key);
-extern void gen_lut_sbox();
-extern int  ctr_crypt_s(uint8_t*iv,uint8_t*buf,int nblk);
+extern void decrypt(uint8_t* key4way, uint8_t* iv, uint8_t(*buf)[16], int nblk);
 
-extern uint8_t rkey_s[480];
-extern uint8_t lut_a[256];
-extern uint8_t lut_b[256];
-extern uint32_t lut_a_map[1];
-extern uint32_t lut_b_map[1];
-extern uint32_t rstate_sha[4],rstate_lfsr[2];
-
-void resetrng() {
-    uint32_t f0,f1;
-    do f0=get_rand_32(); while(f0==0);   // make sure we don't initialise the LFSR to zero
-    f1=get_rand_32();
-    rstate_sha[0]=f0&0xffffff00;         // bottom byte must be zero (or 4) for SHA, representing "out of data"
-    rstate_sha[1]=f1;
-    rstate_sha[2]=0x41414141;
-    rstate_sha[3]=0x41414141;
-    rstate_lfsr[0]=f0;                   // must be nonzero for non-degenerate LFSR
-    rstate_lfsr[1]=0x1d872b41;           // constant that defines LFSR
-#if GEN_RAND_SHA
-    reset_block(RESETS_RESET_SHA256_BITS);
-    unreset_block(RESETS_RESET_SHA256_BITS);
-#endif
+// The function lock_key() is called from decrypt() after key initialisation is complete and before decryption begins.
+// That is a suitable point to lock the OTP area where key information is stored.
+void lock_key() {
+    otp_hw->sw_lock[OTP_KEY_PAGE] = 0xf;
 }
 
-static void init_lut_map() {
-    int i;
-    for(i=0;i<256;i++) lut_b[i]=gen_rand_sha()&0xff, lut_a[i]^=lut_b[i];
-    lut_a_map[0]=0;
-    lut_b_map[0]=0;
-    remap();
-}
-
-static void init_aes() {
-    resetrng();
-    gen_lut_sbox();
-    init_lut_map();
-}
 
 static __attribute__((aligned(4))) uint8_t workarea[4 * 1024];
 
@@ -182,13 +148,10 @@ int main() {
     for (int i=0; i < 4; i++)
         printf("%08x\n", *(uint32_t*)(SRAM_BASE + i*4));
 
-    init_aes();
     // Read key directly from OTP - guarded reads will throw a bus fault if there are any errors
     uint16_t* otp_data = (uint16_t*)OTP_DATA_GUARDED_BASE;
 
-    init_key((uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS & 0x780)]));
-    otp_hw->sw_lock[30] = 0xf;
-    ctr_crypt_s(iv, (void*)SRAM_BASE, data_size/16);
+    decrypt((uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS &  (OTP_KEY_PAGE * 0x40))]), iv, (void*)SRAM_BASE, data_size/16);
 
     printf("Post decryption image begins with\n");
     for (int i=0; i < 4; i++)
