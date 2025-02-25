@@ -9,7 +9,7 @@
 #include "hardware/sync.h"
 
 int main() {
-    restore_interrupts_from_disabled(0);
+    enable_interrupts();
     stdio_init_all();
     while (true) {
         printf("Hello, world!\n");
