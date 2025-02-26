@@ -85,7 +85,7 @@ add_linker_script(hello_serial_enc "0x20000000" "448k")
 # sign, hash, and encrypt
 pico_sign_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/private.pem)
 pico_hash_binary(hello_serial_enc)
-pico_encrypt_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin)
+pico_encrypt_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin ${CMAKE_CURRENT_LIST_DIR}/ivsalt.bin)
 
 # package uf2 in flash
 pico_package_uf2_output(hello_serial_enc 0x10000000)

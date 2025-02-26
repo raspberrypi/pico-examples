@@ -34,6 +34,7 @@ pico_sign_binary(hello_encrypted ${CMAKE_CURRENT_LIST_DIR}/private.pem)
 pico_hash_binary(hello_encrypted)
 pico_encrypt_binary(hello_encrypted
     ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin
+    ${CMAKE_CURRENT_LIST_DIR}/ivsalt.bin
     EMBED
     OTP_KEY_PAGE 29)
 
