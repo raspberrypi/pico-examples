@@ -20,11 +20,14 @@ int main() {
     rom_explicit_buy(buffer, 4096);
     free(buffer);
 #endif
+    extern char secret_data[];
 
     while (true) {
         printf("Hello, world!\n");
         printf("I'm a self-decrypting binary\n");
         printf("My secret is...\n");
         sleep_ms(1000);
+        printf(secret_data);
+        sleep_ms(10000);
     }
 }

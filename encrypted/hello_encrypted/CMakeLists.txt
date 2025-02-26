@@ -1,7 +1,14 @@
 # Example encrypted binard
 add_executable(hello_encrypted
         hello_encrypted.c
+        secret.S
         )
+
+# include secret.txt
+target_include_directories(hello_encrypted PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+
+# add dependency on secret.txt
+set_property(SOURCE secret.S APPEND PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_LIST_DIR}/secret.txt)
 
 # pull in common dependencies
 target_link_libraries(hello_encrypted pico_stdlib)
