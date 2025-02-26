@@ -1,4 +1,4 @@
-For security you **must** replace private.pem and privateaes.bin with your own keys, and ivsalt.bin with your own per-device salt. The AES key should also be different for each device. Make sure you **don't lose your keys and salts**, else you may not be able to boot code on your device.
+For security you **must** replace private.pem and privateaes.bin with your own keys, and ivsalt.bin with your own per-device salt. Make sure you **don't lose your keys and salts**, else you may not be able to update the code on your device.
 
 Your signing key must be for the _secp256k1_ curve, in PEM format. You can create a .PEM file with:
 
