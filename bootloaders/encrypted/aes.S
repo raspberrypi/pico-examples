@@ -40,7 +40,7 @@ scratch RAM and the stack pointer is overwritten.
 #define CTAG8  0x33
 #define CTAG9  0x34
 #define CTAG10 0x35 @ not used
-#define CTAG11 0x36
+#define CTAG11 0x36 @ not used
 #define CTAG12 0x37
 #define CTAG13 0x38
 #define CTAG14 0x39
@@ -93,6 +93,8 @@ scratch RAM and the stack pointer is overwritten.
 .endif
 .endm
 
+@ Clear internal stripe load registers, and r0-r3
+@ 0 <= offset <= 32
 .macro clear03 offset=0
  getchaffaddress r0,\offset
  ldmia r0,{r0-r3}
@@ -158,6 +160,10 @@ RKshareC:                    @ Round key common share C; see comment at init_key
 .space 4
 RKshareCchange:              @ Temporary used by ref_roundkey_share_s
 .space 4
+IV0:                         @ 2-way share of IV for block 0
+.space 36                    @ Considering IV0 as a word pointer, the format is IV = IV0[0,1,2,3] ^ (IV0[5,6,7,8],ror#16)
+                             @ The gap at IV0[4] is to defeat unsharing by internal striped memory registers
+                             @ I.e., there are implicit XORs IV0[0]^IV0[4], IV0[1]^IV0[5], ..., that the 1 word offset renders useless
 
 @ Regardless of configuration, the code uses a single 256-entry LUT,
 @ which is a simple S-box table.
@@ -323,11 +329,11 @@ gen_rand_sha:
  ldr r2,=rstate_sha
  ldr r0,[r2,#jstate-rstate_sha]
  movs r1,#1
- movs r3,r0,lsl#2
- ands r3,r3,#31
- movs r3,r1,lsl r3       @ 1<<(4*(r0&7))
- udiv r3,r3,r1           @ Takes constant + (r0&7) cycles
- lsrs r0,r0,#1
+ ands r3,r0,#3
+ movs r3,r3,lsl#2
+ movs r3,r1,lsl r3       @ 1<<(4*(r0&3))
+ udiv r3,r3,r1           @ Takes constant + (r0&3) cycles
+ lsrs r0,r0,#2
  bne 1f
  bl gen_rand_sha_nonpres
  ldr r2,=rstate_sha
@@ -352,6 +358,7 @@ gen_rand_sha_nonpres:
  strb r3,[r2]                @ save updated SUM register offset in bottom byte of rstate_sha[]
  bx r14
 1:
+@ [CK_JITTER code was here]
  movs r3,#SHA256_SUM6_OFFSET+1
  strb r3,[r2]                @ reset word counter: the +1 is compensated for later
  movw r1,#(1<<SHA256_CSR_BSWAP_LSB)+(1<<SHA256_CSR_START_LSB)
@@ -437,10 +444,13 @@ gen_rand_lfsr_nonpres:
 .balign 4
 .thumb_func
 decrypt:
+@ r0=4-way key, r1=IV_shareA, r2=IV_shareB, r3=message buffer, [r13]=number of blocks
+ ldr r12,[r13]               @ Pop 5th argument in r12 (which we are allowed to treat as scratch according to AAPCS)
  push {r14}
  GET_CANARY r14,CTAG3,6
  SET_COUNT 23,6
- push {r0-r12,r14}
+ push {r4-r11,r14}
+ push {r0-r3,r12}            @ Save the five arguments
  bl reset_sha_trng
  bl init_rstate
 @ randomly re-share the LUT contents
@@ -463,11 +473,11 @@ decrypt:
  bl init_key_4way
  CHK_COUNT 31,6
  bl lock_key
- pop {r0-r2}
+ pop {r0-r3}                 @ r0=IV_shareA, r1=IV_shareB, r2=message, r3=num blocks
  bl ctr_crypt_s
  bl randomisechaff
  clear03
- pop {r4-r12,r14}
+ pop {r4-r11,r14}
  CHK_CANARY r14,CTAG3,6
  pop {r15}
 
@@ -859,7 +869,7 @@ ref_roundkey_hvperms_s_exit:  @ label exit point to be to able to specify to ana
 .if ST_VPERM
 .balign 4
 .thumb_func
-@ Rotate share registers r4-r7, r8-r11 (r4->r5-r6->r7->r4 etc.) by an addtional amount
+@ Cycle share registers r4-r7, r8-r11 (r4->r5-r6->r7->r4 etc.) by an addtional amount
 @ given in the bottom two bits of R0 and update the rotation recorded at statevperm.
 @ On entry R1 must point to statevperm.
 @ Trashes r0-r3,r12
@@ -901,46 +911,7 @@ addstatevperm_exit:           @ label exit point to be to able to specify to ana
  bx r14
 .endif
 
-@ Switch from non-shared to shared state
-@ Trashes r0-r3,r12
-.balign 4
-ns_to_s:
- GET_CANARY r12,CTAG11,6
- push {r12,r14}
-.if ST_SHAREC
- bl gen_rand_sha_nonpres                   @ Create state share C; all bytes the same
- ands r0,r0,#255
- orrs r0,r0,r0,lsl#8
- orrs r12,r0,r0,lsl#16
- ldr r1,=shareC
- str r12,[r1]
-.else
- movs r12,#0
-.endif
- bl gen_rand_sha_nonpres
- eors r4,r4,r0
- eor r8,r12,r0,ror#16
- bl gen_rand_sha_nonpres
- eors r5,r5,r0
- eor r9,r12,r0,ror#16
- bl gen_rand_sha_nonpres
- eors r6,r6,r0
- eor r10,r12,r0,ror#16
- bl gen_rand_sha_nonpres
- eors r7,r7,r0
- eor r11,r12,r0,ror#16
-.if ST_VPERM
- bl gen_rand_sha_nonpres
- ldr r1,=statevperm
- movs r2,#0
- str r2,[r1]
- bl addstatevperm                          @ Initialise state vperm with SHA RNG, refresh with LFSR RNG
-.endif
- pop {r12,r14}
- CHK_CANARY r12,CTAG11,6
- bx r14
-
-@ Conjugate lut_a, lut_b with shareC
+@ Conjugate lut_a, lut_b with (state) shareC
 @ I.e., EOR the input and output with shareC.
 @ We need to pick one input for each share A and B, and one output for ONE of the shares A and B
 @ Arbitrarily choosing a0, b1 and d0
@@ -1653,36 +1624,57 @@ addrkey_s:
 .endif
 
 ctr_crypt_s:
-@ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks
+@ r0=IV_shareA, r1=IV_shareB, r2=cipher/plaintext buffer, r3=number of blocks
  GET_CANARY r12,CTAG0,6
  push {r0-r12,r14}           @ save all registers so that when we restore we overwrite any secrets
 
- push {r0-r2}
+ push {r0-r3}
+ 
  SET_COUNT 93,6
 
 .if CT_BPERM
 @ Initialise 32 random numbers (which fit in half-words)
+@ r3=number of blocks
  ldr r4,=bperm_rand
  movs r5,#32
 1:
  bl gen_rand_sha
- umull r0,r3,r0,r2        @ Random number between 0 and n-1 (n=#blocks)
- strh r3,[r4],#2
+ umull r0,r2,r0,r3        @ Random number between 0 and n-1 (n=#blocks)
+ strh r2,[r4],#2
  subs r5,r5,#1
  bne 1b
 .endif
 
  bl randomisechaff
- pop {r0-r2}
+
+@ Refresh IVshareA and IVshareB, convert to ror#16 format and store the result at IV0
+@ Not doing shareC or state vperm at this point
+ pop {r0}
+ ldmia r0,{r4-r7}         @ r4-r7 = IVshareA
+ clear03 16
+ pop {r1}
+ ldmia r1,{r8-r11}        @ r8-r11 = IVshareB
+ clear03 32
+ bl gen_rand_sha_nonpres; eors r4,r4,r0;  mov r8, r8, ror#16;  eor r8, r8, r0,ror#16
+ bl gen_rand_sha_nonpres; eors r5,r5,r0;  mov r9, r9, ror#16;  eor r9, r9, r0,ror#16
+ bl gen_rand_sha_nonpres; eors r6,r6,r0;  mov r10,r10,ror#16;  eor r10,r10,r0,ror#16
+ bl gen_rand_sha_nonpres; eors r7,r7,r0;  mov r11,r11,ror#16;  eor r11,r11,r0,ror#16
+ ldr r0,=IV0
+ stmia r0,{r4-r7}
+ adds r0,r0,#20
+ stmia r0,{r8-r11}
+ pop {r1,r2}
+@ r1=cipher/plaintext buffer, r2=number of blocks
+
  movs r3,#0
  CHK_COUNT 93,6
 
 ctr_crypt_mainloop:
  SET_COUNT 80,6
-@ here r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
+@ r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
 
 @ Do as much preparatory stuff as possible that doesn't involve the IV (to reduce interaction with it)
- push {r0-r3}
+ push {r1-r3}
 @ It's OK for execution time to depend on the block counter r3 ("public"), but not the block number (secret)
 
  tst r3,#(REFCHAFF_PERIOD-1)
@@ -1690,7 +1682,7 @@ ctr_crypt_mainloop:
  bl refreshchaff_and_lfsr
 1:
 
- ldr r3,[r13,#12]            @ get block count off the stack
+ ldr r3,[r13,#8]             @ get block count off the stack
  tst r3,#(REMAP_PERIOD-1)
  bne 1f
  bl remap                    @ shuffle the LUTs; this preserves R3
@@ -1702,7 +1694,7 @@ ctr_crypt_mainloop:
  bl ref_roundkey_shares_s    @ refresh the round key shares
 1:
 
- ldr r3,[r13,#12]            @ get block count off the stack
+ ldr r3,[r13,#8]             @ get block count off the stack
  tst r3,#(REFROUNDKEYHVPERMS_PERIOD-1)
  bne 1f
  bl ref_roundkey_hvperms_s   @ refresh the round key vperms
@@ -1710,13 +1702,13 @@ ctr_crypt_mainloop:
 
  CHK_COUNT 81,6
 
- pop {r0-r3}
-@ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
+ pop {r1-r3}
+@ r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
 
 @ Now calculate r12 = block number-to-be-deciphered from r3 = block counter
 .if CT_BPERM
 @ Use a "swap-or-not" method to generate an "oblivious" permutation; see makeperm.py version 7
- push {r0,r1}
+ push {r1}
  ldr r0,=murmur3_constants
  ldmia r0,{r9-r12,r14}       @ load five murmur3_32 hash constants
  ldr r0,=bperm_rand
@@ -1752,57 +1744,53 @@ ctr_crypt_mainloop:
  adds r4,r4,r7               @ r4=j if top bit of r6, else i
  subs r1,r1,#1
  bpl 1b
- pop {r0,r1}
+ pop {r1}
  mov r12,r4
 .else
  mov r12,r3
 .endif
  CHK_COUNT 82,6
 
-@ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter (monotonic), r12=block number (block to be deciphered)
- push {r0-r3,r12}
+@ r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter (monotonic), r12=block number (block to be deciphered)
+ push {r1-r3,r12}
+@ r4-r11 = IV0, r12=block number
 
 processIV:                   @ non-target label to assist power analysis
-
-@ It is not clear if the following addition of the block number in r12 to the IV can usefully
-@ be done in terms of shares. Instead we do an addition and subtraction whose overall effect
-@ is the same, and which provides a small degree of masking. The IV is not traditionally a secret,
-@ though it will make it harder for the attacker if it is obscured.
- bl gen_rand_sha
- movs r8,r0,lsr#16           @ only use 16 low bits so we don't get any overflows in the following, and so that a carry from the first word is rare
- add r9,r8,r12               @ "masked" block number
-@ r8=random, r9=(block number)+r8, stack=IV,...
-
- ldr r0,[r13]                @ peek at stack to restore r0=IV ptr
- ldmia r0,{r4-r7}            @ load IV
- clear03                     @ barrier to remove traces of IV from internal CPU load registers
-
-@ Add in r9 in byte-big-endian, bit-little-endian (!) fashion, while trying to avoid rev operations
-@ as far as possible as these tend to expose (via power fluctuations) byte-level hamming weights.
-@ First do 128-bit addition of r9 to byte-reversed IV
- rev r7,r7
- cmn r7,#MAX_NUM_BLOCKS      @ Compare against maximum number of blocks
- bcs 1f
- add r7,r7,r9                @ This can temporarily overflow but it doesn't matter as we know that r7+r12 does not overflow
- sub r7,r7,r8
- b 2f
-1:
-            adds r7,r7,r9
- rev r6,r6; adcs r6,r6,#0
- rev r5,r5; adcs r5,r5,#0
- rev r4,r4; adcs r4,r4,#0
-@ Now do 128-bit subtraction of r8 from byte-reversed IV
- subs r7,r7,r8
- sbcs r6,r6,#0; rev r6,r6
- sbcs r5,r5,#0; rev r5,r5
- sbcs r4,r4,#0; rev r4,r4
-2:
- rev r7,r7
- clear01 16
+ ldr r8,=IV0
+ ldmia r8,{r4-r7}            @ load IV0_A
+ clear03 16
+ add r8,r8,#20
+ ldmia r8,{r8-r11}           @ load IV0_B
+ clear03 32
+ rev r0,r12
+ eor r7,r7,r0                @ XOR in block number to IV0. IV(block n) = IV0 ^ n, cf standard CTR mode IV0 + n.
+                             @ XOR (vs addition) is compatible with XOR-shares, so stealthier/simpler because don't have to unshare to work out IV(block n)
+@ r4-r11 = IV for the current block
  CHK_COUNT 83,6
+.if ST_SHAREC
+ bl gen_rand_sha_nonpres     @ Create state share C; all bytes the same
+ ands r0,r0,#255
+ orrs r0,r0,r0,lsl#8
+ orrs r12,r0,r0,lsl#16
+ ldr r1,=shareC
+ str r12,[r1]
+.else
+ movs r12,#0
+.endif
+@ r4-r11 = IV for the current block w/o shareC, r12=shareC
+@ refresh state shares and mix in shareC
+ bl gen_rand_sha_nonpres; eors r4,r4,r0; eor r4,r4,r12; movs r1,#0; eor r8, r8, r0,ror#16   @ Barriers between shares to prevent implicit r4^r8 etc
+ bl gen_rand_sha_nonpres; eors r5,r5,r0; eor r5,r5,r12; movs r1,#0; eor r9, r9, r0,ror#16
+ bl gen_rand_sha_nonpres; eors r6,r6,r0; eor r6,r6,r12; movs r1,#0; eor r10,r10,r0,ror#16
+ bl gen_rand_sha_nonpres; eors r7,r7,r0; eor r7,r7,r12; movs r1,#0; eor r11,r11,r0,ror#16
+.if ST_VPERM
+ bl gen_rand_sha_nonpres
+ ldr r1,=statevperm
+ movs r2,#0
+ str r2,[r1]
+ bl addstatevperm            @ Initialise state vperm (use SHA RNG to start with, later refreshes are with LFSR RNG)
+.endif
 
-@ r4-r7 = IV for the current block
- bl ns_to_s                  @ convert IV+x to shares, which includes choosing and incorporating a random shareC
  CHK_COUNT 84,6
  bl conjshareC               @ Add the effect of shareC to lut_a, lut_b
  CHK_COUNT 85,6
@@ -1849,9 +1837,9 @@ rounds_s_mainloop:
  bl addstatevperm
 .endif
 
- pop {r0-r3,r12}
- push {r0,r3}
-@ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter, r12=block to be deciphered
+ pop {r1-r3,r12}
+ push {r3}
+@ r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter, r12=block to be deciphered
 
 decryption_start:
 @ Decrypt ciphertext using AES output in shares: r4-r11
@@ -1893,8 +1881,8 @@ decryption_start:
  sub r1,r1,r12,lsl#4         @ Restore r1 to point to start of buffer
  CHK_COUNT 90,6
 
- pop {r0,r3}                 @ Restore IV and block counter
-@ r0=IV, r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
+ pop {r3}                    @ Restore block counter
+@ r1=cipher/plaintext buffer, r2=number of blocks, r3=block counter
 decryption_end:
 
  adds r3,r3,#1

@@ -18,7 +18,7 @@
 
 #define OTP_KEY_PAGE 30
 
-extern void decrypt(uint8_t* key4way, uint8_t* iv, uint8_t(*buf)[16], int nblk);
+extern void decrypt(uint8_t* key4way, uint8_t* IV_OTPsalt, uint8_t* IV_public, uint8_t(*buf)[16], int nblk);
 
 // The function lock_key() is called from decrypt() after key initialisation is complete and before decryption begins.
 // That is a suitable point to lock the OTP area where key information is stored.
@@ -151,7 +151,14 @@ int main() {
     // Read key directly from OTP - guarded reads will throw a bus fault if there are any errors
     uint16_t* otp_data = (uint16_t*)OTP_DATA_GUARDED_BASE;
 
-    decrypt((uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS &  (OTP_KEY_PAGE * 0x40))]), iv, (void*)SRAM_BASE, data_size/16);
+    decrypt(
+        (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS &  (OTP_KEY_PAGE * 0x40))]),
+        (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS &  ((OTP_KEY_PAGE + 1) * 0x40))]),
+        iv, (void*)SRAM_BASE, data_size/16
+    );
+
+    // Lock the IV salt
+    otp_hw->sw_lock[OTP_KEY_PAGE + 1] = 0xf;
 
     printf("Post decryption image begins with\n");
     for (int i=0; i < 4; i++)
