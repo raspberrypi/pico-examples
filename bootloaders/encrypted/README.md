@@ -1,4 +1,6 @@
-For security you **must** replace private.pem and privateaes.bin with your own keys, and ivsalt.bin with your own per-device salt. Your signing key must be for the _secp256k1_ curve, in PEM format. You can create a .PEM file with:
+For security you **must** replace private.pem and privateaes.bin with your own keys, and ivsalt.bin with your own per-device salt. The AES key should also be different for each device. Make sure you **don't lose your keys and salts**, else you may not be able to boot code on your device.
+
+Your signing key must be for the _secp256k1_ curve, in PEM format. You can create a .PEM file with:
 
 ```bash
 openssl ecparam -name secp256k1 -genkey -out private.pem
@@ -23,7 +25,7 @@ NOTE: This will enable secure boot on your device, so only correctly signed bina
 picotool otp load otp.json
 ```
 
-> For more information on security see chapter 10 of the [RP2350 datasheet](https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf), and for information on how to sign other binaries to run on a secure chip see chapter 5.10
+> For more information on security see chapter 10 of the [RP2350 datasheet](https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf), and for information on how to sign other binaries to run on a secure chip see section 5.10
 
 Then either drag & drop the UF2 files to the device in order (enc_bootloader first, then hello_serial_enc) waiting for a reboot in-between, or run
 ```bash
