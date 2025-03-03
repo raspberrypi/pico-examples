@@ -10,7 +10,7 @@
 #include "pico/binary_info.h"
 #include "hardware/i2c.h"
 
-/* Example code to talk to a LIS3DH Mini GPS module.
+/* Example code to talk to a LIS3DH Triple Axis Accelerometer
 
    This example reads data from all 3 axes of the accelerometer and uses an auxiliary ADC to output temperature values.
 
@@ -22,7 +22,7 @@
    GND (physical pin 38)  -> GND on LIS3DH board
 */
 
-// By default this device is on bus address 0x18
+// By default this device is on bus address 0x18. If this doesn't work, try 0x19.
 
 const int ADDRESS = 0x18;
 const uint8_t CTRL_REG_1 = 0x20;
