@@ -38,17 +38,18 @@ typedef struct {
     uint32_t last_sector;
     uint32_t permission;
     uint64_t partition_id;
-    char name[127 + 1];
+    char name[127 + 1];  // name length is indicated by 7 bits
 } pico_partition_entry_t;
 
 
 /*
  * Read the partition table information.
+ *
  * See the RP2350 datasheet 5.1.2, 5.4.8.16 for flags and structures that can be specified.
  */
 int pico_partitions_open(pico_partition_t *pt, int flags) {
     pt->flags = flags;
-    static __attribute__((aligned(4))) uint32_t workarea[816] = {0};
+    static uint32_t workarea[816];
     int rc = rom_get_partition_table_info(workarea, sizeof(workarea), flags);
     if (rc < 0) {
         return rc;
