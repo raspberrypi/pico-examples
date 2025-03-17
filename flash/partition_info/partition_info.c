@@ -1,4 +1,6 @@
 /**
+ * Copyright (c) 2025 Hiroyuki OYAMA <oyama@module.jp>
+ * Copyright (c) 2023 Raspberry Pi (Trading) Ltd.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
@@ -10,6 +12,8 @@
 
 #define PART_LOC_FIRST(x) ( ((x) & PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_BITS) >> PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_LSB )
 #define PART_LOC_LAST(x)  ( ((x) & PICOBIN_PARTITION_LOCATION_LAST_SECTOR_BITS)  >> PICOBIN_PARTITION_LOCATION_LAST_SECTOR_LSB )
+
+#define WORD_SIZE  4
 
 /*
  * Stores partition table information and data read status
@@ -50,13 +54,13 @@ int pico_partitions_open(pico_partition_t *pt, int flags) {
         return rc;
     }
     pt->table = workarea;
-    pt->table_size = rc * 4;  // word to bytes
-    pt->partition_count = ((uint8_t*)workarea)[4];
+    pt->table_size = rc * WORD_SIZE;  // word to bytes
     uint32_t location = workarea[2];
     pt->unpartitioned_space_first_sector = PART_LOC_FIRST(location);
     pt->unpartitioned_space_last_sector = PART_LOC_LAST(location);
     pt->permission = workarea[3];
-    pt->idx = 4;
+    pt->partition_count = ((uint8_t*)workarea)[4];
+    pt->idx = 4;  // point to the beggining of eath table
     pt->current_partition = 0;
 
     return 0;
@@ -92,9 +96,10 @@ size_t pico_partitions_parse(pico_partition_t *pt, pico_partition_entry_t *p) {
         uint8_t *name_src = name_field + 1;
         memcpy(p->name, name_src, name_length);
         p->name[name_length] = '\0';
-        size_t total_name_bytes = 1 + name_length;
-        size_t padded_bytes = (total_name_bytes + 3) & ~((size_t)3);
-        idx += padded_bytes / 4;
+        size_t total_name_field_length = 1 + name_length;
+        // Name field is padded to word size
+        size_t padded_bytes = (total_name_field_length + 3) & ~((size_t)3);
+        idx += padded_bytes / WORD_SIZE;
     } else {
         p->name[0] = '\0';
     }
