@@ -20,6 +20,11 @@ if (NOT DEFINED PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS)
     set(PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS 3000)
 endif()
 
+# Allow using the example keys, as this is the examples repository
+if (NOT DEFINED PICO_ALLOW_EXAMPLE_KEYS)
+    set(PICO_ALLOW_EXAMPLE_KEYS 1)
+endif()
+
 # Initialize the SDK
 pico_sdk_init()
 
