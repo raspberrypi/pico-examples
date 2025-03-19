@@ -12,8 +12,9 @@
     {
       "name": "Firmware",
       "id": 1,
+      "start": 0,
       "size": "512K",
-      "families": ["rp2350-arm-s", "rp2350-riscv"],
+      "families": ["rp2350-arm-ns", "rp2350-arm-s", "rp2350-riscv"],
       "permissions": {
         "secure": "rw",
         "nonsecure": "rw",
@@ -24,7 +25,7 @@
       "name": "Data",
       "id": 2,
       "size": "512K",
-      "families": ["rp2350-arm-s", "rp2350-riscv"],
+      "families": ["data"],
       "permissions": {
         "secure": "rw",
         "nonsecure": "rw",
@@ -35,7 +36,7 @@
       "name": "Read only Data",
       "id": 3,
       "size": "512K",
-      "families": ["rp2350-arm-s", "rp2350-riscv"],
+      "families": ["data"],
       "permissions": {
         "secure": "r",
         "nonsecure": "r",
