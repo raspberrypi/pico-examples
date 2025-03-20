@@ -152,8 +152,8 @@ int main() {
     uint16_t* otp_data = (uint16_t*)OTP_DATA_GUARDED_BASE;
 
     decrypt(
-        (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS &  (OTP_KEY_PAGE * 0x40))]),
-        (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS &  ((OTP_KEY_PAGE + 1) * 0x40))]),
+        (uint8_t*)&(otp_data[OTP_KEY_PAGE * 0x40]),
+        (uint8_t*)&(otp_data[(OTP_KEY_PAGE + 1) * 0x40]),
         iv, (void*)SRAM_BASE, data_size/16
     );
 

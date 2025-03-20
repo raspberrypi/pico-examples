@@ -4,13 +4,6 @@ add_executable(enc_bootloader
         aes.S
         )
 
-# Copy otp.json file to build directory
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/otp.json
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/otp.json" "${CMAKE_CURRENT_BINARY_DIR}/otp.json"
-    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/otp.json)
-add_custom_target(otp_json DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
-add_dependencies(enc_bootloader otp_json)
-
 # pull in common dependencies
 target_link_libraries(enc_bootloader pico_stdlib pico_rand)
 
@@ -45,9 +38,6 @@ endfunction()
 # create linker script to run from 0x20078000
 add_linker_script(enc_bootloader "0x20078000" "32k")
 
-# configure otp output
-pico_set_otp_key_output_file(enc_bootloader ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
-
 # sign, hash, and clear SRAM
 pico_sign_binary(enc_bootloader ${CMAKE_CURRENT_LIST_DIR}/private.pem)
 pico_hash_binary(enc_bootloader)
@@ -81,6 +71,16 @@ pico_set_binary_type(hello_serial_enc no_flash)
 
 # create linker script to ensure it doesn't overwrite the bootloader at 0x20070000
 add_linker_script(hello_serial_enc "0x20000000" "448k")
+
+# Copy otp.json file to build directory
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/otp.json
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/otp.json" "${CMAKE_CURRENT_BINARY_DIR}/otp.json"
+    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/otp.json)
+add_custom_target(otp_json DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
+add_dependencies(hello_serial_enc otp_json)
+
+# configure otp output
+pico_set_otp_key_output_file(hello_serial_enc ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
 
 # sign, hash, and encrypt
 pico_sign_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/private.pem)
