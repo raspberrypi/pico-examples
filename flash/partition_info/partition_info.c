@@ -28,7 +28,7 @@ typedef struct {
     int partition_count;
     uint32_t unpartitioned_space_first_sector;
     uint32_t unpartitioned_space_last_sector;
-    uint32_t permission;
+    uint32_t flags_and_permissions;
     int current_partition;
     size_t idx;
     int status;
