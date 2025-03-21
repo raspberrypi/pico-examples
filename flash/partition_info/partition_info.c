@@ -156,8 +156,7 @@ int main() {
         printf("\n");
     }
     if (pt.status != 0) {
-        fprintf(stderr, "rom_get_partition_table_info rc=%d\n", pt.status);
-        return 1;
+        panic("rom_get_partition_table_info returned %d", pt.status);
     }
 
     return 0;
