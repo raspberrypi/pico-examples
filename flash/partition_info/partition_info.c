@@ -140,7 +140,7 @@ int main() {
     while (pico_partitions_next(&pt, &p)) {
         printf("%3d:", pt.current_partition - 1);
         printf("    %08x->%08x S(%s%s) NSBOOT(%s%s) NS(%s%s)",
-               p.first_sector * 4096, p.last_sector * 4096,
+               p.first_sector * 4096, (p.last_sector + 1) * 4096,
                (p.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_R_BITS ? "r" : ""),
                (p.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_W_BITS ? "w" : ""),
                (p.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NSBOOT_R_BITS ? "r" : ""),
