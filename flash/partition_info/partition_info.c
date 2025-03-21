@@ -66,7 +66,7 @@ int pico_partitions_open(pico_partition_table_t *pt) {
     uint32_t location = pt->table[pos++];
     pt->unpartitioned_space_first_sector = PART_LOC_FIRST(location);
     pt->unpartitioned_space_last_sector = PART_LOC_LAST(location);
-    pt->permission = pt->table[pos++];
+    pt->flags_and_permissions = pt->table[pos++];
     pt->current_partition = 0;
     pt->idx = pos;
     pt->status = 0;
@@ -127,12 +127,12 @@ int main() {
     pico_partition_table_t pt;
     pico_partitions_open(&pt);
     printf("un-partitioned_space: S(%s%s) NSBOOT(%s%s) NS(%s%s)\n",
-           (pt.permission & PICOBIN_PARTITION_PERMISSION_S_R_BITS ? "r" : ""),
-           (pt.permission & PICOBIN_PARTITION_PERMISSION_S_W_BITS ? "w" : ""),
-           (pt.permission & PICOBIN_PARTITION_PERMISSION_NSBOOT_R_BITS ? "r" : ""),
-           (pt.permission & PICOBIN_PARTITION_PERMISSION_NSBOOT_W_BITS ? "w" : ""),
-           (pt.permission & PICOBIN_PARTITION_PERMISSION_NS_R_BITS ? "r" : ""),
-           (pt.permission & PICOBIN_PARTITION_PERMISSION_NS_W_BITS ? "w" : ""));
+           (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_R_BITS ? "r" : ""),
+           (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_W_BITS ? "w" : ""),
+           (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NSBOOT_R_BITS ? "r" : ""),
+           (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NSBOOT_W_BITS ? "w" : ""),
+           (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NS_R_BITS ? "r" : ""),
+           (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NS_W_BITS ? "w" : ""));
     printf("partitions:\n");
     pico_partition_t p;
     while (pico_partitions_next(&pt, &p)) {
