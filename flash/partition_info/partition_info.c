@@ -135,7 +135,7 @@ int main() {
            (pt.permission & PICOBIN_PARTITION_PERMISSION_NSBOOT_W_BITS ? "w" : ""),
            (pt.permission & PICOBIN_PARTITION_PERMISSION_NS_R_BITS ? "r" : ""),
            (pt.permission & PICOBIN_PARTITION_PERMISSION_NS_W_BITS ? "w" : ""));
-    printf("patitions:\n");
+    printf("partitions:\n");
     pico_partition_t p;
     while (pico_partitions_next(&pt, &p)) {
         printf("%3d:", pt.current_partition - 1);
