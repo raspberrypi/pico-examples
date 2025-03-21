@@ -5,7 +5,7 @@ target_link_libraries(partition_info PRIVATE
         pico_bootrom
         )
 
-# not necessary for the example functionality, but shows you how you would add a partition table
+# add a partition table
 pico_embed_pt_in_binary(partition_info ${CMAKE_CURRENT_LIST_DIR}/pt.json)
 
 # create map/bin/hex/uf2 file etc.
