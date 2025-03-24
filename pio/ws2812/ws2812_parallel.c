@@ -29,16 +29,16 @@ static uint8_t *current_strip_out;
 static bool current_strip_4color;
 
 static inline void put_pixel(uint32_t pixel_grb) {
-    *current_strip_out++ = pixel_grb & 0xffu;
-    *current_strip_out++ = (pixel_grb >> 8u) & 0xffu;
     *current_strip_out++ = (pixel_grb >> 16u) & 0xffu;
+    *current_strip_out++ = (pixel_grb >> 8u) & 0xffu;
+    *current_strip_out++ = pixel_grb & 0xffu;
     if (current_strip_4color) {
-        *current_strip_out++ = 0; // todo adjust?
+        *current_strip_out++ = 0;  // todo adjust?
     }
 }
 
 static inline uint32_t urgb_u32(uint8_t r, uint8_t g, uint8_t b) {
-    return
+    return 
             ((uint32_t) (r) << 8) |
             ((uint32_t) (g) << 16) |
             (uint32_t) (b);
