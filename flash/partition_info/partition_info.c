@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 #include <stdio.h>
-#include <pico/stdlib.h>
-#include <pico/bootrom.h>
+#include "pico/stdlib.h"
+#include "pico/bootrom.h"
 #include "boot/picobin.h"
 
 
