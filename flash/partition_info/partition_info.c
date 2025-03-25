@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  */
+#include <assert.h>
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
@@ -51,10 +52,8 @@ typedef struct {
  */
 int open_partition_table(pico_partition_table_t *pt) {
     // Reads fixed size fields
-    int rc = rom_get_partition_table_info(pt->table, sizeof(pt->table),
-                                          (PT_INFO_PT_INFO |
-                                           PT_INFO_PARTITION_LOCATION_AND_FLAGS |
-                                           PT_INFO_PARTITION_ID));
+    uint32_t flags = PT_INFO_PT_INFO | PT_INFO_PARTITION_LOCATION_AND_FLAGS | PT_INFO_PARTITION_ID;
+    int rc = rom_get_partition_table_info(pt->table, sizeof(pt->table), flags);
     if (rc < 0) {
         pt->partition_count = 0;
         pt->status = rc;
@@ -63,6 +62,7 @@ int open_partition_table(pico_partition_table_t *pt) {
 
     size_t pos = 0;
     pt->fields = pt->table[pos++];
+    assert(pt->fields == flags);
     pt->partition_count = pt->table[pos++] & 0x000000FF;
     uint32_t location = pt->table[pos++];
     pt->unpartitioned_space_first_sector = PART_LOC_FIRST(location);
@@ -101,15 +101,15 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
     if (p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS) {
         // Read variable length fields
         uint32_t name_buf[(PARTITION_NAME_MAX + 1) / sizeof(uint32_t)] = {0};
+        uint32_t flags = PT_INFO_SINGLE_PARTITION | PT_INFO_PARTITION_NAME;
         int rc = rom_get_partition_table_info(name_buf, sizeof(name_buf),
-                                              (pt->current_partition << 24 |
-                                               PT_INFO_SINGLE_PARTITION |
-                                               PT_INFO_PARTITION_NAME));
+                                              (pt->current_partition << 24 | flags));
         if (rc < 0) {
             pt->status = rc;
             return false;
         }
         uint32_t __attribute__((unused)) fields = name_buf[0];
+        assert(fields == flags);
         uint8_t *name_buf_u8 = (uint8_t *)&name_buf[1];
         uint8_t name_length = *name_buf_u8++;
         memcpy(p->name, name_buf_u8, name_length);
