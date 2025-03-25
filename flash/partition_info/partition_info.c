@@ -49,7 +49,7 @@ typedef struct {
  *
  * See the RP2350 datasheet 5.1.2, 5.4.8.16 for flags and structures that can be specified.
  */
-int pico_partitions_open(pico_partition_table_t *pt) {
+int open_partition_table(pico_partition_table_t *pt) {
     // Reads fixed size fields
     int rc = rom_get_partition_table_info(pt->table, sizeof(pt->table),
                                           (PT_INFO_PT_INFO |
@@ -77,7 +77,7 @@ int pico_partitions_open(pico_partition_table_t *pt) {
 /*
  * Extract each partition information
  */
-bool pico_partitions_next(pico_partition_table_t *pt, pico_partition_t *p) {
+bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
     if (pt->current_partition >= pt->partition_count) {
         return false;
     }
@@ -125,7 +125,7 @@ int main() {
     stdio_init_all();
 
     pico_partition_table_t pt;
-    pico_partitions_open(&pt);
+    open_partition_table(&pt);
     printf("un-partitioned_space: S(%s%s) NSBOOT(%s%s) NS(%s%s)\n",
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_R_BITS ? "r" : ""),
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_W_BITS ? "w" : ""),
@@ -135,7 +135,7 @@ int main() {
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NS_W_BITS ? "w" : ""));
     printf("partitions:\n");
     pico_partition_t p;
-    while (pico_partitions_next(&pt, &p)) {
+    while (read_next_partition(&pt, &p)) {
         printf("%3d:", pt.current_partition - 1);
         printf("    %08x->%08x S(%s%s) NSBOOT(%s%s) NS(%s%s)",
                p.first_sector * 4096, (p.last_sector + 1) * 4096,
