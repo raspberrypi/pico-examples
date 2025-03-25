@@ -28,7 +28,7 @@ typedef struct {
     uint32_t unpartitioned_space_last_sector;
     uint32_t flags_and_permissions;
     int current_partition;
-    size_t idx;
+    size_t pos;
     int status;
 } pico_partition_table_t;
 
@@ -68,7 +68,7 @@ int pico_partitions_open(pico_partition_table_t *pt) {
     pt->unpartitioned_space_last_sector = PART_LOC_LAST(location);
     pt->flags_and_permissions = pt->table[pos++];
     pt->current_partition = 0;
-    pt->idx = pos;
+    pt->pos = pos;
     pt->status = 0;
 
     return 0;
@@ -82,20 +82,20 @@ bool pico_partitions_next(pico_partition_table_t *pt, pico_partition_t *p) {
         return false;
     }
 
-    size_t idx = pt->idx;
-    uint32_t location = pt->table[idx++];
+    size_t pos = pt->pos;
+    uint32_t location = pt->table[pos++];
     p->first_sector = PART_LOC_FIRST(location);
     p->last_sector = PART_LOC_LAST(location);
-    p->flags_and_permissions = pt->table[idx++];
+    p->flags_and_permissions = pt->table[pos++];
 
     if (p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_ID_BITS) {
-        uint32_t id_low  = pt->table[idx++];
-        uint32_t id_high = pt->table[idx++];
+        uint32_t id_low  = pt->table[pos++];
+        uint32_t id_high = pt->table[pos++];
         p->partition_id = ((uint64_t)id_high << 32) | id_low;
     } else {
         p->partition_id = 0;
     }
-    pt->idx = idx;
+    pt->pos = pos;
 
     if (p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS) {
         // Read variable length fields
