@@ -50,7 +50,7 @@ typedef struct {
  * See the RP2350 datasheet 5.1.2, 5.4.8.16 for flags and structures that can be specified.
  */
 int pico_partitions_open(pico_partition_table_t *pt) {
-    // Reads a fixed size fields
+    // Reads fixed size fields
     int rc = rom_get_partition_table_info(pt->table, sizeof(pt->table),
                                           (PT_INFO_PT_INFO |
                                            PT_INFO_PARTITION_LOCATION_AND_FLAGS |
