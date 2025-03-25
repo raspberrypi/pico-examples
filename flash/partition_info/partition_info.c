@@ -56,6 +56,7 @@ int open_partition_table(pico_partition_table_t *pt) {
                                            PT_INFO_PARTITION_LOCATION_AND_FLAGS |
                                            PT_INFO_PARTITION_ID));
     if (rc < 0) {
+        pt->partition_count = 0;
         pt->status = rc;
         return rc;
     }
