@@ -52,7 +52,7 @@ typedef struct {
  *
  * See the RP2350 datasheet 5.1.2, 5.4.8.16 for flags and structures that can be specified.
  */
-int open_partition_table(pico_partition_table_t *pt) {
+int read_partition_table(pico_partition_table_t *pt) {
     // Reads fixed size fields
     uint32_t flags = PT_INFO_PT_INFO | PT_INFO_PARTITION_LOCATION_AND_FLAGS | PT_INFO_PARTITION_ID;
     int rc = rom_get_partition_table_info(pt->table, sizeof(pt->table), flags);
@@ -131,7 +131,7 @@ int main() {
 
     pico_partition_table_t pt;
     int rc;
-    rc = open_partition_table(&pt);
+    rc = read_partition_table(&pt);
     if (rc != 0) {
         panic("rom_get_partition_table_info returned %d", pt.status);
     }
