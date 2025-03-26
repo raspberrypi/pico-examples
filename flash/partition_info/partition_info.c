@@ -24,7 +24,7 @@
 typedef struct {
     uint32_t table[PARTITION_TABLE_FIXED_INFO_SIZE];
     uint32_t fields;
-    bool has_partition;
+    bool has_partition_table;
     int partition_count;
     uint32_t unpartitioned_space_first_sector;
     uint32_t unpartitioned_space_last_sector;
@@ -65,7 +65,7 @@ int read_partition_table(pico_partition_table_t *pt) {
     pt->fields = pt->table[pos++];
     assert(pt->fields == flags);
     pt->partition_count = pt->table[pos] & 0x000000FF;
-    pt->has_partition = pt->table[pos] & 0x00000100;
+    pt->has_partition_table = pt->table[pos] & 0x00000100;
     pos++;
     uint32_t location = pt->table[pos++];
     pt->unpartitioned_space_first_sector = PART_LOC_FIRST(location);
@@ -134,7 +134,7 @@ int main() {
     if (rc != 0) {
         panic("rom_get_partition_table_info returned %d", pt.status);
     }
-    if (!pt.has_partition) {
+    if (!pt.has_partition_table) {
         printf("there is no partition table\n");
     } else if (pt.partition_count == 0) {
         printf("the partition table is empty\n");
