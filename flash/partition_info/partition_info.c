@@ -25,6 +25,7 @@
 typedef struct {
     uint32_t table[PARTITION_TABLE_FIXED_INFO_SIZE];
     uint32_t fields;
+    bool has_partition;
     int partition_count;
     uint32_t unpartitioned_space_first_sector;
     uint32_t unpartitioned_space_last_sector;
@@ -64,7 +65,9 @@ int open_partition_table(pico_partition_table_t *pt) {
     size_t pos = 0;
     pt->fields = pt->table[pos++];
     assert(pt->fields == flags);
-    pt->partition_count = pt->table[pos++] & 0x000000FF;
+    pt->partition_count = pt->table[pos] & 0x000000FF;
+    pt->has_partition = pt->table[pos] & 0x00000100;
+    pos++;
     uint32_t location = pt->table[pos++];
     pt->unpartitioned_space_first_sector = PART_LOC_FIRST(location);
     pt->unpartitioned_space_last_sector = PART_LOC_LAST(location);
@@ -132,7 +135,11 @@ int main() {
     if (rc != 0) {
         panic("rom_get_partition_table_info returned %d", pt.status);
     }
-
+    if (!pt.has_partition) {
+        printf("there is no partition table\n");
+    } else if (pt.partition_count == 0) {
+        printf("the partition table is empty\n");
+    }
     printf("un-partitioned_space: S(%s%s) NSBOOT(%s%s) NS(%s%s)\n",
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_R_BITS ? "r" : ""),
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_W_BITS ? "w" : ""),
@@ -140,6 +147,7 @@ int main() {
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NSBOOT_W_BITS ? "w" : ""),
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NS_R_BITS ? "r" : ""),
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NS_W_BITS ? "w" : ""));
+
     printf("partitions:\n");
     pico_partition_t p;
     while (read_next_partition(&pt, &p)) {
