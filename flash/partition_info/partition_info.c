@@ -112,7 +112,7 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
         uint32_t __attribute__((unused)) fields = name_buf[0];
         assert(fields == flags);
         uint8_t *name_buf_u8 = (uint8_t *)&name_buf[1];
-        uint8_t name_length = *name_buf_u8++;
+        uint8_t name_length = *name_buf_u8++ & 0x7F;
         memcpy(p->name, name_buf_u8, name_length);
         p->name[name_length] = '\0';
     } else {
