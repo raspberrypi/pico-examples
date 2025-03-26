@@ -8,7 +8,7 @@
 #include "pico/stdlib.h"
 #include "pico/bootrom.h"
 #include "boot/picobin.h"
-
+#include "hardware/flash.h"
 
 #define PART_LOC_FIRST(x) ( ((x) & PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_BITS) >> PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_LSB )
 #define PART_LOC_LAST(x)  ( ((x) & PICOBIN_PARTITION_LOCATION_LAST_SECTOR_BITS)  >> PICOBIN_PARTITION_LOCATION_LAST_SECTOR_LSB )
@@ -17,7 +17,6 @@
 #define PARTITION_ID_SIZE                  2
 #define PARTITION_NAME_MAX                 127
 #define PARTITION_TABLE_FIXED_INFO_SIZE    (4 + PARTITION_TABLE_MAX_PARTITIONS * (PARTITION_LOCATION_AND_FLAGS_SIZE + PARTITION_ID_SIZE))
-#define SECTOR_SIZE 4096
 
 /*
  * Stores partition table information and data read status
@@ -153,7 +152,7 @@ int main() {
     while (read_next_partition(&pt, &p)) {
         printf("%3d:", pt.current_partition - 1);
         printf("    %08x->%08x S(%s%s) NSBOOT(%s%s) NS(%s%s)",
-               p.first_sector * SECTOR_SIZE, (p.last_sector + 1) * SECTOR_SIZE,
+               p.first_sector * FLASH_SECTOR_SIZE, (p.last_sector + 1) * FLASH_SECTOR_SIZE,
                (p.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_R_BITS ? "r" : ""),
                (p.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_W_BITS ? "w" : ""),
                (p.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NSBOOT_R_BITS ? "r" : ""),

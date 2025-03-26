@@ -3,6 +3,7 @@ add_executable(partition_info partition_info.c)
 target_link_libraries(partition_info PRIVATE
         pico_stdlib
         pico_bootrom
+        hardware_flash
         )
 
 # add a partition table
