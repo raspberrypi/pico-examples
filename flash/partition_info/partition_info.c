@@ -126,7 +126,12 @@ int main() {
     stdio_init_all();
 
     pico_partition_table_t pt;
-    open_partition_table(&pt);
+    int rc;
+    rc = open_partition_table(&pt);
+    if (rc != 0) {
+        panic("rom_get_partition_table_info returned %d", pt.status);
+    }
+
     printf("un-partitioned_space: S(%s%s) NSBOOT(%s%s) NS(%s%s)\n",
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_R_BITS ? "r" : ""),
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_W_BITS ? "w" : ""),
