@@ -147,6 +147,9 @@ int main() {
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NS_R_BITS ? "r" : ""),
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NS_W_BITS ? "w" : ""));
 
+    if (pt.partition_count == 0) {
+        return 0;
+    }
     printf("partitions:\n");
     pico_partition_t p;
     while (read_next_partition(&pt, &p)) {
