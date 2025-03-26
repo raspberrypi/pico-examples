@@ -101,7 +101,7 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
 
     if (p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS) {
         // Read variable length fields
-        uint32_t name_buf[(PARTITION_NAME_MAX + 1) / sizeof(uint32_t)] = {0};
+        uint32_t name_buf[((PARTITION_NAME_MAX + 1) / sizeof(uint32_t)) + 1] = {0};
         uint32_t flags = PT_INFO_SINGLE_PARTITION | PT_INFO_PARTITION_NAME;
         int rc = rom_get_partition_table_info(name_buf, sizeof(name_buf),
                                               (pt->current_partition << 24 | flags));
