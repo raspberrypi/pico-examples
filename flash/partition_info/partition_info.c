@@ -198,8 +198,8 @@ int main() {
         }
         str_family_ids = uf2_family_ids_join(family_ids, ", ");
         printf(", uf2 { %s }", str_family_ids);
-        uf2_family_ids_free(family_ids);
         free(str_family_ids);
+        uf2_family_ids_free(family_ids);
 
         printf("\n");
     }
