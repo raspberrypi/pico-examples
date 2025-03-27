@@ -132,7 +132,7 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
             p->name[name_length] = '\0';
         }
     }
-    if (!(p->has_name))
+    if (!p->has_name)
          p->name[0] = '\0';
 
     pt->current_partition++;
