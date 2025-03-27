@@ -110,23 +110,23 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
     p->has_name = p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS;
     if (p->extra_family_id_count | p->has_name) {
         // Read variable length fields
-        uint32_t extra_family_id_and_name[PARTITION_EXTRA_FAMILY_ID_MAX + (((PARTITION_NAME_MAX + 1) / sizeof(uint32_t)) + 1)];
+        uint32_t extra_family_ids_and_name[PARTITION_EXTRA_FAMILY_ID_MAX + (((PARTITION_NAME_MAX + 1) / sizeof(uint32_t)) + 1)];
         uint32_t flags = PT_INFO_SINGLE_PARTITION | PT_INFO_PARTITION_FAMILY_IDS | PT_INFO_PARTITION_NAME;
-        int rc = rom_get_partition_table_info(extra_family_id_and_name, sizeof(extra_family_id_and_name),
+        int rc = rom_get_partition_table_info(extra_family_ids_and_name, sizeof(extra_family_ids_and_name),
                                               (pt->current_partition << 24 | flags));
         if (rc < 0) {
             pt->status = rc;
             return false;
         }
         size_t pos_ = 0;
-        uint32_t __attribute__((unused)) fields = extra_family_id_and_name[pos_++];
+        uint32_t __attribute__((unused)) fields = extra_family_ids_and_name[pos_++];
         assert(fields == flags);
         for (size_t i = 0; i < p->extra_family_id_count; i++, pos_++) {
-            p->extra_family_ids[i] = extra_family_id_and_name[pos_];
+            p->extra_family_ids[i] = extra_family_ids_and_name[pos_];
         }
 
         if (p->has_name) {
-            uint8_t *name_buf = (uint8_t *)&extra_family_id_and_name[pos_];
+            uint8_t *name_buf = (uint8_t *)&extra_family_ids_and_name[pos_];
             uint8_t name_length = *name_buf++ & 0x7F;
             memcpy(p->name, name_buf, name_length);
             p->name[name_length] = '\0';
