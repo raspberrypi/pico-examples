@@ -155,8 +155,7 @@ int main() {
         printf("the partition table is empty\n");
     }
 
-    uf2_family_ids_t *family_ids = uf2_family_ids_new();
-    uf2_family_ids_add_default_families(family_ids, pt.flags_and_permissions);
+    uf2_family_ids_t *family_ids = uf2_family_ids_new(pt.flags_and_permissions);
     char *str_family_ids = uf2_family_ids_join(family_ids, ", ");
     printf("un-partitioned_space: S(%s%s) NSBOOT(%s%s) NS(%s%s) uf2 { %s }\n",
            (pt.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_S_R_BITS ? "r" : ""),
@@ -193,8 +192,7 @@ int main() {
         }
 
         // print UF2 family ID
-        family_ids = uf2_family_ids_new();
-        uf2_family_ids_add_default_families(family_ids, p.flags_and_permissions);
+        family_ids = uf2_family_ids_new(p.flags_and_permissions);
         for (size_t i = 0; i < p.extra_family_id_count; i++) {
             uf2_family_ids_add_extra_family_id(family_ids, p.extra_family_ids[i]);
         }

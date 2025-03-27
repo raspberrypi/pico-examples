@@ -2,14 +2,7 @@
 
 #define UF2_FAMILY_ID_HEX_SIZE   (2 + 8 * 2 + 1)
 
-uf2_family_ids_t *uf2_family_ids_new(void) {
-    uf2_family_ids_t *ids = malloc(sizeof(uf2_family_ids_t));
-    ids->count = 0;
-    ids->items = NULL;
-    return ids;
-}
-
-void uf2_family_ids_add(uf2_family_ids_t *ids, const char *str) {
+static void _add(uf2_family_ids_t *ids, const char *str) {
     ids->items = realloc(ids->items, (ids->count + 1) * sizeof(char *));
     ids->items[ids->count] = strdup(str);
     if (ids->items[ids->count] == NULL) {
@@ -17,6 +10,29 @@ void uf2_family_ids_add(uf2_family_ids_t *ids, const char *str) {
         return;
     }
     ids->count++;
+}
+
+static void _add_default_families(uf2_family_ids_t *ids, uint32_t flags) {
+    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_ABSOLUTE_BITS)
+        _add(ids, "absolute");
+    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_RP2040_BITS)
+        _add(ids, "rp2040");
+    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_RP2350_ARM_S_BITS)
+        _add(ids, "rp2350-arm-s");
+    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_RP2350_ARM_NS_BITS)
+        _add(ids, "rp2350-arm-ns");
+    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_RP2350_RISCV_BITS)
+        _add(ids, "rp2350-riscv");
+    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_DATA_BITS)
+        _add(ids, "data");
+}
+
+uf2_family_ids_t *uf2_family_ids_new(uint32_t flags) {
+    uf2_family_ids_t *ids = malloc(sizeof(uf2_family_ids_t));
+    ids->count = 0;
+    ids->items = NULL;
+    _add_default_families(ids, flags);
+    return ids;
 }
 
 char *uf2_family_ids_join(const uf2_family_ids_t *ids, const char *sep) {
@@ -53,23 +69,8 @@ void uf2_family_ids_free(uf2_family_ids_t *ids) {
     free(ids);
 }
 
-void uf2_family_ids_add_default_families(uf2_family_ids_t *ids, uint32_t flags) {
-    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_ABSOLUTE_BITS)
-        uf2_family_ids_add(ids, "absolute");
-    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_RP2040_BITS)
-        uf2_family_ids_add(ids, "rp2040");
-    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_RP2350_ARM_S_BITS)
-        uf2_family_ids_add(ids, "rp2350-arm-s");
-    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_RP2350_ARM_NS_BITS)
-        uf2_family_ids_add(ids, "rp2350-arm-ns");
-    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_RP2350_RISCV_BITS)
-        uf2_family_ids_add(ids, "rp2350-riscv");
-    if (flags & PICOBIN_PARTITION_FLAGS_ACCEPTS_DEFAULT_FAMILY_DATA_BITS)
-        uf2_family_ids_add(ids, "data");
-}
-
 void uf2_family_ids_add_extra_family_id(uf2_family_ids_t *ids, uint32_t family_id) {
     char hex_id[UF2_FAMILY_ID_HEX_SIZE];
     sprintf(hex_id, "0x%08x", family_id);
-    uf2_family_ids_add(ids, hex_id);
+    _add(ids, hex_id);
 }
