@@ -8,6 +8,8 @@
 #include "boot/picobin.h"
 
 
+#define PARTITION_EXTRA_FAMILY_ID_MAX      3
+
 typedef struct {
     size_t count;
     char **items;
