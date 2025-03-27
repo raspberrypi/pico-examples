@@ -1,4 +1,4 @@
-add_executable(partition_info partition_info.c)
+add_executable(partition_info partition_info.c uf2_family_ids.c)
 
 target_link_libraries(partition_info PRIVATE
         pico_stdlib
