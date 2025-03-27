@@ -118,15 +118,15 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
             pt->status = rc;
             return false;
         }
-        size_t pos = 0;
-        uint32_t __attribute__((unused)) fields = extra_family_id_and_name[pos++];
+        size_t pos_ = 0;
+        uint32_t __attribute__((unused)) fields = extra_family_id_and_name[pos_++];
         assert(fields == flags);
-        for (size_t i = 0; i < p->extra_family_id_count; i++, pos++) {
-            p->extra_family_ids[i] = extra_family_id_and_name[pos];
+        for (size_t i = 0; i < p->extra_family_id_count; i++, pos_++) {
+            p->extra_family_ids[i] = extra_family_id_and_name[pos_];
         }
 
         if (p->has_name) {
-            uint8_t *name_buf = (uint8_t *)&extra_family_id_and_name[pos];
+            uint8_t *name_buf = (uint8_t *)&extra_family_id_and_name[pos_];
             uint8_t name_length = *name_buf++ & 0x7F;
             memcpy(p->name, name_buf, name_length);
             p->name[name_length] = '\0';
