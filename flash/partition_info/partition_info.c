@@ -44,6 +44,7 @@ typedef struct {
     uint32_t last_sector;
     uint32_t flags_and_permissions;
     uint64_t partition_id;
+    bool has_name;
     char name[PARTITION_NAME_MAX + 1];  // name length is indicated by 7 bits
     uint32_t extra_family_id_count;
     uint32_t extra_family_ids[PARTITION_EXTRA_FAMILY_ID_MAX];
@@ -107,7 +108,8 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
 
     p->extra_family_id_count = (p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_ACCEPTS_NUM_EXTRA_FAMILIES_BITS)
                                    >> PICOBIN_PARTITION_FLAGS_ACCEPTS_NUM_EXTRA_FAMILIES_LSB;
-    if (p->extra_family_id_count | (p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS)) {
+    p->has_name = p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS;
+    if (p->extra_family_id_count | p->has_name) {
         // Read variable length fields
         uint32_t extra_family_id_and_name[PARTITION_EXTRA_FAMILY_ID_MAX + (((PARTITION_NAME_MAX + 1) / sizeof(uint32_t)) + 1)];
         uint32_t flags = PT_INFO_SINGLE_PARTITION | PT_INFO_PARTITION_FAMILY_IDS | PT_INFO_PARTITION_NAME;
@@ -124,14 +126,14 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
             p->extra_family_ids[i] = extra_family_id_and_name[pos];
         }
 
-        if (p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS) {
+        if (p->has_name) {
             uint8_t *name_buf = (uint8_t *)&extra_family_id_and_name[pos];
             uint8_t name_length = *name_buf++ & 0x7F;
             memcpy(p->name, name_buf, name_length);
             p->name[name_length] = '\0';
         }
     }
-    if (!(p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS))
+    if (!(p->has_name))
          p->name[0] = '\0';
 
     pt->current_partition++;
