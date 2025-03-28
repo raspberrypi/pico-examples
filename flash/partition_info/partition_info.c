@@ -16,7 +16,7 @@
 
 #define PARTITION_LOCATION_AND_FLAGS_SIZE  2
 #define PARTITION_ID_SIZE                  2
-#define PARTITION_NAME_MAX                 127
+#define PARTITION_NAME_MAX                 127  // name length is indicated by 7 bits
 #define PARTITION_TABLE_FIXED_INFO_SIZE    (4 + PARTITION_TABLE_MAX_PARTITIONS * (PARTITION_LOCATION_AND_FLAGS_SIZE + PARTITION_ID_SIZE))
 
 /*
@@ -44,7 +44,7 @@ typedef struct {
     uint32_t flags_and_permissions;
     uint64_t partition_id;
     bool has_name;
-    char name[PARTITION_NAME_MAX + 1];  // name length is indicated by 7 bits
+    char name[PARTITION_NAME_MAX + 1];
     uint32_t extra_family_id_count;
     uint32_t extra_family_ids[PARTITION_EXTRA_FAMILY_ID_MAX];
 } pico_partition_t;
