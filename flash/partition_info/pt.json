@@ -14,7 +14,7 @@
       "id": 1,
       "start": 0,
       "size": "512K",
-      "families": ["rp2350-arm-ns", "rp2350-arm-s", "rp2350-riscv"],
+      "families": ["rp2350-arm-ns", "rp2350-arm-s", "rp2350-riscv", "0x12345678"],
       "permissions": {
         "secure": "rw",
         "nonsecure": "rw",
