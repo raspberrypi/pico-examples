@@ -42,6 +42,7 @@ typedef struct {
     uint32_t first_sector;
     uint32_t last_sector;
     uint32_t flags_and_permissions;
+    bool has_id;
     uint64_t partition_id;
     bool has_name;
     char name[PARTITION_NAME_MAX + 1];
@@ -95,8 +96,10 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
     p->first_sector = PART_LOC_FIRST(location);
     p->last_sector = PART_LOC_LAST(location);
     p->flags_and_permissions = pt->table[pos++];
+    p->has_name = p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS;
+    p->has_id = p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_ID_BITS;
 
-    if (p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_ID_BITS) {
+    if (p->has_id) {
         uint32_t id_low  = pt->table[pos++];
         uint32_t id_high = pt->table[pos++];
         p->partition_id = ((uint64_t)id_high << 32) | id_low;
@@ -107,7 +110,6 @@ bool read_next_partition(pico_partition_table_t *pt, pico_partition_t *p) {
 
     p->extra_family_id_count = (p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_ACCEPTS_NUM_EXTRA_FAMILIES_BITS)
                                    >> PICOBIN_PARTITION_FLAGS_ACCEPTS_NUM_EXTRA_FAMILIES_LSB;
-    p->has_name = p->flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS;
     if (p->extra_family_id_count | p->has_name) {
         // Read variable length fields
         uint32_t extra_family_ids_and_name[PARTITION_EXTRA_FAMILY_ID_MAX + (((PARTITION_NAME_MAX + 1) / sizeof(uint32_t)) + 1)];
@@ -183,10 +185,10 @@ int main() {
                (p.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NSBOOT_W_BITS ? "w" : ""),
                (p.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NS_R_BITS ? "r" : ""),
                (p.flags_and_permissions & PICOBIN_PARTITION_PERMISSION_NS_W_BITS ? "w" : ""));
-        if (p.flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_ID_BITS) {
+        if (p.has_id) {
             printf(", id=%016llx", p.partition_id);
         }
-        if (p.flags_and_permissions & PICOBIN_PARTITION_FLAGS_HAS_NAME_BITS) {
+        if (p.has_name) {
             printf(", \"%s\"", p.name);
         }
 
