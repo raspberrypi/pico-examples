@@ -26,13 +26,6 @@ pico_set_binary_version(hello_encrypted MAJOR 7 MINOR 3)
 # set tbyb (optional)
 # target_compile_definitions(hello_encrypted PRIVATE PICO_CRT0_IMAGE_TYPE_TBYB=1)
 
-# Copy otp.json file to build directory
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/otp.json
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/otp.json" "${CMAKE_CURRENT_BINARY_DIR}/otp.json"
-    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/otp.json)
-add_custom_target(hello_encrypted_otp_json DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
-add_dependencies(hello_encrypted hello_encrypted_otp_json)
-
 # configure otp output
 pico_set_otp_key_output_file(hello_encrypted ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
 

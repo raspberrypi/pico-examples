@@ -72,13 +72,6 @@ pico_set_binary_type(hello_serial_enc no_flash)
 # create linker script to ensure it doesn't overwrite the bootloader at 0x20070000
 add_linker_script(hello_serial_enc "0x20000000" "448k")
 
-# Copy otp.json file to build directory
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/otp.json
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/otp.json" "${CMAKE_CURRENT_BINARY_DIR}/otp.json"
-    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/otp.json)
-add_custom_target(otp_json DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
-add_dependencies(hello_serial_enc otp_json)
-
 # configure otp output
 pico_set_otp_key_output_file(hello_serial_enc ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
 
