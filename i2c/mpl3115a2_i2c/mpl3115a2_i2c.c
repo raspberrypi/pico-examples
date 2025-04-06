@@ -9,6 +9,7 @@
 #include "pico/binary_info.h"
 #include "hardware/gpio.h"
 #include "hardware/i2c.h"
+#include "mpl3115a2_i2c.h"
 
 /* Example code to talk to an MPL3115A2 altimeter sensor via I2C
 
@@ -42,6 +43,11 @@
 #define MPL3115A2_OFF_T _u(0x2C)
 #define MPL3115A2_OFF_H _u(0x2D)
 
+/*** Sea-level pressure registers ***/
+#define MPL3115A2_BAR_IN_MSB _u(0x14)
+#define MPL3115A2_BAR_IN_LSB _u(0x15)
+
+
 #define MPL3115A2_FIFO_DISABLED _u(0x00)
 #define MPL3115A2_FIFO_STOP_ON_OVERFLOW _u(0x80)
 #define MPL3115A2_FIFO_SIZE 32
@@ -62,6 +68,24 @@ struct mpl3115a2_data_t {
     // Q16.4 fixed-point
     float altitude;
 };
+
+/*** Sea-level pressure functions ***/
+// Set sea-level pressure in hectopascals (hPa)
+void mpl3115a2_set_sealevel_pressure(float hPa) {
+    uint16_t bars = (uint16_t)(hPa * 50); // Convert hPa to BAR_IN value (2 Pa/LSB)
+    uint8_t buf[] = {MPL3115A2_BAR_IN_MSB, (bars >> 8) & 0xFF, bars & 0xFF};
+    i2c_write_blocking(i2c_default, ADDR, buf, 3, false);
+}
+
+// Get current sea-level pressure setting in hPa
+float mpl3115a2_get_sealevel_pressure() {
+    uint8_t reg = MPL3115A2_BAR_IN_MSB;
+    uint8_t buf[2];
+    i2c_write_blocking(i2c_default, ADDR, &reg, 1, true);
+    i2c_read_blocking(i2c_default, ADDR, buf, 2, false);
+    uint16_t bars = (buf[0] << 8) | buf[1];
+    return (float)bars / 50.0f; // Convert back to hPa
+}
 
 void copy_to_vbuf(uint8_t buf1[], volatile uint8_t buf2[], uint buflen) {
     for (size_t i = 0; i < buflen; i++) {
@@ -108,6 +132,9 @@ void mpl3115a2_init() {
     // tie FIFO interrupt to pin INT1
     buf[0] = MPL3115A2_CTRLREG5, buf[1] = 0x40;
     i2c_write_blocking(i2c_default, ADDR, buf, 2, false);
+
+    /*** Default sea-level pressure (1013.25 hPa) ***/
+    mpl3115a2_set_sealevel_pressure(1013.25f);
 
     // set p, t and h offsets here if needed
     // eg. 2's complement number: 0xFF subtracts 1 meter
@@ -186,6 +213,9 @@ int main() {
 
     mpl3115a2_init();
 
+    // Uncomment to overwrite default sea-level pressure:
+    // mpl3115a2_set_sealevel_pressure(1020.0f); // Local weather pressure
+
     gpio_set_irq_enabled_with_callback(INT1_PIN, GPIO_IRQ_LEVEL_LOW, true, &gpio_callback);
 
     while (1) {
@@ -200,6 +230,7 @@ int main() {
             }
             printf("%d sample average -> t: %.4f C, h: %.4f m\n", MPL3115A2_FIFO_SIZE, tsum / MPL3115A2_FIFO_SIZE,
                    hsum / MPL3115A2_FIFO_SIZE);
+            mpl3115a2_get_sealevel_pressure(); // Show current setting
             has_new_data = false;
         }
         sleep_ms(10);

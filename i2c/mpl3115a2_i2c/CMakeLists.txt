@@ -2,6 +2,15 @@ add_executable(mpl3115a2_i2c
         mpl3115a2_i2c.c
         )
 
+target_include_directories(mpl3115a2_i2c PUBLIC 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_link_libraries(mpl3115a2_i2c 
+    pico_stdlib 
+    hardware_i2c
+)
+
 # pull in common dependencies and additional i2c hardware support
 target_link_libraries(mpl3115a2_i2c pico_stdlib hardware_i2c)
 
