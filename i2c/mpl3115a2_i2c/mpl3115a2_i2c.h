@@ -8,14 +8,16 @@
 extern "C" {
 #endif
 
-// Existing structs
 struct mpl3115a2_data_t {
+    // Q8.4 fixed point
     float temperature;
+    // Q16.4 fixed-point
     float altitude;
 };
 
 void mpl3115a2_init(void);
 void mpl3115a2_read_fifo(volatile uint8_t* fifo_buf);
+void mpl3115a2_convert_fifo_batch(uint8_t start, volatile uint8_t* buf, struct mpl3115a2_data_t* data);
 
 // Add NEW prototypes
 void mpl3115a2_set_sealevel_pressure(float hPa);

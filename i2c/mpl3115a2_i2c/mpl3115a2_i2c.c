@@ -62,12 +62,6 @@
 volatile uint8_t fifo_data[MPL3115A2_FIFO_SIZE * MPL3115A2_DATA_BATCH_SIZE];
 volatile bool has_new_data = false;
 
-struct mpl3115a2_data_t {
-    // Q8.4 fixed point
-    float temperature;
-    // Q16.4 fixed-point
-    float altitude;
-};
 
 /*** Sea-level pressure functions ***/
 // Set sea-level pressure in hectopascals (hPa)
