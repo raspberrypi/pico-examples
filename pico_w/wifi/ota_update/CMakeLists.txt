@@ -17,7 +17,7 @@ target_link_libraries(picow_ota_update_background
         boot_uf2_headers
         )
 
-pico_use_partition_firmware(picow_ota_update_background)
+pico_use_wifi_firmware_partition(picow_ota_update_background)
 
 pico_hash_binary(picow_ota_update_background)
 pico_sign_binary(picow_ota_update_background)
@@ -45,7 +45,7 @@ target_link_libraries(picow_ota_update_poll
         boot_uf2_headers
         )
 
-pico_use_partition_firmware(picow_ota_update_poll)
+pico_use_wifi_firmware_partition(picow_ota_update_poll)
 
 pico_hash_binary(picow_ota_update_poll)
 pico_sign_binary(picow_ota_update_poll)

@@ -34,10 +34,10 @@
     },
     {
       "name": "Firmware A",
-      "id": "0x123456789abcdef0",
+      "id": "0x776966696669726d",
       "start": "3500k",
       "size": "240K",
-      "families": ["0x12345678"],
+      "families": ["data"],
       "permissions": {
         "secure": "rw",
         "nonsecure": "rw",
@@ -50,7 +50,7 @@
       "name": "Firmware B",
       "id": 12345,
       "size": "240K",
-      "families": ["0x12345678"],
+      "families": ["data"],
       "permissions": {
         "secure": "rw",
         "nonsecure": "rw",
