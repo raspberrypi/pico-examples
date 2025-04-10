@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+set -e
 
 if [ "${PWD##*/}" != "certs" ]; then
     echo Run this in the certs folder
@@ -8,6 +9,11 @@ if [ -z "$DTLS_SERVER" ]; then
     echo Define DTLS_SERVER
     exit 1
 fi
+if ! command -v openssl 2>&1 >/dev/null; then
+    echo openssl could not be found
+    exit 1
+fi
+
 SERVER_NAME=$DTLS_SERVER
 
 if [ -d "$SERVER_NAME" ]; then
@@ -30,27 +36,23 @@ openssl x509 -req -in $SERVER_NAME/client.csr -CA $SERVER_NAME/ca.crt -CAkey $SE
 
 echo -n \#define DTLS_ROOT_CERT \" > $SERVER_NAME/dtls_client.inc
 cat $SERVER_NAME/ca.crt | awk '{printf "%s\\n\\\n", $0}' >> $SERVER_NAME/dtls_client.inc
-echo "\"" >> $SERVER_NAME/dtls_client.inc
-echo >> $SERVER_NAME/dtls_client.inc
+echo -e "\"\n" >> $SERVER_NAME/dtls_client.inc
 
 echo -n \#define DTLS_KEY \" >> $SERVER_NAME/dtls_client.inc
 cat $SERVER_NAME/client.key | awk '{printf "%s\\n\\\n", $0}' >> $SERVER_NAME/dtls_client.inc
-echo "\"" >> $SERVER_NAME/dtls_client.inc
-echo >> $SERVER_NAME/dtls_client.inc
+echo -e "\"\n" >> $SERVER_NAME/dtls_client.inc
 
 echo -n \#define DTLS_CERT \" >> $SERVER_NAME/dtls_client.inc
 cat $SERVER_NAME/client.crt | awk '{printf "%s\\n\\\n", $0}' >> $SERVER_NAME/dtls_client.inc
-echo "\"" >> $SERVER_NAME/dtls_client.inc
+echo -e "\"\n" >> $SERVER_NAME/dtls_client.inc
 
 echo -n \#define DTLS_ROOT_CERT \" > $SERVER_NAME/dtls_server.inc
 cat $SERVER_NAME/ca.crt | awk '{printf "%s\\n\\\n", $0}' >> $SERVER_NAME/dtls_server.inc
-echo "\"" >> $SERVER_NAME/dtls_server.inc
-echo >> $SERVER_NAME/dtls_server.inc
+echo -e "\"\n" >> $SERVER_NAME/dtls_server.inc
 
 echo -n \#define DTLS_KEY \" >> $SERVER_NAME/dtls_server.inc
 cat $SERVER_NAME/server.key | awk '{printf "%s\\n\\\n", $0}' >> $SERVER_NAME/dtls_server.inc
-echo "\"" >> $SERVER_NAME/dtls_server.inc
-echo >> $SERVER_NAME/dtls_server.inc
+echo -e "\"\n" >> $SERVER_NAME/dtls_server.inc
 
 echo -n \#define DTLS_CERT \" >> $SERVER_NAME/dtls_server.inc
 cat $SERVER_NAME/server.crt | awk '{printf "%s\\n\\\n", $0}' >> $SERVER_NAME/dtls_server.inc

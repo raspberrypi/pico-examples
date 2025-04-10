@@ -30,7 +30,7 @@ static const uint8_t dtls_cert[] = DTLS_CERT;
 #endif
 
 static void dtls_timer_callback(__unused async_context_t *context, async_at_time_worker_t *worker) {
-    DTLS_DEBUG("pico_mbedtls_timing_worker_callback\n");
+    DTLS_DEBUG("dtls_timer_callback\n");
     dtls_processing((dtls_session_t*)worker->user_data, true);
 }
 
@@ -174,7 +174,11 @@ int dtls_base_init(dtls_base_t *base)
     }
     mbedtls_ssl_conf_ca_chain(&base->conf, base->cert.next, NULL);
     mbedtls_pk_init(&base->pkey);
+#if MBEDTLS_VERSION_MAJOR < 3
     ret = mbedtls_pk_parse_key(&base->pkey, dtls_key, sizeof(dtls_key), NULL, 0);
+#else
+    ret = mbedtls_pk_parse_key(&base->pkey, dtls_key, sizeof(dtls_key), NULL, 0, NULL, NULL);
+#endif
     if (ret != 0) {
         DTLS_ERROR("Failed to parse key");
         return ret;
