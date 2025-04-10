@@ -153,7 +153,6 @@ void gpio_callback(uint gpio, __unused uint32_t events) {
         // FIFO overflow interrupt
         // watermark bits set to 0 in F_SETUP reg, so only possible event is an overflow
         // otherwise, we would read F_STATUS to confirm it was an overflow
-        printf("FIFO overflow!\n");
         // drain the fifo
         mpl3115a2_read_fifo(fifo_data);
         // read status register to clear interrupt bit
