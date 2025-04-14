@@ -19,6 +19,19 @@ static int scan_result(void *env, const cyw43_ev_scan_result_t *result) {
     return 0;
 }
 
+// Start a wifi scan
+static void scan_worker_fn(async_context_t *context, async_at_time_worker_t *worker) {
+    cyw43_wifi_scan_options_t scan_options = {0};
+    int err = cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, scan_result);
+    if (err == 0) {
+        bool *scan_started = (bool*)worker->user_data;
+        *scan_started = true;
+        printf("\nPerforming wifi scan\n");
+    } else {
+        printf("Failed to start scan: %d\n", err);
+    }
+}
+
 #include "hardware/vreg.h"
 #include "hardware/clocks.h"
 
@@ -30,26 +43,24 @@ int main() {
         return 1;
     }
 
+    printf("Press 'q' to quit\n");
     cyw43_arch_enable_sta_mode();
 
-    absolute_time_t scan_time = nil_time;
-    bool scan_in_progress = false;
-    while(true) {
-        if (absolute_time_diff_us(get_absolute_time(), scan_time) < 0) {
-            if (!scan_in_progress) {
-                cyw43_wifi_scan_options_t scan_options = {0};
-                int err = cyw43_wifi_scan(&cyw43_state, &scan_options, NULL, scan_result);
-                if (err == 0) {
-                    printf("\nPerforming wifi scan\n");
-                    scan_in_progress = true;
-                } else {
-                    printf("Failed to start scan: %d\n", err);
-                    scan_time = make_timeout_time_ms(10000); // wait 10s and scan again
-                }
-            } else if (!cyw43_wifi_scan_active(&cyw43_state)) {
-                scan_time = make_timeout_time_ms(10000); // wait 10s and scan again
-                scan_in_progress = false; 
-            }
+    // Start a scan immediately
+    bool scan_started = false;
+    async_at_time_worker_t scan_worker = { .do_work = scan_worker_fn, .user_data = &scan_started };
+    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &scan_worker, 0));
+
+    bool exit = false;
+    while(!exit) {
+        int key = getchar_timeout_us(0);
+        if (key == 'q' || key == 'Q') {
+            exit = true;
+        }
+        if (!cyw43_wifi_scan_active(&cyw43_state) && scan_started) {
+            // Start a scan in 10s
+            scan_started = false;
+            hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &scan_worker, 10000));
         }
         // the following #ifdef is only here so this same example can be used in multiple modes;
         // you do not need it in your code
@@ -59,7 +70,7 @@ int main() {
         cyw43_arch_poll();
         // you can poll as often as you like, however if you have nothing else to do you can
         // choose to sleep until either a specified time, or cyw43_arch_poll() has work to do:
-        cyw43_arch_wait_for_work_until(scan_time);
+        cyw43_arch_wait_for_work_until(at_the_end_of_time);
 #else
         // if you are not using pico_cyw43_arch_poll, then WiFI driver and lwIP work
         // is done via interrupt in the background. This sleep is just an example of some (blocking)
