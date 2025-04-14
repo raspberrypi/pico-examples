@@ -16,18 +16,17 @@
 
 typedef struct NTP_T_ {
     ip_addr_t ntp_server_address;
-    bool dns_request_sent;
     struct udp_pcb *ntp_pcb;
-    absolute_time_t ntp_test_time;
-    alarm_id_t ntp_resend_alarm;
+    async_at_time_worker_t request_worker;
+    async_at_time_worker_t resend_worker;
 } NTP_T;
 
 #define NTP_SERVER "pool.ntp.org"
 #define NTP_MSG_LEN 48
 #define NTP_PORT 123
 #define NTP_DELTA 2208988800 // seconds between 1 Jan 1900 and 1 Jan 1970
-#define NTP_TEST_TIME (30 * 1000)
-#define NTP_RESEND_TIME (10 * 1000)
+#define NTP_TEST_TIME_MS (30 * 1000)
+#define NTP_RESEND_TIME_MS (10 * 1000)
 
 // Called with results of operation
 static void ntp_result(NTP_T* state, int status, time_t *result) {
@@ -36,16 +35,10 @@ static void ntp_result(NTP_T* state, int status, time_t *result) {
         printf("got ntp response: %02d/%02d/%04d %02d:%02d:%02d\n", utc->tm_mday, utc->tm_mon + 1, utc->tm_year + 1900,
                utc->tm_hour, utc->tm_min, utc->tm_sec);
     }
-
-    if (state->ntp_resend_alarm > 0) {
-        cancel_alarm(state->ntp_resend_alarm);
-        state->ntp_resend_alarm = 0;
-    }
-    state->ntp_test_time = make_timeout_time_ms(NTP_TEST_TIME);
-    state->dns_request_sent = false;
+    async_context_remove_at_time_worker(cyw43_arch_async_context(), &state->resend_worker);
+    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(),  &state->request_worker, NTP_TEST_TIME_MS)); // repeat the request in future
+    printf("Next request in %ds\n", NTP_TEST_TIME_MS / 1000);
 }
-
-static int64_t ntp_failed_handler(alarm_id_t id, void *user_data);
 
 // Make an NTP request
 static void ntp_request(NTP_T *state) {
@@ -61,14 +54,6 @@ static void ntp_request(NTP_T *state) {
     udp_sendto(state->ntp_pcb, p, &state->ntp_server_address, NTP_PORT);
     pbuf_free(p);
     cyw43_arch_lwip_end();
-}
-
-static int64_t ntp_failed_handler(alarm_id_t id, void *user_data)
-{
-    NTP_T* state = (NTP_T*)user_data;
-    printf("ntp request failed\n");
-    ntp_result(state, -1, NULL);
-    return 0;
 }
 
 // Call back with a DNS result
@@ -106,6 +91,26 @@ static void ntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
     pbuf_free(p);
 }
 
+// Called to make a NTP request
+static void request_worker_fn(__unused async_context_t *context, async_at_time_worker_t *worker) {
+    NTP_T* state = (NTP_T*)worker->user_data;
+    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &state->resend_worker, NTP_RESEND_TIME_MS)); // in case UDP request is lost
+    int err = dns_gethostbyname(NTP_SERVER, &state->ntp_server_address, ntp_dns_found, state);
+    if (err == ERR_OK) {
+        ntp_request(state); // Cached DNS result, make NTP request
+    } else if (err != ERR_INPROGRESS) { // ERR_INPROGRESS means expect a callback
+        printf("dns request failed\n");
+        ntp_result(state, -1, NULL);
+    }
+}
+
+// Called to resend an NTP request if it appears to get lost
+static void resend_worker_fn(__unused async_context_t *context, async_at_time_worker_t *worker) {
+    NTP_T* state = (NTP_T*)worker->user_data;
+    printf("ntp request failed\n");
+    ntp_result(state, -1, NULL);
+}
+
 // Perform initialisation
 static NTP_T* ntp_init(void) {
     NTP_T *state = (NTP_T*)calloc(1, sizeof(NTP_T));
@@ -120,6 +125,10 @@ static NTP_T* ntp_init(void) {
         return NULL;
     }
     udp_recv(state->ntp_pcb, ntp_recv, state);
+    state->request_worker.do_work = request_worker_fn;
+    state->request_worker.user_data = state;
+    state->resend_worker.do_work = resend_worker_fn;
+    state->resend_worker.user_data = state;
     return state;
 }
 
@@ -128,26 +137,12 @@ void run_ntp_test(void) {
     NTP_T *state = ntp_init();
     if (!state)
         return;
+    printf("Press 'q' to quit\n");
+    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(),  &state->request_worker, 0)); // make the first request
     while(true) {
-        if (absolute_time_diff_us(get_absolute_time(), state->ntp_test_time) < 0 && !state->dns_request_sent) {
-            // Set alarm in case udp requests are lost
-            state->ntp_resend_alarm = add_alarm_in_ms(NTP_RESEND_TIME, ntp_failed_handler, state, true);
-
-            // cyw43_arch_lwip_begin/end should be used around calls into lwIP to ensure correct locking.
-            // You can omit them if you are in a callback from lwIP. Note that when using pico_cyw_arch_poll
-            // these calls are a no-op and can be omitted, but it is a good practice to use them in
-            // case you switch the cyw43_arch type later.
-            cyw43_arch_lwip_begin();
-            int err = dns_gethostbyname(NTP_SERVER, &state->ntp_server_address, ntp_dns_found, state);
-            cyw43_arch_lwip_end();
-
-            state->dns_request_sent = true;
-            if (err == ERR_OK) {
-                ntp_request(state); // Cached result
-            } else if (err != ERR_INPROGRESS) { // ERR_INPROGRESS means expect a callback
-                printf("dns request failed\n");
-                ntp_result(state, -1, NULL);
-            }
+        int key = getchar_timeout_us(0);
+        if (key == 'q' || key == 'Q') {
+            break;
         }
 #if PICO_CYW43_ARCH_POLL
         // if you are using pico_cyw43_arch_poll, then you must poll periodically from your
@@ -155,7 +150,7 @@ void run_ntp_test(void) {
         cyw43_arch_poll();
         // you can poll as often as you like, however if you have nothing else to do you can
         // choose to sleep until either a specified time, or cyw43_arch_poll() has work to do:
-        cyw43_arch_wait_for_work_until(state->dns_request_sent ? at_the_end_of_time : state->ntp_test_time);
+        cyw43_arch_wait_for_work_until(at_the_end_of_time);
 #else
         // if you are not using pico_cyw43_arch_poll, then WiFI driver and lwIP work
         // is done via interrupt in the background. This sleep is just an example of some (blocking)
@@ -176,7 +171,7 @@ int main() {
 
     cyw43_arch_enable_sta_mode();
 
-    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 10000)) {
+    if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD, CYW43_AUTH_WPA2_AES_PSK, 30000)) {
         printf("failed to connect\n");
         return 1;
     }
