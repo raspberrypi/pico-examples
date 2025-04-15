@@ -8,7 +8,7 @@ target_link_libraries(uart_boot pico_stdlib hardware_flash)
 # add partition table
 pico_embed_pt_in_binary(uart_boot ${CMAKE_CURRENT_LIST_DIR}/uart-pt.json)
 
-# create absolute UF2
+# create absolute UF2, as it's a bootloader so shouldn't go in a partition
 pico_set_uf2_family(uart_boot "absolute")
 
 # create map/bin/hex file etc.
