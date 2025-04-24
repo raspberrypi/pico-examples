@@ -24,7 +24,7 @@ int main() {
             uint32_t flash_update_base = boot_info.reboot_params[0];
             if (flash_update_base) {
                 printf("Perform self-check... ");
-                if (1 == 1) {
+                if (1 == 1) {   // replace this with your actual self-check function
                     printf("passed\n");
                 } else {
                     printf("failed - looping forever\n");

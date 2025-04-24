@@ -1,10 +1,10 @@
-# Example encrypted binard
+# Example encrypted binary
 add_executable(hello_encrypted
         hello_encrypted.c
         secret.S
         )
 
-# include secret.txt
+# include directory containing secret.txt
 target_include_directories(hello_encrypted PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 # add dependency on secret.txt
