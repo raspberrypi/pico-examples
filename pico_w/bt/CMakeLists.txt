@@ -176,10 +176,6 @@ if (TARGET FreeRTOS-Kernel)
                 CYW43_TASK_STACK_SIZE=1024
                 NO_SYS=0
                 )
-        target_include_directories(picow_bt_example_common_freertos INTERFACE
-                ${FREERTOS_KERNEL_PATH}/include
-                ${FREERTOS_KERNEL_PATH}/portable/ThirdParty/GCC/RP2040/include
-                )
 
         # variant: no cyw43 lwip | freertos
         add_library(picow_bt_example_no_cyw43_lwip_freertos INTERFACE)
