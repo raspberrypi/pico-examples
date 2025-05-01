@@ -14,8 +14,15 @@
 
 #include "pico/stdlib.h"
 #include "mbedtls/sha256.h"
+#include "mbedtls/version.h"
 
 #define BUFFER_SIZE 10000
+
+#if MBEDTLS_VERSION_MAJOR < 3
+#define mbedtls_sha256_starts mbedtls_sha256_starts_ret
+#define mbedtls_sha256_update mbedtls_sha256_update_ret
+#define mbedtls_sha256_finish mbedtls_sha256_finish_ret
+#endif
 
 int main() {
     stdio_init_all();
@@ -32,14 +39,14 @@ int main() {
     mbedtls_sha256_context ctx;
     mbedtls_sha256_init(&ctx);
     uint64_t start = time_us_64();
-    int rc = mbedtls_sha256_starts_ret(&ctx, 0);
+    int rc = mbedtls_sha256_starts(&ctx, 0);
     hard_assert(rc == 0);
     for(int i = 0; i < 1000000; i += BUFFER_SIZE) {
-        rc = mbedtls_sha256_update_ret(&ctx, buffer, BUFFER_SIZE);
+        rc = mbedtls_sha256_update(&ctx, buffer, BUFFER_SIZE);
         hard_assert(rc == 0);
     }
     unsigned char mbed_result[32];
-    rc = mbedtls_sha256_finish_ret(&ctx, mbed_result);
+    rc = mbedtls_sha256_finish(&ctx, mbed_result);
     hard_assert(rc == 0);
     uint64_t mbed_time = (time_us_64() - start) / 1000;
     printf("Mbedtls time for sha256 of 1M bytes %"PRIu64"ms\n", mbed_time);
