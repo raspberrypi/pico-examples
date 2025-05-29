@@ -188,7 +188,7 @@ void SSD1306_scroll(bool on) {
         0x00, // dummy byte
         0x00, // start page 0
         0x00, // time interval
-        0x03, // end page 3 SSD1306_NUM_PAGES ??
+        SSD1306_NUM_PAGES - 1, // end page
         0x00, // dummy byte
         0xFF, // dummy byte
         SSD1306_SET_SCROLL | (on ? 0x01 : 0) // Start/stop scrolling
