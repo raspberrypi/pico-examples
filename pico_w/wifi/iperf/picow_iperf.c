@@ -19,6 +19,17 @@
 #error IPERF_SERVER_IP not defined
 #endif
 
+#if USE_LED
+// Invert led
+static void led_worker_fn(async_context_t *context, async_at_time_worker_t *worker) {
+    // Invert the led
+    static int led_on = true;
+    led_on = !led_on;
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
+    async_context_add_at_time_worker_in_ms(context, worker, 1000);
+}
+#endif
+
 // Report IP results and exit
 static void iperf_report(void *arg, enum lwiperf_report_type report_type,
                          const ip_addr_t *local_addr, u16_t local_port, const ip_addr_t *remote_addr, u16_t remote_port,
@@ -36,12 +47,12 @@ static void iperf_report(void *arg, enum lwiperf_report_type report_type,
 #endif
 }
 
+// Note: This is called from an interrupt handler
 void key_pressed_func(void *param) {
     int key = getchar_timeout_us(0); // get any pending key press but don't wait
     if (key == 'd' || key == 'D') {
-        cyw43_arch_lwip_begin();
-        cyw43_arch_disable_sta_mode();
-        cyw43_arch_lwip_end();
+        bool *exit = (bool*)param;
+        *exit = true;
     }
 }
 
@@ -52,9 +63,6 @@ int main() {
         printf("failed to initialise\n");
         return 1;
     }
-
-    // Get notified if the user presses a key
-    stdio_set_chars_available_callback(key_pressed_func, cyw43_arch_async_context());
 
     cyw43_arch_enable_sta_mode();
     printf("Connecting to Wi-Fi... (press 'd' to disconnect)\n");
@@ -77,23 +85,15 @@ int main() {
 #endif
     cyw43_arch_lwip_end();
 
-    while(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != CYW43_LINK_DOWN) {
+    bool exit = false;
+    stdio_set_chars_available_callback(key_pressed_func, &exit);
+
 #if USE_LED
-        static absolute_time_t led_time;
-        static int led_on = true;
-
-        // Invert the led
-        if (absolute_time_diff_us(get_absolute_time(), led_time) < 0) {
-            led_on = !led_on;
-            cyw43_gpio_set(&cyw43_state, 0, led_on);
-            led_time = make_timeout_time_ms(1000);
-
-            // Check we can read back the led value
-            bool actual_led_val = !led_on;
-            cyw43_gpio_get(&cyw43_state, 0, &actual_led_val);
-            assert(led_on == actual_led_val);
-        }
+    // start the led flashing
+    async_at_time_worker_t led_worker = { .do_work = led_worker_fn };
+    async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &led_worker, 0);
 #endif
+    while(!exit && cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != CYW43_LINK_DOWN) {
         // the following #ifdef is only here so this same example can be used in multiple modes;
         // you do not need it in your code
 #if PICO_CYW43_ARCH_POLL
@@ -102,7 +102,7 @@ int main() {
         cyw43_arch_poll();
         // you can poll as often as you like, however if you have nothing else to do you can
         // choose to sleep until either a specified time, or cyw43_arch_poll() has work to do:
-        cyw43_arch_wait_for_work_until(led_time);
+        cyw43_arch_wait_for_work_until(at_the_end_of_time);
 #else
         // if you are not using pico_cyw43_arch_poll, then WiFI driver and lwIP work
         // is done via interrupt in the background. This sleep is just an example of some (blocking)
@@ -110,6 +110,7 @@ int main() {
         sleep_ms(1000);
 #endif
     }
+    cyw43_arch_disable_sta_mode();
 
     cyw43_arch_deinit();
     printf("Test complete\n");
