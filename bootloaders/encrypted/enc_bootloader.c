@@ -16,52 +16,21 @@
 
 #include "config.h"
 
-extern void flush_reg();
-volatile uint32_t systick_data[18]; // count, R0-R15,RETPSR
+#define OTP_KEY_PAGE 30
 
-extern void remap();
-extern uint32_t gen_rand();
-extern void init_key(uint8_t *rk_s, uint8_t *key);
-extern void gen_lut_inverse();
-extern void gen_lut_sbox();
-extern void gen_lut_inv_sbox();
-extern int  ctr_crypt_s(uint8_t*iv,uint8_t*buf,int nblk);
+extern void decrypt(uint8_t* key4way, uint8_t* IV_OTPsalt, uint8_t* IV_public, uint8_t(*buf)[16], int nblk);
 
-extern uint8_t rkey_s[480];
-extern uint8_t lut_a[256];
-extern uint8_t lut_b[256];
-extern uint32_t lut_a_map;
-extern uint32_t lut_b_map;
-extern uint32_t rstate[4];
-
-static void init_lut_map() {
-    int i;
-    for(i=0;i<256;i++) lut_b[i]=gen_rand()&0xff, lut_a[i]^=lut_b[i];
-    lut_a_map=0;
-    lut_b_map=0;
-    remap();
+// The function lock_key() is called from decrypt() after key initialisation is complete and before decryption begins.
+// That is a suitable point to lock the OTP area where key information is stored.
+void lock_key() {
+    otp_hw->sw_lock[OTP_KEY_PAGE] = 0xf;
 }
+
 
 static __attribute__((aligned(4))) uint8_t workarea[4 * 1024];
 
 int main() {
     stdio_init_all();
-
-    #if RANDOMIZE
-        get_rand_128((rng_128_t*)rstate);   // fill rstate with 128 bits of random data
-    #else
-        rstate[0]=1223352428;
-        rstate[1]=1223352428;
-        rstate[2]=0x41414141;
-        rstate[3]=0x41414141;
-    #endif
-
-    // reset the RNG
-    reset_block(RESETS_RESET_SHA256_BITS);
-    unreset_block(RESETS_RESET_SHA256_BITS);
-    rstate[0]&=0xffffff00;    // bottom byte must be zero
-
-    printf("Rstate at address %x\n", rstate);
 
     printf("Entered bootloader code\n");
     int rc;
@@ -74,15 +43,13 @@ int main() {
     boot_info_t info;
     printf("Getting boot info\n");
     rc = rom_get_boot_info(&info);
-    uint32_t flash_update_base = 0;
     printf("Boot Type %x\n", info.boot_type);
 
     if (info.boot_type == BOOT_TYPE_FLASH_UPDATE) {
-        flash_update_base = info.reboot_params[0];
-        printf("Flash Update Base %x\n", flash_update_base);
+        printf("Flash Update Base %x\n", info.reboot_params[0]);
     }
 
-    rc = rom_pick_ab_partition(workarea, sizeof(workarea), 0, flash_update_base);
+    rc = rom_pick_ab_update_partition((uint32_t*)workarea, sizeof(workarea), 0);
     if (rc < 0) {
         printf("Partition Table A/B choice failed %d - resetting\n", rc);
         reset_usb_boot(0, 0);
@@ -92,36 +59,46 @@ int main() {
 
     rc = rom_get_partition_table_info((uint32_t*)workarea, 0x8, PT_INFO_PARTITION_LOCATION_AND_FLAGS | PT_INFO_SINGLE_PARTITION | (boot_partition << 24));
 
-    uint32_t data_start_addr;
-    uint32_t data_end_addr;
+    uint32_t data_start_addr = 0;
+    uint32_t data_end_addr = 0;
+    uint32_t data_max_size = 0;
     if (rc != 3) {
         printf("No boot partition - assuming bin at start of flash\n");
         data_start_addr = 0;
         data_end_addr = 0x70000; // must fit into 0x20000000 -> 0x20070000
+        data_max_size = data_end_addr - data_start_addr;
     } else {
         uint16_t first_sector_number = (((uint32_t*)workarea)[1] & PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_BITS) >> PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_LSB;
         uint16_t last_sector_number = (((uint32_t*)workarea)[1] & PICOBIN_PARTITION_LOCATION_LAST_SECTOR_BITS) >> PICOBIN_PARTITION_LOCATION_LAST_SECTOR_LSB;
         data_start_addr = first_sector_number * 0x1000;
         data_end_addr = (last_sector_number + 1) * 0x1000;
+        data_max_size = data_end_addr - data_start_addr;
 
-        printf("Partition Start %x, End %x\n", data_start_addr, data_end_addr);
+        printf("Partition Start %x, End %x, Max Size %x\n", data_start_addr, data_end_addr, data_max_size);
     }
 
     printf("Decrypting the chosen image\n");
     uint32_t first_mb_start = 0;
+    bool first_mb_start_found = false;
     uint32_t first_mb_end = 0;
     uint32_t last_mb_start = 0;
-    for (uint16_t i=0; i <= 0x1000; i += 4) {
+    for (uint16_t i=0; i < 0x1000; i += 4) {
         if (*(uint32_t*)(XIP_BASE + data_start_addr + i) == 0xffffded3) {
             printf("Found first block start\n");
             first_mb_start = i;
-        }
-        if (*(uint32_t*)(XIP_BASE + data_start_addr + i) == 0xab123579) {
+            first_mb_start_found = true;
+        } else if (first_mb_start_found && (*(uint32_t*)(XIP_BASE + data_start_addr + i) == 0xab123579)) {
             printf("Found first block end\n");
             first_mb_end = i + 4;
             last_mb_start = *(uint32_t*)(XIP_BASE + data_start_addr + i-4) + first_mb_start;
             break;
         }
+    }
+
+    if (last_mb_start > data_max_size) {
+        // todo - harden this check
+        printf("ERROR: Encrypted binary is too big for it's partition - resetting\n");
+        reset_usb_boot(0, 0);
     }
 
     if (*(uint32_t*)(XIP_BASE + data_start_addr + last_mb_start) == 0xffffded3) {
@@ -171,20 +148,17 @@ int main() {
     for (int i=0; i < 4; i++)
         printf("%08x\n", *(uint32_t*)(SRAM_BASE + i*4));
 
-    flush_reg();
-    #if !SBOX_VIA_INV
-        gen_lut_sbox();
-    #else
-        gen_lut_inverse();
-    #endif
-    init_lut_map();
     // Read key directly from OTP - guarded reads will throw a bus fault if there are any errors
     uint16_t* otp_data = (uint16_t*)OTP_DATA_GUARDED_BASE;
-    init_key(rkey_s, (uint8_t*)&(otp_data[(OTP_CMD_ROW_BITS & 0x780)]));
-    otp_hw->sw_lock[30] = 0xf;
-    flush_reg();
-    ctr_crypt_s(iv, (void*)SRAM_BASE, data_size/16);
-    flush_reg();
+
+    decrypt(
+        (uint8_t*)&(otp_data[OTP_KEY_PAGE * 0x40]),
+        (uint8_t*)&(otp_data[(OTP_KEY_PAGE + 1) * 0x40]),
+        iv, (void*)SRAM_BASE, data_size/16
+    );
+
+    // Lock the IV salt
+    otp_hw->sw_lock[OTP_KEY_PAGE + 1] = 0xf;
 
     printf("Post decryption image begins with\n");
     for (int i=0; i < 4; i++)

@@ -1,127 +1,90 @@
 #pragma once
 
-#ifndef CM_PROFILE
-#define CM_PROFILE 0
+// These options (up to long /////////////// line) should be enabled because the security risk of not using them is too high
+// or because the time cost is very low so you may as well have them.
+// They can be set to 0 for analysis or testing purposes.
+
+#ifndef GEN_RAND_SHA
+#define GEN_RAND_SHA         1         // use SHA256 hardware to generate some random numbers
 #endif
-
-#define DEBUG                0         // for use in debugging with serial output (timing not repeatable)
-#define CHIPW                0         // change clock to 48MHz for use with CW hardware
-#define SYSTICK_IMAP         0         // use SYSTICK to get a map of instruction execution (set DEBUG to 0 to get useful timings)
-#define INCLUDE_ENCRYPT_CBC  0         // include code to perform encryption in CBC mode?
-#define INCLUDE_DECRYPT_CBC  0         // include code to perform decryption in CBC mode?
-#define INCLUDE_CRYPT_CTR    1         // include code to perform de/encryption in CTR mode?
-#define ROUND_TRIP_TEST      0         // do the glitch detection test in CBC mode where we re-encrypt each block and compare against original ciphertext?
-#define SBOX_VIA_INV         1         // compute (inverse) S-box values via a table of field inverses rather than via a direct table?
-#define GEN_RAND_SHA         0         // use SHA256 hardware to generate random numbers (disable for Qemu testing)
-
-#if ROUND_TRIP_TEST && !SBOX_VIA_INV
-#error Sorry, if you want to do the round-trip test then SBOX_VIA_INV must also be set
+                                       // Some RNG calls are hard coded to LFSR RNG, others to SHA RNG
+                                       // Setting GEN_RAND_SHA to 0 has the effect of redirecting the latter to LFSR RNG
+#ifndef ST_SHAREC
+#define ST_SHAREC            1         // This creates a partial extra share at almost no extra cost
 #endif
-
-#if CM_PROFILE==0
-
-#define RANDOMIZE            0         // new random seed on each reset?
-#define RC_CANARY            0         // use rcp_canary feature
-#define RC_JITTER            0         // use random-delay versions of RCP instructions
-#define RC_COUNT             0         // use rcp_count feature
-#define IK_SHUFREAD          0         // read key bytes in random order?
-#define IK_JUNK              0         // add some random distraction in init_key?
-#define IK_PERM              0         // permute bytes (and possibly distraction bytes) in round key generation?
-#define IK_REMAP             0         // remap S-box in round key generation?
-#define IK_JITTER            0         // jitter timing in init_key?
-#define RK_ROR               0         // store round keys with random RORs?
-#define ST_HPERM             0         // insert random horizontal permutations in state during de/encryption?
-#define ST_VPERM             0         // insert random vertical permutations in state during de/encryption?
-#define CT_BPERM             0         // process blocks in a random order in counter mode?
-
-#elif CM_PROFILE==1
-
-#define RANDOMIZE            1         // new random seed on each reset?
-#define RC_CANARY            0         // use rcp_canary feature
-#define RC_JITTER            0         // use random-delay versions of RCP instructions
-#define RC_COUNT             0         // use rcp_count feature
-#define IK_SHUFREAD          1         // read key bytes in random order?
-#define IK_JUNK              1         // add some random distraction in init_key?
-#define IK_PERM              1         // permute bytes (and possibly distraction bytes) in round key generation?
-#define IK_REMAP             1         // remap S-box in round key generation?
-#define IK_JITTER            0         // jitter timing in init_key?
-#define RK_ROR               1         // store round keys with random RORs?
-#define ST_HPERM             0         // insert random horizontal permutations in state during de/encryption?
-#define ST_VPERM             0         // insert random vertical permutations in state during de/encryption?
-#define CT_BPERM             0         // process blocks in a random order in counter mode?
-
-#elif CM_PROFILE==2
-
-#define RANDOMIZE            1         // new random seed on each reset?
-#define RC_CANARY            0         // use rcp_canary feature
-#define RC_JITTER            0         // use random-delay versions of RCP instructions
-#define RC_COUNT             0         // use rcp_count feature
-#define IK_SHUFREAD          0         // read key bytes in random order?
-#define IK_JUNK              0         // add some random distraction in init_key?
-#define IK_PERM              0         // permute bytes (and possibly distraction bytes) in round key generation?
-#define IK_REMAP             0         // remap S-box in round key generation?
-#define IK_JITTER            0         // jitter timing in init_key?
-#define RK_ROR               0         // store round keys with random RORs?
-#define ST_HPERM             1         // insert random horizontal permutations in state during de/encryption?
+#ifndef ST_VPERM
 #define ST_VPERM             1         // insert random vertical permutations in state during de/encryption?
-#define CT_BPERM             0         // process blocks in a random order in counter mode?
-
-#elif CM_PROFILE==3
-
-#define RANDOMIZE            1         // new random seed on each reset?
-#define RC_CANARY            0         // use rcp_canary feature
-#define RC_JITTER            0         // use random-delay versions of RCP instructions
-#define RC_COUNT             0         // use rcp_count feature
-#define IK_SHUFREAD          0         // read key bytes in random order?
-#define IK_JUNK              0         // add some random distraction in init_key?
-#define IK_PERM              0         // permute bytes (and possibly distraction bytes) in round key generation?
-#define IK_REMAP             0         // remap S-box in round key generation?
-#define IK_JITTER            0         // jitter timing in init_key?
-#define RK_ROR               0         // store round keys with random RORs?
-#define ST_HPERM             0         // insert random horizontal permutations in state during de/encryption?
-#define ST_VPERM             0         // insert random vertical permutations in state during de/encryption?
+#endif
+#ifndef CT_BPERM
 #define CT_BPERM             1         // process blocks in a random order in counter mode?
+#endif
+#ifndef RK_ROR
+#define RK_ROR               1         // store round key shares with random rotations within each word
+#endif
 
-#elif CM_PROFILE==4
+#ifndef WIPE_MEMORY
+#define WIPE_MEMORY          1         // Wipe memory after decryption
+#endif
 
-#define RANDOMIZE            1         // new random seed on each reset?
-#define RC_CANARY            0         // use rcp_canary feature
-#define RC_JITTER            0         // use random-delay versions of RCP instructions
-#define RC_COUNT             0         // use rcp_count feature
-#define IK_SHUFREAD          0         // read key bytes in random order?
-#define IK_JUNK              0         // add some random distraction in init_key?
-#define IK_PERM              0         // permute bytes (and possibly distraction bytes) in round key generation?
-#define IK_REMAP             0         // remap S-box in round key generation?
-#define IK_JITTER            1         // jitter timing in init_key?
-#define RK_ROR               0         // store round keys with random RORs?
-#define ST_HPERM             0         // insert random horizontal permutations in state during de/encryption?
-#define ST_VPERM             0         // insert random vertical permutations in state during de/encryption?
-#define CT_BPERM             0         // process blocks in a random order in counter mode?
+// The following options should be enabled to increase resistance to glitching attacks.
 
-#elif CM_PROFILE==5
-
-#define RANDOMIZE            1         // new random seed on each reset?
+#ifndef RC_CANARY
 #define RC_CANARY            1         // use rcp_canary feature
-#define RC_JITTER            1         // use random-delay versions of RCP instructions
+#endif
+#ifndef RC_COUNT
 #define RC_COUNT             1         // use rcp_count feature
-#define IK_SHUFREAD          1         // read key bytes in random order?
-#define IK_JUNK              1         // add some random distraction in init_key?
-#define IK_PERM              1         // permute bytes (and possibly distraction bytes) in round key generation?
-#define IK_REMAP             1         // remap S-box in round key generation?
-#define IK_JITTER            1         // jitter timing in init_key?
-#define RK_ROR               1         // store round keys with random RORs?
-#define ST_HPERM             1         // insert random horizontal permutations in state during de/encryption?
-#define ST_VPERM             1         // insert random vertical permutations in state during de/encryption?
-#define CT_BPERM             1         // process blocks in a random order in counter mode?
-
 #endif
 
-#if RC_COUNT && (INCLUDE_ENCRYPT_CBC || INCLUDE_DECRYPT_CBC)
-#error Sorry, RC_COUNT is only tested in CTR mode
+// Although jitter/timing-variation may be circumventable in theory, in practice
+// randomising the timing of operations can make side-channel attacks very much more
+// effort to carry out. These can be disabled for analysis or testing purposes.
+// It is advisable to use a least one form of jitter.
+
+// RC_JITTER is quite slow, and is probably the most predictable of the three, so it is disabled by default.
+// (Leaving it as an option because it's just possible that the large delays it produces are advantageous in defeating certain side-channel attacks.)
+#ifndef RC_JITTER
+#define RC_JITTER            0         // 0-7. Higher = more jitter. Governs use of random-delay versions of RCP instructions.
 #endif
 
-// derived values
-#define NEED_ROUNDS          (INCLUDE_ENCRYPT_CBC || (INCLUDE_DECRYPT_CBC && ROUND_TRIP_TEST) || INCLUDE_CRYPT_CTR)
-#define NEED_INV_ROUNDS      (INCLUDE_DECRYPT_CBC)
-#define NEED_HPERM           (IK_PERM || ST_HPERM)
-#define NEED_VPERM           (IK_PERM || ST_VPERM)
+#ifndef SH_JITTER
+#define SH_JITTER            1         // Insert random delays, tagged onto SHA RNG
+#endif
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// The following options can be adjusted, affecting the performance/security tradeoff
+
+// Period = X means that the operation in question occurs every X blocks, so higher = more performance and lower security.
+// No point in making them more than 16 or so, since the time taken by the subroutines would be negligible.
+// These must be a power of 2. Timings as of commit 82d31652
+// 
+//                                        Baseline time per 16-byte block = 14109 (with no jitter)         cycles
+#ifndef REFCHAFF_PERIOD
+#define REFCHAFF_PERIOD             1     // Extra cost per 16-byte block =   474/REFCHAFF_PERIOD          cycles
+#endif
+#ifndef REMAP_PERIOD
+#define REMAP_PERIOD                4     // Extra cost per 16-byte block =  4148/REMAP_PERIOD             cycles
+#endif
+#ifndef REFROUNDKEYSHARES_PERIOD
+#define REFROUNDKEYSHARES_PERIOD    1     // Extra cost per 16-byte block =  1304/REFROUNDKEYSHARES_PERIOD cycles
+#endif
+#ifndef REFROUNDKEYHVPERMS_PERIOD
+#define REFROUNDKEYHVPERMS_PERIOD   1     // Extra cost per 16-byte block =  1486/REFROUNDKEYVPERM_PERIOD  cycles
+#endif
+
+// Setting NUMREFSTATEVPERM to X means that state vperm refreshing happens on the first X AES rounds only,
+// so lower = more performance and lower security.
+// The rationale for doing it this way is that later rounds should be protected by CT_BPERM.
+// NUMREFSTATEVPERM can be from 0 to 14.
+#ifndef NUMREFSTATEVPERM
+#define NUMREFSTATEVPERM            7     // Extra cost per 16-byte block =  61*NUMREFSTATEVPERM cycles
+#endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define MAX_NUM_BLOCKS 32768
+
+#if SH_JITTER && !GEN_RAND_SHA
+#error GEN_RAND_SHA must be set if you want to use SH_JITTER
+#endif

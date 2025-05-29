@@ -12,8 +12,8 @@
     {
       "name": "A",
       "id": 0,
-      "start": "64K",
-      "size": "448K",
+      "start": "40K",
+      "size": "480K",
       "families": ["rp2350-arm-s"],
       "permissions": {
         "secure": "rw",
@@ -24,7 +24,7 @@
     {
       "name": "B",
       "id": 1,
-      "size": "448K",
+      "size": "480K",
       "families": ["rp2350-arm-s"],
       "permissions": {
         "secure": "rw",

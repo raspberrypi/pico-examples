@@ -4,17 +4,6 @@ add_executable(enc_bootloader
         aes.S
         )
 
-# Add command to update otp.json if privateaes.bin changes
-add_custom_command(OUTPUT ${CMAKE_CURRENT_LIST_DIR}/otp.json
-    COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_LIST_DIR}/update-key.cmake"
-    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin)
-# Copy that otp.json file to build directory
-add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/otp.json
-    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_LIST_DIR}/otp.json" "${CMAKE_CURRENT_BINARY_DIR}/otp.json"
-    DEPENDS ${CMAKE_CURRENT_LIST_DIR}/otp.json)
-add_custom_target(otp_json DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
-add_dependencies(enc_bootloader otp_json)
-
 # pull in common dependencies
 target_link_libraries(enc_bootloader pico_stdlib pico_rand)
 
@@ -46,11 +35,8 @@ function(add_linker_script target origin length)
     pico_set_linker_script(${target} ${CMAKE_CURRENT_BINARY_DIR}/${target}.ld)
 endfunction()
 
-# create linker script to run from 0x20070000
-add_linker_script(enc_bootloader "0x20070000" "64k")
-
-# configure otp output
-pico_set_otp_key_output_file(enc_bootloader ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
+# create linker script to run from 0x20078000
+add_linker_script(enc_bootloader "0x20078000" "32k")
 
 # sign, hash, and clear SRAM
 pico_sign_binary(enc_bootloader ${CMAKE_CURRENT_LIST_DIR}/private.pem)
@@ -86,10 +72,13 @@ pico_set_binary_type(hello_serial_enc no_flash)
 # create linker script to ensure it doesn't overwrite the bootloader at 0x20070000
 add_linker_script(hello_serial_enc "0x20000000" "448k")
 
+# configure otp output
+pico_set_otp_key_output_file(hello_serial_enc ${CMAKE_CURRENT_BINARY_DIR}/otp.json)
+
 # sign, hash, and encrypt
 pico_sign_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/private.pem)
 pico_hash_binary(hello_serial_enc)
-pico_encrypt_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin)
+pico_encrypt_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin ${CMAKE_CURRENT_LIST_DIR}/ivsalt.bin)
 
 # package uf2 in flash
 pico_package_uf2_output(hello_serial_enc 0x10000000)
