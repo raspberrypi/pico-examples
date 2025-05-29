@@ -40,14 +40,27 @@ static void heartbeat_handler(struct btstack_timer_source *ts) {
     btstack_run_loop_add_timer(ts);
 }
 
+static volatile bool key_pressed;
+void key_pressed_func(void *param) {
+    int key = getchar_timeout_us(0); // get any pending key press but don't wait
+    if (key == 's' || key == 'S') {
+        key_pressed = true;
+    }
+}
+
 int main() {
     stdio_init_all();
 
+restart:
     // initialize CYW43 driver architecture (will enable BT if/because CYW43_ENABLE_BLUETOOTH == 1)
     if (cyw43_arch_init()) {
         printf("failed to initialise cyw43_arch\n");
         return -1;
     }
+
+    // Get notified if the user presses a key
+    printf("Press the \"S\" key to Stop bluetooth\n");
+    stdio_set_chars_available_callback(key_pressed_func, NULL);
 
     // Initialise adc for the temp sensor
     adc_init();
@@ -74,20 +87,19 @@ int main() {
     // turn on bluetooth!
     hci_power_control(HCI_POWER_ON);
     
-    // btstack_run_loop_execute is only required when using the 'polling' method (e.g. using pico_cyw43_arch_poll library).
-    // This example uses the 'threadsafe background` method, where BT work is handled in a low priority IRQ, so it
-    // is fine to call bt_stack_run_loop_execute() but equally you can continue executing user code.
+    key_pressed = false;
+    while(!key_pressed) {
+        async_context_poll(cyw43_arch_async_context());
+        async_context_wait_for_work_until(cyw43_arch_async_context(), at_the_end_of_time);
+    }
 
-#if 0 // btstack_run_loop_execute() is not required, so lets not use it
-    btstack_run_loop_execute();
-#else
-    // this core is free to do it's own stuff except when using 'polling' method (in which case you should use 
-    // btstacK_run_loop_ methods to add work to the run loop.
-    
-    // this is a forever loop in place of where user code would go.
-    while(true) {      
+    cyw43_arch_deinit();
+
+    printf("Press the \"S\" key to Start bluetooth\n");
+    key_pressed = false;
+    while(!key_pressed) {
         sleep_ms(1000);
     }
-#endif
+    goto restart;
     return 0;
 }
