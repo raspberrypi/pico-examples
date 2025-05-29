@@ -7,8 +7,13 @@ env:
 
 jobs:
   build:
-    if: github.repository_owner == 'raspberrypi'
+    # Prevent running twice for PRs from same repo
+    if: github.repository_owner == 'raspberrypi' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name != github.event.pull_request.base.repo.full_name)
     runs-on: [self-hosted, Linux, X64]
+    strategy:
+      fail-fast: false
+      matrix:
+        board: ["pico", "pico2_w"]
 
     steps:
     - name: Clean workspace
@@ -37,24 +42,25 @@ jobs:
       # Some projects don't allow in-source building, so create a separate build directory
       # We'll use this as our working directory for all subsequent commands
       working-directory: ${{github.workspace}}/pico-examples
-      run:  cmake -E make_directory ${{github.workspace}}/pico-examples/build
+      run:  cmake -E make_directory ${{github.workspace}}/pico-examples/build.${{ matrix.board }}
 
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
       shell: bash
-      working-directory: ${{github.workspace}}/pico-examples/build
+      working-directory: ${{github.workspace}}/pico-examples/build.${{ matrix.board }}
       # Note the current convention is to use the -S and -B options here to specify source 
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
-      run: PICO_SDK_PATH=../../pico-sdk cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      # Set WIFI_SSID and WIFI_PASSWORD to build all of the wireless examples
+      run: PICO_SDK_PATH=../../pico-sdk cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DPICO_BOARD=${{ matrix.board }} -DWIFI_SSID=TestSSID -DWIFI_PASSWORD=TestPassword
 
     - name: Get core count
       id: core_count
       run : cat /proc/cpuinfo  | grep processor | wc -l
 
     - name: Build
-      working-directory: ${{github.workspace}}/pico-examples/build
+      working-directory: ${{github.workspace}}/pico-examples/build.${{ matrix.board }}
       shell: bash
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE --parallel $(nproc)
