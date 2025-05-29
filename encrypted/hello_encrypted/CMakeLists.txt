@@ -1,4 +1,4 @@
-# Example encrypted binary
+# Example encrypted binary - this should be secure against side channel attacks
 add_executable(hello_encrypted
         hello_encrypted.c
         secret.S
@@ -48,7 +48,7 @@ pico_add_extra_outputs(hello_encrypted)
 example_auto_set_url(hello_encrypted)
 
 
-# Example encrypted binary using MbedTLS
+# Example encrypted binary using MbedTLS - this is faster, but not secure against side channel attacks
 add_executable(hello_encrypted_mbedtls
         hello_encrypted.c
         secret.S
