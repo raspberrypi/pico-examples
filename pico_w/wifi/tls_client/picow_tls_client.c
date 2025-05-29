@@ -7,8 +7,8 @@
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 
-#define TLS_CLIENT_SERVER        "worldtimeapi.org"
-#define TLS_CLIENT_HTTP_REQUEST  "GET /api/ip HTTP/1.1\r\n" \
+#define TLS_CLIENT_SERVER        "fw-download-alias1.raspberrypi.com"
+#define TLS_CLIENT_HTTP_REQUEST  "GET /net_install/boot.sig HTTP/1.1\r\n" \
                                  "Host: " TLS_CLIENT_SERVER "\r\n" \
                                  "Connection: close\r\n" \
                                  "\r\n"
