@@ -1,5 +1,7 @@
 For security you **must** replace private.pem and privateaes.bin with your own keys, and ivsalt.bin with your own per-device salt. Make sure you **don't lose your keys and salts**, else you may not be able to update the code on your device.
 
+This bootloader uses MbedTLS for decryption, so it is not secure against side channel attacks and therefore only offers limited protection against physical attackers.
+
 Your signing key must be for the _secp256k1_ curve, in PEM format. You can create a .PEM file with:
 
 ```bash
