@@ -1,14 +1,18 @@
 # Encrypted Bootloader
 add_executable(enc_bootloader
         enc_bootloader.c
-        aes.S
+        mbedtls_aes.c
         )
 
 # pull in common dependencies
-target_link_libraries(enc_bootloader pico_stdlib pico_rand)
+target_link_libraries(enc_bootloader pico_stdlib pico_rand pico_mbedtls)
 
 # use stack guards, as AES variables are written near the stack
 target_compile_definitions(enc_bootloader PRIVATE PICO_USE_STACK_GUARDS=1)
+
+target_link_options(enc_bootloader PUBLIC -Wl,--print-memory-usage)
+
+target_include_directories(enc_bootloader PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 # set as no_flash binary
 pico_set_binary_type(enc_bootloader no_flash)
@@ -35,8 +39,8 @@ function(add_linker_script target origin length)
     pico_set_linker_script(${target} ${CMAKE_CURRENT_BINARY_DIR}/${target}.ld)
 endfunction()
 
-# create linker script to run from 0x20078000
-add_linker_script(enc_bootloader "0x20078000" "32k")
+# create linker script to run from 0x20070000
+add_linker_script(enc_bootloader "0x20070000" "64k")
 
 # sign, hash, and clear SRAM
 pico_sign_binary(enc_bootloader ${CMAKE_CURRENT_LIST_DIR}/private.pem)
@@ -49,6 +53,9 @@ pico_embed_pt_in_binary(enc_bootloader ${CMAKE_CURRENT_LIST_DIR}/enc-pt.json)
 # create absolute uf2, and package in flash
 pico_set_uf2_family(enc_bootloader "absolute")
 pico_package_uf2_output(enc_bootloader 0x10000000)
+
+# optionally enable USB output in addition to UART
+# pico_enable_stdio_usb(enc_bootloader 1)
 
 # create map/bin/hex/uf2 file etc.
 pico_add_extra_outputs(enc_bootloader)
@@ -82,6 +89,9 @@ pico_encrypt_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin ${
 
 # package uf2 in flash
 pico_package_uf2_output(hello_serial_enc 0x10000000)
+
+# optionally enable USB output in addition to UART
+# pico_enable_stdio_usb(hello_serial_enc 1)
 
 # create map/bin/hex/uf2 file etc.
 pico_add_extra_outputs(hello_serial_enc)

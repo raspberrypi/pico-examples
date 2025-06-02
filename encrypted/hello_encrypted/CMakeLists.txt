@@ -35,8 +35,7 @@ pico_hash_binary(hello_encrypted)
 pico_encrypt_binary(hello_encrypted
     ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin
     ${CMAKE_CURRENT_LIST_DIR}/ivsalt.bin
-    EMBED
-    OTP_KEY_PAGE 29)
+    EMBED)
 
 # package uf2 in flash
 pico_package_uf2_output(hello_encrypted 0x10000000)

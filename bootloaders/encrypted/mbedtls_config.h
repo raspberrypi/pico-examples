@@ -1,0 +1,9 @@
+#ifndef _MBEDTLS_CONFIG_H
+#define _MBEDTLS_CONFIG_H
+
+#define MBEDTLS_HAVE_ASM
+#define MBEDTLS_AES_C
+#define MBEDTLS_AES_ROM_TABLES
+#define MBEDTLS_CIPHER_MODE_CTR
+
+#endif
