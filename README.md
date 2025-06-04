@@ -90,7 +90,8 @@ App|Description
 
 App|Description
 ---|---
-[hello_encrypted](encrypted/hello_encrypted) | Create a self-decrypting binary.
+[hello_encrypted](encrypted/hello_encrypted) | Create a self-decrypting binary, using the hardened decryption stage. This should be secure against side channel attacks.
+[hello_encrypted_mbedtls](encrypted/hello_encrypted) | Create a self-decrypting binary, using the MbedTLS decryption stage. This is not secure against side channel attacks, so is fast but provides limited protection.
 
 ### HSTX (RP235x Only)
 

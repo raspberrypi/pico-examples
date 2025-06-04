@@ -13,17 +13,94 @@
 #include "hardware/structs/otp.h"
 #include "hardware/structs/qmi.h"
 #include "hardware/structs/xip_ctrl.h"
+#include "hardware/clocks.h"
+#include "hardware/xosc.h"
+#include "hardware/structs/rosc.h"
+#include "hardware/pll.h"
 
-#include "config.h"
-
-#define OTP_KEY_PAGE 30
+#define OTP_KEY_PAGE 29
 
 extern void decrypt(uint8_t* key4way, uint8_t* IV_OTPsalt, uint8_t* IV_public, uint8_t(*buf)[16], int nblk);
+
+// These just have to be higher than the actual frequency, to prevent overclocking unused peripherals
+#define ROSC_HZ 300*MHZ
+#define OTHER_CLK_DIV 30
+
+
+void runtime_init_clocks(void) {
+    // Disable resus that may be enabled from previous software
+    clocks_hw->resus.ctrl = 0;
+
+    uint32_t rosc_div = 2; // default divider 2
+    uint32_t rosc_drive = 0x7777; // default drives of 0b111 (0x7)
+
+    // Bump up ROSC speed to ~110MHz
+    rosc_hw->freqa = 0; // reset the drive strengths
+    rosc_hw->div = rosc_div | ROSC_DIV_VALUE_PASS; // set divider
+    // Increment the freqency range one step at a time - this is safe provided the current config is not TOOHIGH
+    // because ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM | ROSC_CTRL_FREQ_RANGE_VALUE_HIGH == ROSC_CTRL_FREQ_RANGE_VALUE_HIGH
+    static_assert((ROSC_CTRL_FREQ_RANGE_VALUE_LOW | ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM) == ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM);
+    static_assert((ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM | ROSC_CTRL_FREQ_RANGE_VALUE_HIGH) == ROSC_CTRL_FREQ_RANGE_VALUE_HIGH);
+    hw_set_bits(&rosc_hw->ctrl, ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM);
+    hw_set_bits(&rosc_hw->ctrl, ROSC_CTRL_FREQ_RANGE_VALUE_HIGH);
+
+    // Enable rosc randomisation
+    rosc_hw->freqa = (ROSC_FREQA_PASSWD_VALUE_PASS << ROSC_FREQA_PASSWD_LSB) |
+            rosc_drive | ROSC_FREQA_DS1_RANDOM_BITS | ROSC_FREQA_DS0_RANDOM_BITS; // enable randomisation
+
+    // Not used with FREQ_RANGE_VALUE_HIGH, but should still be set to the maximum drive
+    rosc_hw->freqb = (ROSC_FREQB_PASSWD_VALUE_PASS << ROSC_FREQB_PASSWD_LSB) |
+            ROSC_FREQB_DS7_LSB | ROSC_FREQB_DS6_LSB | ROSC_FREQB_DS5_LSB | ROSC_FREQB_DS4_LSB;
+
+    // CLK SYS = ROSC directly, as it's running slowly enough
+    clock_configure_int_divider(clk_sys,
+                    CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX,
+                    CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_ROSC_CLKSRC,
+                    ROSC_HZ,    // this doesn't have to be accurate
+                    1);
+
+    // CLK_REF = ROSC / OTHER_CLK_DIV - this isn't really used, so just needs to be set to a low enough frequency
+    clock_configure_int_divider(clk_ref,
+                    CLOCKS_CLK_REF_CTRL_SRC_VALUE_ROSC_CLKSRC_PH,
+                    0,
+                    ROSC_HZ,
+                    OTHER_CLK_DIV);
+
+
+    // Everything else should run from PLL USB, so we can use UART and USB for output
+    xosc_init();
+    pll_init(pll_usb, PLL_USB_REFDIV, PLL_USB_VCO_FREQ_HZ, PLL_USB_POSTDIV1, PLL_USB_POSTDIV2);
+
+    // CLK USB = PLL USB 48MHz / 1 = 48MHz
+    clock_configure_undivided(clk_usb,
+                    0, // No GLMUX
+                    CLOCKS_CLK_USB_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,
+                    USB_CLK_HZ);
+
+    // CLK ADC = PLL USB 48MHz / 1 = 48MHz
+    clock_configure_undivided(clk_adc,
+                    0, // No GLMUX
+                    CLOCKS_CLK_ADC_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,
+                    USB_CLK_HZ);
+
+    // CLK PERI = PLL USB 48MHz / 1 = 48MHz. Used as reference clock for UART and SPI serial.
+    clock_configure_undivided(clk_peri,
+                    0,
+                    CLOCKS_CLK_PERI_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,
+                    USB_CLK_HZ);
+
+    // CLK_HSTX = PLL USB 48MHz / 1 = 48MHz. Transmit bit clock for the HSTX peripheral.
+    clock_configure_undivided(clk_hstx,
+                    0,
+                    CLOCKS_CLK_HSTX_CTRL_AUXSRC_VALUE_CLKSRC_PLL_USB,
+                    USB_CLK_HZ);
+}
 
 // The function lock_key() is called from decrypt() after key initialisation is complete and before decryption begins.
 // That is a suitable point to lock the OTP area where key information is stored.
 void lock_key() {
     otp_hw->sw_lock[OTP_KEY_PAGE] = 0xf;
+    otp_hw->sw_lock[OTP_KEY_PAGE + 1] = 0xf;
 }
 
 
@@ -121,15 +198,6 @@ int main() {
         reset_usb_boot(0, 0);
     }
 
-    printf("OTP Valid Keys %x\n", otp_hw->key_valid);
-
-    printf("Unlocking\n");
-    for (int i=0; i<4; i++) {
-        uint32_t key_i = ((i*2+1) << 24) | ((i*2+1) << 16) |
-                         (i*2 << 8) | i*2;
-        otp_hw->crt_key_w[i] = key_i;
-    }
-
     uint8_t iv[16];
     data_start_addr += first_mb_end;
     memcpy(iv, (void*)(XIP_BASE + data_start_addr), sizeof(iv));
@@ -153,12 +221,12 @@ int main() {
 
     decrypt(
         (uint8_t*)&(otp_data[OTP_KEY_PAGE * 0x40]),
-        (uint8_t*)&(otp_data[(OTP_KEY_PAGE + 1) * 0x40]),
+        (uint8_t*)&(otp_data[(OTP_KEY_PAGE + 2) * 0x40]),
         iv, (void*)SRAM_BASE, data_size/16
     );
 
     // Lock the IV salt
-    otp_hw->sw_lock[OTP_KEY_PAGE + 1] = 0xf;
+    otp_hw->sw_lock[OTP_KEY_PAGE + 2] = 0xf;
 
     printf("Post decryption image begins with\n");
     for (int i=0; i < 4; i++)
@@ -166,7 +234,7 @@ int main() {
 
     printf("Chaining into %x, size %x\n", SRAM_BASE, data_size);
 
-    stdio_deinit_all();
+    stdio_uart_deinit();    // stdio_usb_deinit doesn't work here, so only deinit UART
 
     rc = rom_chain_image(
         workarea,
@@ -175,7 +243,7 @@ int main() {
         data_size
     );
 
-    stdio_init_all();
+    stdio_uart_init();
     printf("Shouldn't return from ROM call %d\n", rc);
 
     reset_usb_boot(0, 0);

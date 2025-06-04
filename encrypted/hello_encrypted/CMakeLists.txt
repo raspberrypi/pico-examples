@@ -1,4 +1,4 @@
-# Example encrypted binary
+# Example encrypted binary - this should be secure against side channel attacks
 add_executable(hello_encrypted
         hello_encrypted.c
         secret.S
@@ -35,8 +35,7 @@ pico_hash_binary(hello_encrypted)
 pico_encrypt_binary(hello_encrypted
     ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin
     ${CMAKE_CURRENT_LIST_DIR}/ivsalt.bin
-    EMBED
-    OTP_KEY_PAGE 29)
+    EMBED)
 
 # package uf2 in flash
 pico_package_uf2_output(hello_encrypted 0x10000000)
@@ -48,7 +47,7 @@ pico_add_extra_outputs(hello_encrypted)
 example_auto_set_url(hello_encrypted)
 
 
-# Example encrypted binary using MbedTLS
+# Example encrypted binary using MbedTLS - this is faster, but not secure against side channel attacks
 add_executable(hello_encrypted_mbedtls
         hello_encrypted.c
         secret.S
