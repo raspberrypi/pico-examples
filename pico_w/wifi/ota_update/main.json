@@ -36,7 +36,7 @@
       "name": "Firmware A",
       "id": "0x776966696669726d",
       "start": "3500k",
-      "size": "240K",
+      "size": "256K",
       "families": ["data"],
       "permissions": {
         "secure": "rw",
@@ -49,7 +49,7 @@
     {
       "name": "Firmware B",
       "id": 12345,
-      "size": "240K",
+      "size": "256K",
       "families": ["data"],
       "permissions": {
         "secure": "rw",
