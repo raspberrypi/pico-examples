@@ -30,8 +30,8 @@ typedef struct TCP_UPDATE_SERVER_T_ {
     struct tcp_pcb *server_pcb;
     struct tcp_pcb *client_pcb;
     bool complete;
-    uint8_t buffer_sent[SHA256_RESULT_BYTES];
-    uint8_t buffer_recv[BUF_SIZE];
+    __attribute__((aligned(4))) uint8_t buffer_sent[SHA256_RESULT_BYTES];
+    __attribute__((aligned(4))) uint8_t buffer_recv[BUF_SIZE];
     int sent_len;
     int recv_len;
     int num_blocks;
@@ -299,6 +299,15 @@ static bool tcp_update_server_open(void *arg) {
 
 int main() {
     stdio_init_all();
+
+#ifdef __riscv
+    // Increased bootrom stack is required for some of the functions in this example
+    bootrom_stack_t stack = {
+        .base = malloc(0x400),
+        .size = 0x400
+    };
+    rom_set_bootrom_stack(&stack);
+#endif
 
     if (cyw43_arch_init()) {
         printf("failed to initialise\n");

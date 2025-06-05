@@ -49,7 +49,7 @@ pico_use_wifi_firmware_partition(picow_ota_update_poll)
 
 pico_hash_binary(picow_ota_update_poll)
 pico_sign_binary(picow_ota_update_poll ${CMAKE_CURRENT_LIST_DIR}/private.pem)
-# pico_set_binary_type(picow_ota_update_background no_flash)
-# pico_package_uf2_output(picow_ota_update_background 0x10000000)
+# pico_set_binary_type(picow_ota_update_poll no_flash)
+# pico_package_uf2_output(picow_ota_update_poll 0x10000000)
 
 pico_add_extra_outputs(picow_ota_update_poll)
