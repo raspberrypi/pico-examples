@@ -9,8 +9,15 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
+// Whether to flash the led
+#ifndef USE_LED
+#define USE_LED 1
+#endif
+
+#if USE_LED
 #ifdef CYW43_WL_GPIO_LED_PIN
 #include "pico/cyw43_arch.h"
+#endif
 #endif
 
 #include "FreeRTOS.h"
@@ -21,10 +28,6 @@
 #define RUN_FREE_RTOS_ON_CORE 0
 #endif
 
-// Whether to flash the led
-#ifndef USE_LED
-#define USE_LED 1
-#endif
 
 // Whether to busy wait in the led thread
 #ifndef LED_BUSY_WAIT
