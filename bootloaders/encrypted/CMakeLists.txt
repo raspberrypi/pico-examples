@@ -10,8 +10,6 @@ target_link_libraries(enc_bootloader pico_stdlib pico_rand pico_mbedtls)
 # use stack guards, as AES variables are written near the stack
 target_compile_definitions(enc_bootloader PRIVATE PICO_USE_STACK_GUARDS=1)
 
-target_link_options(enc_bootloader PUBLIC -Wl,--print-memory-usage)
-
 target_include_directories(enc_bootloader PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 # set as no_flash binary
