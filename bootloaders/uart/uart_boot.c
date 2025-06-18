@@ -185,6 +185,7 @@ int main()
     // Reset chip
     reset_chip();
 
+    int attempts = 0;
 
     while (true) {
         char splash[] = "RP2350";
@@ -204,13 +205,20 @@ int main()
         if (ptr && strncmp(ptr, splash, sizeof(splash) - 1) == 0) {
             printf("Splash found\n");
             uart_boot();
+            attempts = 0;
         } else {
             ptr = memchr(buf, hello[0], sizeof(buf));
             if (ptr && strncmp(ptr, hello, sizeof(hello) - 1) == 0) {
                 printf("Device is running\n");
             } else {
-                printf("Device not running - attempting reset\n");
-                reset_chip();
+                if (attempts > 3) {
+                    printf("Device not running - attempting reset\n");
+                    reset_chip();
+                    attempts = 0;
+                } else {
+                    printf("Device not running - waiting\n");
+                    attempts++;
+                }
             }
         }
         sleep_ms(1000);
