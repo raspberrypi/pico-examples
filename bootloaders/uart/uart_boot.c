@@ -210,6 +210,7 @@ int main()
             ptr = memchr(buf, hello[0], sizeof(buf));
             if (ptr && strncmp(ptr, hello, sizeof(hello) - 1) == 0) {
                 printf("Device is running\n");
+                attempts = 0;
             } else {
                 if (attempts > 3) {
                     printf("Device not running - attempting reset\n");
