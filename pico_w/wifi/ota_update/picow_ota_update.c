@@ -347,6 +347,8 @@ int main() {
         tcp_update_server_result(state, -1);
         return -1;
     }
+
+    bool led_state = false;
     while(!state->complete) {
         // the following #ifdef is only here so this same example can be used in multiple modes;
         // you do not need it in your code
@@ -357,9 +359,8 @@ int main() {
 #endif
 
         // Do your application code here
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);
-        sleep_ms(250);
-        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+        led_state = !led_state;
+        cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
         sleep_ms(250);
     }
 
