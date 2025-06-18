@@ -79,7 +79,8 @@ void uart_boot() {
     while (current_addr < end_addr) {
         uart_putc_raw(UART_ID, 'w');
         char *buf = (char*)current_addr;
-        for (int i=0; i < 32; i++) {
+        int i;
+        for (i = 0; i < 32; i++) {
             uart_putc_raw(UART_ID, buf[i]);
         }
         if (!uart_is_readable_within_us(UART_ID, 500)) {
@@ -94,7 +95,7 @@ void uart_boot() {
             reset_chip();
             return;
         }
-        current_addr += 32;
+        current_addr += i;
     }
 
     uint32_t time_end = time_us_32();
@@ -133,11 +134,15 @@ void uart_boot() {
             in = uart_getc(UART_ID);
             if (in != buf[i]) {
                 printf("Verify has incorrect data at 0x%08x - resetting\n", current_addr - start_addr + SRAM_BASE);
+                reset_chip();
+                return;
             }
             i++;
         }
         if (i != 32) {
             printf("Verify has incorrect data size - resetting\n");
+            reset_chip();
+            return;
         }
         in = uart_getc(UART_ID);
         if (in != 'r') {
@@ -145,7 +150,7 @@ void uart_boot() {
             reset_chip();
             return;
         }
-        current_addr += 32;
+        current_addr += i;
     }
 
     time_end = time_us_32();
@@ -186,10 +191,10 @@ int main()
     reset_chip();
 
     int attempts = 0;
+    char splash[] = "RP2350";
+    char hello[] = "Hello, world";
 
     while (true) {
-        char splash[] = "RP2350";
-        char hello[] = "Hello";
         char buf[500] = {0};
         int i = 0;
         while (uart_is_readable(UART_ID) && i < sizeof(buf)) {
