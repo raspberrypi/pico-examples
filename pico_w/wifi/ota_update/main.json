@@ -37,7 +37,7 @@
       "id": "0x776966696669726d",
       "start": "3500k",
       "size": "256K",
-      "families": ["data"],
+      "families": ["cyw43-firmware"],
       "permissions": {
         "secure": "rw",
         "nonsecure": "rw",
@@ -50,7 +50,7 @@
       "name": "Firmware B",
       "id": 12345,
       "size": "256K",
-      "families": ["data"],
+      "families": ["cyw43-firmware"],
       "permissions": {
         "secure": "rw",
         "nonsecure": "rw",
