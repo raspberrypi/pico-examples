@@ -17,7 +17,7 @@
  * pico-examples/adc/adc_console/adc_console.c */
 float read_onboard_temperature(const char unit) {
     
-    /* 12-bit conversion, assume max value == ADC_VREF == 3.3 V */
+    /* 12-bit conversion, assume max value == ADC_VREF == 3.3 V */4096
     const float conversionFactor = 3.3f / (1 << 12);
 
     float adc = (float)adc_read() * conversionFactor;
