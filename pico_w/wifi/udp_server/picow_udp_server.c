@@ -12,6 +12,9 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+// Choose architecture
+// #define PICO_CYW43_ARCH_POLL
+
 // Connection timeout in ms
 #define WIFI_CONNECT_TIMEOUT_MS 30000
 
@@ -393,7 +396,12 @@ int main() {
 
     // Main loop
     while (1) {
-        // Work goes here.
+        #if PICO_CYW43_ARCH_POLL
+            wifi_poll();
+        #else
+            // Do some work here.
+            sleep_ms(1000);
+        #endif
         sleep_ms(10);
     }
 
