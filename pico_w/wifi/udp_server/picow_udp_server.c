@@ -233,11 +233,6 @@ int udp_server_start(uint16_t port, udp_data_callback_t callback) {
         return -1;
     }
 
-    // if (!wifi_is_connected()) {
-    //     printf("WiFi not connected, cannot start UDP server\n");
-    //     return -1;
-    // }
-
     // Create PCB
     udp_pcb = udp_new();
     if (!udp_pcb) {
