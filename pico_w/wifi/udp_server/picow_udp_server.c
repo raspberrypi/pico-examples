@@ -12,14 +12,14 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-// Choose architecture
-// #define PICO_CYW43_ARCH_POLL
+// define type for callback function
+typedef void (*udp_data_callback_t)(const uint8_t *data, size_t data_len,
+     const ip_addr_t *src_addr, uint16_t src_port);
 
 // Connection timeout in ms
 #define WIFI_CONNECT_TIMEOUT_MS 30000
 
 static bool wifi_connected = false;
-static absolute_time_t connection_start_time;
 
 // Default UDP port
 #ifndef UDP_PORT    
@@ -44,6 +44,11 @@ int wifi_init(void) {
     return 0;
 }
 
+// Set WiFi LED based on connection status
+void wifi_update_led() {
+    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, wifi_connected ? 1 : 0);
+}
+
 #define WIFI_CONNECT_TIMEOUT_MS 30000
 
 int wifi_connect(const char *ssid, const char *password) {
@@ -55,8 +60,6 @@ int wifi_connect(const char *ssid, const char *password) {
     printf("Connecting to WiFi network: %s\n", ssid);
 
     cyw43_wifi_pm(&cyw43_state, CYW43_PERFORMANCE_PM);
-
-    int ssid_len = strlen(ssid);
 
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASSWORD,
          CYW43_AUTH_WPA2_AES_PSK, WIFI_CONNECT_TIMEOUT_MS)) {
@@ -156,11 +159,6 @@ void wifi_deinit(void) {
     printf("WiFi deinitialized\n");
 }
 
-// Set WiFi LED based on connection status
-void wifi_update_led(void) {
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, wifi_connected ? 1 : 0);
-}
-
 // Periodic WiFi maintenance (call from main loop)
 void wifi_poll(void) {
     // Update LED status
@@ -189,6 +187,17 @@ static bool udp_server_active = false;
 // Buffer for incoming data
 static uint8_t rx_buffer[MAX_UDP_MSG_SIZE];
 
+void handle_udp_message(const unsigned char *data, unsigned int len,
+                        const struct ip4_addr *addr, uint16_t port) {
+    if (len > 255) len = 255;  // limit to safe buffer size
+
+    char message[256] = {0};
+    strncpy(message, (const char *)data, len);
+    message[len] = '\0';
+
+    printf("Received from %s:%u -> %s\n", ip4addr_ntoa(addr), port, message);
+}
+
 // Callback function for receiving UDP data
 static void udp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p, 
                               const ip_addr_t *addr, u16_t port) {
@@ -215,22 +224,8 @@ static void udp_recv_callback(void *arg, struct udp_pcb *pcb, struct pbuf *p,
     }
 }
 
-// Initialize UDP handler
-int udp_server_init(udp_data_callback_t callback) {
-    printf("Initializing UDP handler...\n");
-    
-    if (!callback) {
-        printf("Error: NULL callback passed to udp_server_init\n");
-        return -1;
-    }
-
-    data_callback = callback; // Save the app-level callback
-    return udp_server_start(UDP_PORT, callback); // Start server via saved port
-}
-
-
 // Start UDP server on specified port
-int udp_server_start(uint16_t port, udp_data_callback_t callback) {
+static int udp_server_start(uint16_t port, udp_data_callback_t callback) {
     if (udp_server_active) {
         printf("UDP server already active\n");
         return -1;
@@ -260,6 +255,18 @@ int udp_server_start(uint16_t port, udp_data_callback_t callback) {
     return 0;
 }
 
+// Initialize UDP handler
+static int udp_server_init(udp_data_callback_t callback) {
+    printf("Initializing UDP handler...\n");
+    
+    if (!callback) {
+        printf("Error: NULL callback passed to udp_server_init\n");
+        return -1;
+    }
+
+    data_callback = callback; // Save the app-level callback
+    return udp_server_start(UDP_PORT, callback); // Start server via saved port
+}
 
 // Stop UDP server
 void udp_server_stop(void) {
@@ -372,7 +379,7 @@ void udp_deinit(void) {
 
 int main() {
     stdio_init_all();
-    sleep_ms(5000);
+    // sleep_ms(5000); // optional sleep for ease of testing.
     printf("Pico UDP Server Demo Starting...\n");
     
     // Initialize WiFi

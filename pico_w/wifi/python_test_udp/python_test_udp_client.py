@@ -2,16 +2,16 @@ import socket
 import time
 
 # === Configuration ===
-PICO_IP = "PI_IP_HERE"  # Replace with your Pico's IP
+PICO_IP = "PI_IP_HERE!"  # Replace with your Pico's IP
 PICO_PORT = 12345       # Port Pico is listening on
 
 # === Data to send ===
 data = {
-    "1.": "Message 1 received!",
-    "2.": "Message 2 received!",
-    "3.": "Message 3 received!",
-    "4.": "Message 4 received!",
-    "5.": "Message 5 received!"
+    "1": " Message 1 received!",
+    "2": " Message 2 received!",
+    "3": " Message 3 received!",
+    "4": " Message 4 received!",
+    "5": " Message 5 received!"
 }
 
 # === Create UDP socket ===

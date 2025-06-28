@@ -18,10 +18,12 @@ target_link_libraries(picow_udp_server_background
 
 pico_add_extra_outputs(picow_udp_server_background)
 
+pico_enable_stdio_usb(picow_udp_server_background 1)
+
 # Manual polling
 
 add_executable(picow_udp_server_poll
-        picow_tcp_server.c
+        picow_udp_server.c
         )
 target_compile_definitions(picow_udp_server_poll PRIVATE
         WIFI_SSID=\"${WIFI_SSID}\"
@@ -35,7 +37,7 @@ target_link_libraries(picow_udp_server_poll
         pico_cyw43_arch_lwip_poll
         pico_stdlib
         )
+        
 pico_add_extra_outputs(picow_udp_server_poll)
 
 pico_enable_stdio_usb(picow_udp_server_poll 1)
-pico_enable_stdio_usb(picow_udp_server_background 1)
