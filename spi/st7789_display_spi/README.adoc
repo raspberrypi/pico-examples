@@ -1,2 +1,9 @@
-This document is a guide to the super lightweight driver for the ST7789 display controller, 
-with the aim to provide a compact interface for using the 
+This driver is a super-compact version of the competitor ST7789 drivers, with a
+focus on being as light as possible on the Pico. It can display strings, chars, 
+and individual pixels for pixelart as shown. It saves lots of overhead by not
+supporting microSD storage, or including animation support by default. Ideal for
+super light or multi-use applications.
+
+Also included is an example of how a sprite can be included as pixelart, I hope 
+the example is useful and entertaining (simply remove the references and sprite 
+file for a more normal output).

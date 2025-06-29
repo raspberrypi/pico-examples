@@ -1,69 +1,12 @@
-#include "st7789.h"
+#include "st7789_display_demo.h"
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/gpio.h"
 #include "fonts.h"
-#include "../config.h"
+#include "chicken_sprite.h"
 #include <stdlib.h>
 
 static uint8_t rotation = 0;
-
-void draw_potted_plant_right_half() {
-    // Note: Heavily commented because this was hard.
-    uint16_t pot_color = 0xA52A;    // Brown colour for pot
-    uint16_t stem_color = 0x07E0;   // Green for stem and leaves
-    uint16_t leaf_color = 0x07E0;   // Green for leaves
-    uint16_t bg_color = 0x0000;     // Black background
-
-    uint16_t center_y = 120;  // Center in y-axis
-    uint16_t x_shift = 20;
-
-    // Pot setup
-    uint16_t pot_bottom_y = center_y + 60;  // 180y
-    uint16_t pot_top_y = pot_bottom_y - 30; // 150y
-    uint16_t pot_left_x = 220 + x_shift;    // 240x
-    uint16_t pot_right_x = 260 + x_shift;   // 280x
-
-    // Pot
-    for (uint16_t x = pot_left_x; x < pot_right_x; x++) {
-        for (uint16_t y = pot_top_y; y < pot_bottom_y; y++) {
-            st7789_draw_pixel(x, y, pot_color);
-        }
-    }
-
-    // Pot rim
-    for (uint16_t x = pot_left_x - 5; x < pot_right_x + 5; x++) {
-        for (uint16_t y = pot_top_y - 5; y < pot_top_y; y++) {
-            st7789_draw_pixel(x, y, pot_color);
-        }
-    }
-
-    // Stem setup
-    uint16_t stem_x = (pot_left_x + pot_right_x) / 2;
-    uint16_t stem_y_start = pot_top_y - 5;
-    uint16_t stem_y_end = center_y - 30;
-
-    // Stem
-    st7789_draw_line(stem_x, stem_y_start, stem_x, stem_y_end, stem_color);
-
-    // Leaves - offset is lower relative to stem top
-    uint16_t leaf_base_y = stem_y_end + 30;
-    uint16_t leaf_mid_y = leaf_base_y - 10;
-    uint16_t leaf_top_y = leaf_mid_y - 10;
-
-    // Left leaves
-    st7789_draw_line(stem_x, leaf_base_y, stem_x - 15, leaf_mid_y, leaf_color);
-    st7789_draw_line(stem_x, leaf_mid_y, stem_x - 20, leaf_top_y, leaf_color);
-
-    // Right leaves
-    st7789_draw_line(stem_x, leaf_base_y, stem_x + 15, leaf_mid_y, leaf_color);
-    st7789_draw_line(stem_x, leaf_mid_y, stem_x + 20, leaf_top_y, leaf_color);
-
-    // Asterisk leaves
-    st7789_draw_char(stem_x - 8, leaf_mid_y + 2, '*', leaf_color, bg_color, 1);
-    st7789_draw_char(stem_x + 8, leaf_mid_y + 2, '*', leaf_color, bg_color, 1);
-    st7789_draw_char(stem_x, leaf_top_y - 2, '*', leaf_color, bg_color, 1);
-}
 
 static void st7789_write_cmd(uint8_t cmd) {
     gpio_put(PIN_DC, 0);
@@ -103,7 +46,7 @@ static void st7789_set_address_window(uint16_t x0, uint16_t y0, uint16_t x1, uin
     st7789_write_cmd(0x2C);
 }
 
-void st7789_init(void) {
+static void st7789_init(void) {
     spi_init(SPI_PORT, 62.5 * 1000 * 1000);
     gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
     gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
@@ -139,7 +82,7 @@ void st7789_init(void) {
     sleep_ms(20);
 }
 
-void st7789_set_rotation(uint8_t r) {
+static void st7789_set_rotation(uint8_t r) {
     rotation = r % 4;
     st7789_write_cmd(0x36);
     switch (rotation) {
@@ -150,13 +93,13 @@ void st7789_set_rotation(uint8_t r) {
     }
 }
 
-void st7789_draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
+static void st7789_draw_pixel(uint16_t x, uint16_t y, uint16_t color) {
     if (x >= DISPLAY_WIDTH || y >= DISPLAY_HEIGHT) return;
     st7789_set_address_window(x, y, x, y);
     st7789_write_data16(color);
 }
 
-void st7789_fill_screen(uint16_t color) {
+static void st7789_fill_screen(uint16_t color) {
     st7789_set_address_window(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1);
     gpio_put(PIN_DC, 1);
     gpio_put(PIN_CS, 0);
@@ -167,7 +110,7 @@ void st7789_fill_screen(uint16_t color) {
     gpio_put(PIN_CS, 1);
 }
 
-void st7789_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color) {
+static void st7789_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t color) {
     int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     int16_t err = dx + dy, e2;
@@ -181,7 +124,7 @@ void st7789_draw_line(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16
     }
 }
 
-void st7789_draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg, uint8_t size) {
+static void st7789_draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t bg, uint8_t size) {
     if (c < 32 || c > 126) return;
     const uint8_t *glyph = font_8x8[c - 32];
     for (int8_t i = 0; i < 8; i++) {
@@ -199,7 +142,7 @@ void st7789_draw_char(uint16_t x, uint16_t y, char c, uint16_t color, uint16_t b
     }
 }
 
-void st7789_draw_string(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t bg, uint8_t size) {
+static void st7789_draw_string(uint16_t x, uint16_t y, const char *str, uint16_t color, uint16_t bg, uint8_t size) {
     uint16_t start_x = x;
     while (*str) {
         if (*str == '\n') {
@@ -211,4 +154,50 @@ void st7789_draw_string(uint16_t x, uint16_t y, const char *str, uint16_t color,
         }
         str++;
     }
+}
+
+void draw_chicken(uint16_t top_left_x, uint16_t top_left_y) {
+    for (uint8_t row = 0; row < CHICKEN_HEIGHT; row++) {
+        for (uint8_t col = 0; col < CHICKEN_WIDTH; col++) {
+            uint16_t color = chicken_sprite[row][col];
+            if (color != TRANSPARENT) {
+                st7789_draw_pixel(top_left_x + col, top_left_y + row, color);
+            }
+        }
+    }
+}
+
+static void draw_initial_screen() {
+
+    // Cycle screen
+    st7789_fill_screen(RED);
+    sleep_ms(1000);
+    st7789_fill_screen(GREEN);
+    sleep_ms(1000);
+    st7789_fill_screen(BLUE);
+    sleep_ms(1000);
+    st7789_fill_screen(BLACK);
+
+    // Header
+    st7789_draw_string(20, 10, "Pico Display Demo", WHITE, BLACK, 2);
+    st7789_draw_line(10, 35, 310, 35, WHITE);
+
+    // Placeholder lines -> adjust as necessary
+    st7789_draw_string(20, 50, "Perhaps one day,", GREEN, BLACK, 1);
+    st7789_draw_string(20, 85, "a hen will come out to play", MAGENTA, BLACK, 1);
+    st7789_draw_string(20, 120, "and lead the world astray.", YELLOW, BLACK, 1);
+    st7789_draw_string(20, 155, "She is coming now.", WHITE, BLACK, 1);
+    st7789_draw_string(20, 190, "Beware the demon chicken,", CYAN, BLACK, 1);
+
+    // Footer
+    st7789_draw_string(10, 210, "the demon chicken is coming,", RED, BLACK, 1);
+    st7789_draw_string(10, 230, "and you cannot escape her.", RED, BLACK, 1);
+}
+
+int main() {
+    st7789_init();
+    st7789_set_rotation(1); // Landscape
+    draw_initial_screen();
+    draw_chicken(240, 80); // optional chicken
+    return 0;
 }
