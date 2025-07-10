@@ -1,2 +1,6 @@
-add_subdirectory(client)
-add_subdirectory(server)
+add_subdirectory(secure_temp_sensor)
+add_subdirectory(doorbell)
+add_subdirectory(wifi_provisioner)
+add_subdirectory(ble_pointer)
+add_subdirectory(temp_sensor)
+
