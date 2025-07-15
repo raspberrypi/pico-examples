@@ -203,6 +203,7 @@ App|Description
 [picow_http_client](pico_w/wifi/http_client) | Demonstrates how to make http and https requests
 [picow_http_client_verify](pico_w/wifi/http_client) | Demonstrates how to make a https request with server authentication
 [picow_mqtt_client](pico_w/wifi/mqtt) | Demonstrates how to implement a MQTT client application
+[picow_ota_update](pico_w/wifi/ota_update) | A simple OTA update server (RP235x Only). You can run [python_ota_update.py](pico_w/wifi/python_test_tcp/python_ota_update.py) to upload UF2s to it.
 
 #### FreeRTOS examples
 
