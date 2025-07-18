@@ -28,5 +28,5 @@ pico_set_lwip_httpd_content(pico_httpd_content INTERFACE
         ${CMAKE_CURRENT_LIST_DIR}/content/test.shtml
         ${CMAKE_CURRENT_LIST_DIR}/content/ledpass.shtml
         ${CMAKE_CURRENT_LIST_DIR}/content/ledfail.shtml
-        ${CMAKE_CURRENT_LIST_DIR}/content/img/rpi.png
+        ${CMAKE_CURRENT_LIST_DIR}/content/img/rpi.png.gz
         )
