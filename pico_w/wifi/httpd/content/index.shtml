@@ -4,7 +4,7 @@
 </head>
 <body>
     <h1>Pico httpd example</h1>
-    <p><img src="/img/rpi.png"/></p>
+    <p><img src="/img/rpi.png.gz"/></p>
     <p><!--#welcome--></p>
     <p>Uptime is <!--#uptime--> seconds</p>
     <p><a href="/?test">CGI handler test</a></p>
