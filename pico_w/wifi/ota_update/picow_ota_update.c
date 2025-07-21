@@ -350,14 +350,6 @@ int main() {
 
     bool led_state = false;
     while(!state->complete) {
-        // the following #ifdef is only here so this same example can be used in multiple modes;
-        // you do not need it in your code
-#if PICO_CYW43_ARCH_POLL
-        // if you are using pico_cyw43_arch_poll, then you must poll periodically from your
-        // main loop (not from a timer) to check for Wi-Fi driver or lwIP work that needs to be done.
-        cyw43_arch_poll();
-#endif
-
         // Do your application code here
         led_state = !led_state;
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_state);
