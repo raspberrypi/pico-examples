@@ -21,6 +21,12 @@ pico_use_wifi_firmware_partition(picow_ota_update)
 
 pico_hash_binary(picow_ota_update)
 pico_sign_binary(picow_ota_update ${CMAKE_CURRENT_LIST_DIR}/private.pem)
+
+# By default this example requires a partition table in flash, and will
+# update the partition that is not currently in use. To use it without
+# a partition table in flash, uncomment the following lines to make it
+# a no_flash binary, so it can update the currently running program.
+
 # pico_set_binary_type(picow_ota_update no_flash)
 # pico_package_uf2_output(picow_ota_update 0x10000000)
 
