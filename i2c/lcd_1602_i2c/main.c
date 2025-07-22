@@ -21,8 +21,8 @@
  * the data lines up to 5V.
  *
  * Connections on Raspberry Pi Pico board, other boards may vary.
- * GPIO 0 -> SDA on LCD bridge board
- * GPIO 1 -> SCL on LCD bridge board
+ * GPIO 4 -> SDA on LCD bridge board
+ * GPIO 5 -> SCL on LCD bridge board
  */
 
 // You may need to change this for your LCD module
@@ -34,11 +34,11 @@ int main()
 	stdio_init_all();
 
 	// Set up the I2C peripheral at 100k
-	i2c_init(i2c0, 100 * 1000);
+	i2c_init(i2c_default, 100 * 1000);
 
 	// Bind pins to I2C peripheral
-	gpio_set_function(0, GPIO_FUNC_I2C);
-	gpio_set_function(1, GPIO_FUNC_I2C);
+	gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
+	gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
 
 	// Wait long enough for power rails to rise on the LCD module
 	sleep_ms(100);
@@ -46,19 +46,19 @@ int main()
 	// Create an instance of the LCD driver (you can create multiple instances
 	// either with the same address on different i2c ports or with different
 	// addresses on the same i2c port)
-	i2c_lcd_handle lcd = i2c_lcd_init(i2c0, I2_LCD_ADDR);
+	i2c_lcd_handle lcd = i2c_lcd_init(i2c_default, I2_LCD_ADDR);
 
 	// Fairly self-explanatory
-	i2c_lcd_setBacklightEnabled(lcd, true);
+	i2c_lcd_set_backlight_enabled(lcd, true);
 
 	// Demonstrate writing to the different lines on the display
 	int counter = 0;
 	while (1)
 	{
-		i2c_lcd_setCursorLine(lcd, 0);
-		i2c_lcd_writeStringf(lcd, "Hello World!");
-		i2c_lcd_setCursorLine(lcd, 1);
-		i2c_lcd_writeStringf(lcd, "Counter = %d", counter);
+		i2c_lcd_set_cursor_line(lcd, 0);
+		i2c_lcd_write_stringf(lcd, "Hello World!");
+		i2c_lcd_set_cursor_line(lcd, 1);
+		i2c_lcd_write_stringf(lcd, "Counter = %d", counter);
 		counter++;
 	}
 }
