@@ -126,7 +126,7 @@ int main() {
         printf("Flash Update Base %x\n", info.reboot_params[0]);
     }
 
-    rc = rom_pick_ab_update_partition((uint32_t*)workarea, sizeof(workarea), 0);
+    rc = rom_pick_ab_partition_during_update((uint32_t*)workarea, sizeof(workarea), 0);
     if (rc < 0) {
         printf("Partition Table A/B choice failed %d - resetting\n", rc);
         reset_usb_boot(0, 0);
