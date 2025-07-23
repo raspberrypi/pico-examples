@@ -6,6 +6,7 @@
 
 #include "pico/stdlib.h"
 #include "boot/picobin.h"
+#include "boot/uf2.h"
 
 
 #define PARTITION_EXTRA_FAMILY_ID_MAX      3

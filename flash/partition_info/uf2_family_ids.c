@@ -71,6 +71,13 @@ void uf2_family_ids_free(uf2_family_ids_t *ids) {
 
 void uf2_family_ids_add_extra_family_id(uf2_family_ids_t *ids, uint32_t family_id) {
     char hex_id[UF2_FAMILY_ID_HEX_SIZE];
-    sprintf(hex_id, "0x%08x", family_id);
-    _add(ids, hex_id);
+    switch (family_id) {
+        case CYW43_FIRMWARE_FAMILY_ID:
+            _add(ids, "cyw43-firmware");
+            break;
+        default:
+            sprintf(hex_id, "0x%08x", family_id);
+            _add(ids, hex_id);
+            break;
+    }
 }

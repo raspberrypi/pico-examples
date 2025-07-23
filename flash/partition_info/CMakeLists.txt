@@ -4,6 +4,7 @@ target_link_libraries(partition_info PRIVATE
         pico_stdlib
         pico_bootrom
         hardware_flash
+        boot_uf2_headers
         )
 
 # add a partition table
