@@ -33,11 +33,10 @@ if (NOT MQTT_CERT_INC)
     set(MQTT_CERT_INC mqtt_client.inc)
 endif()
 
-set(TARGET_NAME picow_mqtt_client)
-add_executable(${TARGET_NAME}
+add_executable(picow_mqtt_client
     mqtt_client.c
     )
-target_link_libraries(${TARGET_NAME}
+target_link_libraries(picow_mqtt_client
     pico_stdlib
     hardware_adc
     pico_cyw43_arch_lwip_threadsafe_background
@@ -45,31 +44,31 @@ target_link_libraries(${TARGET_NAME}
     pico_mbedtls
     pico_lwip_mbedtls
     )
-target_include_directories(${TARGET_NAME} PRIVATE
+target_include_directories(picow_mqtt_client PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required
     )
-target_compile_definitions(${TARGET_NAME} PRIVATE
+target_compile_definitions(picow_mqtt_client PRIVATE
     WIFI_SSID=\"${WIFI_SSID}\"
     WIFI_PASSWORD=\"${WIFI_PASSWORD}\"
     MQTT_SERVER=\"${MQTT_SERVER}\"
     )
 if (EXISTS "${MQTT_CERT_PATH}/${MQTT_CERT_INC}")
-    target_compile_definitions(${TARGET_NAME} PRIVATE
+    target_compile_definitions(picow_mqtt_client PRIVATE
         MQTT_CERT_INC=\"${MQTT_CERT_INC}\" # contains the tls certificates for MQTT_SERVER needed by the client
         ALTCP_MBEDTLS_AUTHMODE=MBEDTLS_SSL_VERIFY_REQUIRED
         )
-    target_include_directories(${TARGET_NAME} PRIVATE
+    target_include_directories(picow_mqtt_client PRIVATE
         ${MQTT_CERT_PATH}
         )
 endif()
 if (MQTT_USERNAME AND MQTT_PASSWORD)
-    target_compile_definitions(${TARGET_NAME} PRIVATE
+    target_compile_definitions(picow_mqtt_client PRIVATE
         MQTT_USERNAME=\"${MQTT_USERNAME}\"
         MQTT_PASSWORD=\"${MQTT_PASSWORD}\"
     )
 endif()
-pico_add_extra_outputs(${TARGET_NAME})
+pico_add_extra_outputs(picow_mqtt_client)
 
 # Ignore warnings from lwip code
 set_source_files_properties(
