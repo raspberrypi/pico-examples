@@ -8,9 +8,9 @@ picotool load pt.uf2
 picotool reboot -u
 ```
 
-Once the partition table is loaded, you first need to load the Wi-Fi firmware UF2 (`picow_ota_update_firmware.uf2`) followed by loading & executing the main program (`picow_ota_update.uf2`) - either by dragging and dropping them in order, or using `picotool`:
+Once the partition table is loaded, you first need to load the Wi-Fi firmware UF2 (`picow_ota_update_wifi_firmware.uf2`) followed by loading & executing the main program (`picow_ota_update.uf2`) - either by dragging and dropping them in order, or using `picotool`:
 ```
-picotool load picow_ota_update_firmware.uf2
+picotool load picow_ota_update_wifi_firmware.uf2
 picotool load -x picow_ota_update.uf2
 ```
 
