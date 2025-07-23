@@ -20,7 +20,7 @@ else()
     add_subdirectory_exclude_platforms(http_client)
     add_subdirectory_exclude_platforms(mqtt)
 
-    if (NOT TARGET pico_mbed_tls)
+    if (NOT TARGET pico_mbedtls)
         message("Skipping tls_client and ota_update examples as Mbed TLS is not available")
     else()
         add_subdirectory_exclude_platforms(tls_client)
