@@ -48,7 +48,7 @@
 static async_context_freertos_t async_context_instance;
 
 // Create an async context
-static async_context_t *example_async_context(void) {
+static async_context_t *create_async_context(void) {
     async_context_freertos_config_t config = async_context_freertos_default_config();
     config.task_priority = WORKER_TASK_PRIORITY; // defaults to ASYNC_CONTEXT_DEFAULT_FREERTOS_TASK_PRIORITY
     config.task_stack_size = WORKER_TASK_STACK_SIZE; // defaults to ASYNC_CONTEXT_DEFAULT_FREERTOS_TASK_STACK_SIZE
@@ -63,7 +63,7 @@ static async_context_t *example_async_context(void) {
 
 #if USE_LED
 // Turn led on or off
-static void pico_set_led(bool led_on) {
+static void set_led(bool led_on) {
 #if defined PICO_DEFAULT_LED_PIN
     gpio_put(PICO_DEFAULT_LED_PIN, led_on);
 #elif defined(CYW43_WL_GPIO_LED_PIN)
@@ -72,20 +72,20 @@ static void pico_set_led(bool led_on) {
 }
 
 // Initialise led
-static void pico_init_led(void) {
+static void init_led(void) {
 #if defined PICO_DEFAULT_LED_PIN
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 #elif defined(CYW43_WL_GPIO_LED_PIN)
     hard_assert(cyw43_arch_init() == PICO_OK);
-    pico_set_led(false); // make sure cyw43 is started
+    set_led(false); // make sure cyw43 is started
 #endif
 }
 
 void blink_task(__unused void *params) {
     bool on = false;
     printf("blink_task starts\n");
-    pico_init_led();
+    init_led();
     while (true) {
 #if configNUMBER_OF_CORES > 1
         static int last_core_id = -1;
@@ -94,7 +94,7 @@ void blink_task(__unused void *params) {
             printf("blink task is on core %d\n", last_core_id);
         }
 #endif
-        pico_set_led(on);
+        set_led(on);
         on = !on;
 
 #if LED_BUSY_WAIT
@@ -126,7 +126,7 @@ static void do_work(async_context_t *context, async_at_time_worker_t *worker) {
 async_at_time_worker_t worker_timeout = { .do_work = do_work };
 
 void main_task(__unused void *params) {
-    async_context_t *context = example_async_context();
+    async_context_t *context = create_async_context();
     // start the worker running
     async_context_add_at_time_worker_in_ms(context, &worker_timeout, 0);
 #if USE_LED
