@@ -29,7 +29,7 @@ target_link_libraries(uart_binary pico_stdlib)
 pico_set_binary_type(uart_binary no_flash)
 
 # package uf2 in flash
-pico_package_uf2_output(uart_binary 0x10000000)
+pico_package_uf2_output(uart_binary)
 
 # create map/bin/hex/uf2 file etc.
 pico_add_extra_outputs(uart_binary)

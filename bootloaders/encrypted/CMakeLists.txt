@@ -50,7 +50,7 @@ pico_embed_pt_in_binary(enc_bootloader ${CMAKE_CURRENT_LIST_DIR}/enc-pt.json)
 
 # create absolute uf2, and package in flash
 pico_set_uf2_family(enc_bootloader "absolute")
-pico_package_uf2_output(enc_bootloader 0x10000000)
+pico_package_uf2_output(enc_bootloader)
 
 # optionally enable USB output in addition to UART
 # pico_enable_stdio_usb(enc_bootloader 1)
@@ -86,7 +86,7 @@ pico_hash_binary(hello_serial_enc)
 pico_encrypt_binary(hello_serial_enc ${CMAKE_CURRENT_LIST_DIR}/privateaes.bin ${CMAKE_CURRENT_LIST_DIR}/ivsalt.bin)
 
 # package uf2 in flash
-pico_package_uf2_output(hello_serial_enc 0x10000000)
+pico_package_uf2_output(hello_serial_enc)
 
 # optionally enable USB output in addition to UART
 # pico_enable_stdio_usb(hello_serial_enc 1)

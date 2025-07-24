@@ -38,7 +38,7 @@ pico_encrypt_binary(hello_encrypted
     EMBED)
 
 # package uf2 in flash
-pico_package_uf2_output(hello_encrypted 0x10000000)
+pico_package_uf2_output(hello_encrypted)
 
 # create map/bin/hex/uf2 file etc.
 pico_add_extra_outputs(hello_encrypted)
@@ -86,7 +86,7 @@ pico_encrypt_binary(hello_encrypted_mbedtls
     OTP_KEY_PAGE 29)
 
 # package uf2 in flash
-pico_package_uf2_output(hello_encrypted_mbedtls 0x10000000)
+pico_package_uf2_output(hello_encrypted_mbedtls)
 
 # create map/bin/hex/uf2 file etc.
 pico_add_extra_outputs(hello_encrypted_mbedtls)
