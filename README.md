@@ -113,6 +113,7 @@ App|Description
 [xip_stream](flash/xip_stream) | Stream data using the XIP stream hardware, which allows data to be DMA'd in the background whilst executing code from flash.
 [ssi_dma](flash/ssi_dma) | DMA directly from the flash interface (continuous SCK clocking) for maximum bulk read performance.
 [runtime_flash_permissions](flash/runtime_flash_permissions) | Demonstrates adding partitions at runtime to change the flash permissions
+[partition_info](flash/partition_info) | Extract and enumerate partition information (address ranges, permissions, IDs, and names) from the partition table.
 
 ### FreeRTOS
 

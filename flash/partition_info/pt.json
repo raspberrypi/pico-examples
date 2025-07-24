@@ -1,0 +1,47 @@
+{
+  "version": [1, 0],
+  "unpartitioned": {
+    "families": ["absolute"],
+    "permissions": {
+      "secure": "rw",
+      "nonsecure": "rw",
+      "bootloader": "rw"
+    }
+  },
+  "partitions": [
+    {
+      "name": "Firmware",
+      "id": 1,
+      "start": 0,
+      "size": "512K",
+      "families": ["rp2350-arm-ns", "rp2350-arm-s", "rp2350-riscv", "0x12345678"],
+      "permissions": {
+        "secure": "rw",
+        "nonsecure": "rw",
+        "bootloader": "rw"
+      }
+    },
+    {
+      "name": "Data",
+      "id": 2,
+      "size": "512K",
+      "families": ["data"],
+      "permissions": {
+        "secure": "rw",
+        "nonsecure": "rw",
+        "bootloader": "rw"
+      }
+    },
+    {
+      "name": "Read only Data",
+      "id": 3,
+      "size": "512K",
+      "families": ["data"],
+      "permissions": {
+        "secure": "r",
+        "nonsecure": "r",
+        "bootloader": "r"
+      }
+    }
+  ]
+}
