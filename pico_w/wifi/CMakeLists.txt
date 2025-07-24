@@ -24,6 +24,7 @@ else()
         message("Skipping tls_client and ota_update examples as Mbed TLS is not available")
     else()
         add_subdirectory_exclude_platforms(tls_client)
+        # note ota_update doesn't use Mbed TLS, but it requires picotool with Mbed TLS, so the above check is a good proxy
         add_subdirectory_exclude_platforms(ota_update rp2040)
     endif()
 endif()
