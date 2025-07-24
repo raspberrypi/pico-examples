@@ -70,8 +70,12 @@
 #define configMESSAGE_BUFFER_LENGTH_TYPE        size_t
 
 /* Memory allocation related definitions. */
+#ifndef configSUPPORT_STATIC_ALLOCATION
 #define configSUPPORT_STATIC_ALLOCATION         0
+#endif
+#ifndef configSUPPORT_DYNAMIC_ALLOCATION
 #define configSUPPORT_DYNAMIC_ALLOCATION        1
+#endif
 #define configTOTAL_HEAP_SIZE                   (128*1024)
 #define configAPPLICATION_ALLOCATED_HEAP        0
 

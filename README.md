@@ -120,7 +120,9 @@ These examples require you to set the `FREERTOS_KERNEL_PATH` to point to the Fre
 
 App|Description
 ---|---
-[hello_freertos](freertos/hello_freertos) | Examples that demonstrate how run FreeRTOS and tasks on 1 or 2 cores.
+[hello_freertos_one_core](freertos/hello_freertos) | Demonstrates how run FreeRTOS and tasks on one core
+[hello_freertos_two_cores](freertos/hello_freertos) | Demonstrates how run FreeRTOS and tasks on two cores.
+[hello_freertos_static_allocation](freertos/hello_freertos) | Demonstrates how run FreeRTOS on two cores with static RAM allocation.
 
 ### GPIO
 

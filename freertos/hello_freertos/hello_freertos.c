@@ -48,10 +48,14 @@
 static async_context_freertos_t async_context_instance;
 
 // Create an async context
-static async_context_t *example_async_context(void) {
+static async_context_t *create_async_context(void) {
     async_context_freertos_config_t config = async_context_freertos_default_config();
     config.task_priority = WORKER_TASK_PRIORITY; // defaults to ASYNC_CONTEXT_DEFAULT_FREERTOS_TASK_PRIORITY
     config.task_stack_size = WORKER_TASK_STACK_SIZE; // defaults to ASYNC_CONTEXT_DEFAULT_FREERTOS_TASK_STACK_SIZE
+#if configSUPPORT_STATIC_ALLOCATION
+    static StackType_t async_context_freertos_task_stack[WORKER_TASK_STACK_SIZE];
+    config.task_stack = async_context_freertos_task_stack;
+#endif
     if (!async_context_freertos_init(&async_context_instance, &config))
         return NULL;
     return &async_context_instance.core;
@@ -59,7 +63,7 @@ static async_context_t *example_async_context(void) {
 
 #if USE_LED
 // Turn led on or off
-static void pico_set_led(bool led_on) {
+static void set_led(bool led_on) {
 #if defined PICO_DEFAULT_LED_PIN
     gpio_put(PICO_DEFAULT_LED_PIN, led_on);
 #elif defined(CYW43_WL_GPIO_LED_PIN)
@@ -68,20 +72,20 @@ static void pico_set_led(bool led_on) {
 }
 
 // Initialise led
-static void pico_init_led(void) {
+static void init_led(void) {
 #if defined PICO_DEFAULT_LED_PIN
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 #elif defined(CYW43_WL_GPIO_LED_PIN)
     hard_assert(cyw43_arch_init() == PICO_OK);
-    pico_set_led(false); // make sure cyw43 is started
+    set_led(false); // make sure cyw43 is started
 #endif
 }
 
 void blink_task(__unused void *params) {
     bool on = false;
     printf("blink_task starts\n");
-    pico_init_led();
+    init_led();
     while (true) {
 #if configNUMBER_OF_CORES > 1
         static int last_core_id = -1;
@@ -90,7 +94,7 @@ void blink_task(__unused void *params) {
             printf("blink task is on core %d\n", last_core_id);
         }
 #endif
-        pico_set_led(on);
+        set_led(on);
         on = !on;
 
 #if LED_BUSY_WAIT
@@ -122,13 +126,20 @@ static void do_work(async_context_t *context, async_at_time_worker_t *worker) {
 async_at_time_worker_t worker_timeout = { .do_work = do_work };
 
 void main_task(__unused void *params) {
-    async_context_t *context = example_async_context();
+    async_context_t *context = create_async_context();
     // start the worker running
     async_context_add_at_time_worker_in_ms(context, &worker_timeout, 0);
 #if USE_LED
     // start the led blinking
+#if configSUPPORT_STATIC_ALLOCATION
+    static StackType_t blink_stack[BLINK_TASK_STACK_SIZE];
+    static StaticTask_t blink_buf;
+    xTaskCreateStatic(blink_task, "BlinkThread", BLINK_TASK_STACK_SIZE, NULL, BLINK_TASK_PRIORITY, blink_stack, &blink_buf);
+#else
+    static_assert(configSUPPORT_DYNAMIC_ALLOCATION, "");
     xTaskCreate(blink_task, "BlinkThread", BLINK_TASK_STACK_SIZE, NULL, BLINK_TASK_PRIORITY, NULL);
-#endif
+#endif // configSUPPORT_STATIC_ALLOCATION
+#endif // USE_LED
     int count = 0;
     while(true) {
 #if configNUMBER_OF_CORES > 1
@@ -146,11 +157,19 @@ void main_task(__unused void *params) {
 
 void vLaunch( void) {
     TaskHandle_t task;
+#if configSUPPORT_STATIC_ALLOCATION
+    static StackType_t main_stack[MAIN_TASK_STACK_SIZE];
+    static StaticTask_t main_buf;
+    task = xTaskCreateStatic(main_task, "MainThread", MAIN_TASK_STACK_SIZE, NULL, MAIN_TASK_PRIORITY, main_stack, &main_buf);
+#else
+    static_assert(configSUPPORT_DYNAMIC_ALLOCATION, "");
     xTaskCreate(main_task, "MainThread", MAIN_TASK_STACK_SIZE, NULL, MAIN_TASK_PRIORITY, &task);
-
+#endif // configSUPPORT_STATIC_ALLOCATION
 #if configUSE_CORE_AFFINITY && configNUMBER_OF_CORES > 1
     // we must bind the main task to one core (well at least while the init is called)
     vTaskCoreAffinitySet(task, 1);
+#else
+    (void)task;
 #endif
 
     /* Start the tasks and timer running. */
