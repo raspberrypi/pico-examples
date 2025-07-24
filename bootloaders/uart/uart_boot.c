@@ -63,8 +63,8 @@ void uart_boot() {
     uint32_t* buffer = malloc(buf_words * 4);
 
     int ret = rom_get_partition_table_info(buffer, buf_words, PT_INFO_PARTITION_LOCATION_AND_FLAGS | PT_INFO_SINGLE_PARTITION | (0 << 24));
-    assert(buffer[0] == (PT_INFO_PARTITION_LOCATION_AND_FLAGS | PT_INFO_SINGLE_PARTITION));
-    assert(ret == 3);
+    hard_assert(buffer[0] == (PT_INFO_PARTITION_LOCATION_AND_FLAGS | PT_INFO_SINGLE_PARTITION));
+    hard_assert(ret == 3);
 
     uint32_t location_and_permissions = buffer[1];
     uint32_t start_addr = XIP_BASE + ((location_and_permissions & PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_BITS) >> PICOBIN_PARTITION_LOCATION_FIRST_SECTOR_LSB) * FLASH_SECTOR_SIZE;
