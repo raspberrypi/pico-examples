@@ -322,7 +322,7 @@ App|Description
 [pio_squarewave](pio/squarewave) | Drive a fast square wave onto a GPIO. This example accesses low-level PIO registers directly, instead of using the SDK functions.
 [pio_squarewave_div_sync](pio/squarewave) | Generates a square wave on three GPIOs and synchronises the divider on all the state machines
 [pio_st7789_lcd](pio/st7789_lcd) | Set up PIO for 62.5 Mbps serial output, and use this to display a spinning image on a ST7789 serial LCD.
-[uart_pio_dma](pio/uart_pio_dma) | Send and receive data from a UART implemented using the PIO and DMA
+[pio_uart_dma](pio/uart_dma) | Send and receive data from a UART implemented using the PIO and DMA
 [pio_uart_rx](pio/uart_rx) | Implement the receive component of a UART serial port. Attach it to the spare Arm UART to see it receive characters.
 [pio_uart_rx_intr](pio/uart_rx) | Implement the receive component of a UART serial port with an interrupt for received characters. Attach it to the spare Arm UART to see it receive characters.
 [pio_uart_tx](pio/uart_tx) | Implement the transmit component of a UART serial port, and print hello world.
