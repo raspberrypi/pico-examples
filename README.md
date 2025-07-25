@@ -367,6 +367,7 @@ App|Description
 [spi_master_slave](spi/spi_master_slave) | Demonstrate SPI communication as master and slave.
 [max7219_8x7seg_spi](spi/max7219_8x7seg_spi) | Attaching a Max7219 driving an 8 digit 7 segment display via SPI
 [max7219_32x8_spi](spi/max7219_32x8_spi) | Attaching a Max7219 driving an 32x8 LED display via SPI
+[st7789_display_spi](spi/st7789_display_spi) | Driving an ST7789 based display via SPI, minimal driver
 
 ### System
 
