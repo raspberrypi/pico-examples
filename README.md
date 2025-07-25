@@ -315,8 +315,8 @@ App|Description
 [pio_onewire](pio/onewire)| A library for interfacing to 1-Wire devices, with an example for the DS18B20 temperature sensor.
 [pio_blink](pio/pio_blink) | Set up some PIO state machines to blink LEDs at different frequencies, according to delay counts pushed into their FIFOs.
 [pio_pwm](pio/pwm) | Pulse width modulation on PIO. Use it to gradually fade the brightness of an LED.
-[quadrature_encoder](pio/quadrature_encoder) | A quadrature encoder using PIO to maintain counts independent of the CPU. 
-[quadrature_encoder_substep](pio/quadrature_encoder_substep) | High resolution speed measurement using a standard quadrature encoder
+[pio_quadrature_encoder](pio/quadrature_encoder) | A quadrature encoder using PIO to maintain counts independent of the CPU. 
+[pio_quadrature_encoder_substep](pio/quadrature_encoder_substep) | High resolution speed measurement using a standard quadrature encoder
 [pio_spi_flash](pio/spi) | Use PIO to erase, program and read an external SPI flash chip
 [pio_spi_loopback](pio/spi) | Use PIO to run a loopback test with all four CPHA/CPOL combinations.
 [pio_squarewave](pio/squarewave) | Drive a fast square wave onto a GPIO. This example accesses low-level PIO registers directly, instead of using the SDK functions.
