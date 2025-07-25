@@ -1,5 +1,5 @@
-#ifndef _PICO_BTSTACK_BTSTACK_CONFIG_H
-#define _PICO_BTSTACK_BTSTACK_CONFIG_H
+#ifndef _PICO_BTSTACK_CONFIG_COMMON_H
+#define _PICO_BTSTACK_CONFIG_COMMON_H
 
 #ifndef ENABLE_BLE
 #error Please link to pico_btstack_ble

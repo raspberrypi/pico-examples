@@ -33,8 +33,9 @@ static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 
 extern uint8_t const profile_data[];
+static void poll_temp(void);
 
-void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
+static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
     UNUSED(size);
     UNUSED(channel);
     bd_addr_t local_addr;
@@ -72,7 +73,7 @@ void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint
     }
 }
 
-uint16_t att_read_callback(hci_con_handle_t connection_handle, uint16_t att_handle, uint16_t offset, uint8_t * buffer, uint16_t buffer_size) {
+static uint16_t att_read_callback(hci_con_handle_t connection_handle, uint16_t att_handle, uint16_t offset, uint8_t * buffer, uint16_t buffer_size) {
     UNUSED(connection_handle);
 
     if (att_handle == ATT_CHARACTERISTIC_ORG_BLUETOOTH_CHARACTERISTIC_TEMPERATURE_01_VALUE_HANDLE){
@@ -81,7 +82,7 @@ uint16_t att_read_callback(hci_con_handle_t connection_handle, uint16_t att_hand
     return 0;
 }
 
-int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_handle, uint16_t transaction_mode, uint16_t offset, uint8_t *buffer, uint16_t buffer_size) {
+static int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_handle, uint16_t transaction_mode, uint16_t offset, uint8_t *buffer, uint16_t buffer_size) {
     UNUSED(transaction_mode);
     UNUSED(offset);
     UNUSED(buffer_size);
@@ -95,7 +96,7 @@ int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_handle, 
     return 0;
 }
 
-void poll_temp(void) {
+static void poll_temp(void) {
     adc_select_input(ADC_CHANNEL_TEMPSENSOR);
     uint32_t raw32 = adc_read();
     const uint32_t bits = 12;

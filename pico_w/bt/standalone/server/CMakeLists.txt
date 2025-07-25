@@ -11,7 +11,8 @@ target_link_libraries(picow_ble_temp_sensor
     hardware_adc
     )
 target_include_directories(picow_ble_temp_sensor PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/.. # For btstack config
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/.. # For our common btstack config
     )
 pico_btstack_make_gatt_header(picow_ble_temp_sensor PRIVATE "${CMAKE_CURRENT_LIST_DIR}/temp_sensor.gatt")
 
