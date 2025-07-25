@@ -1,4 +1,4 @@
-add_executable (pio_ir_loopback ir_loopback.c)
+add_executable(pio_ir_loopback ir_loopback.c)
 
 # link the executable using the IR transmit and receive libraries
 #
