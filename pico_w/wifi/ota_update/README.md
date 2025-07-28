@@ -4,19 +4,19 @@ This example demonstrates how to implement an Over-The-Air (OTA) software update
 
 A python script runs on a host machine to _push_ a new (UF2 format) application image to a Pico 2 W running the `ota_update` example application. The incoming application image is received via the LwIP IP stack and programmed into Pico 2 W flash memory.
 
-Two flash partitions ("A"/"B") are used for application images so that the application can be running from one, while the new application image is being written to the other. The RP2350 bootrom provides support for determining the location in flash memory to write the new version of the application.
+Two flash partitions ("A"/"B") are used for application images so that the application can be running from one, while the new application image is being written to the other. The RP2350 bootrom provides support for determining the location in flash memory of the partition to use for the new version of the application.
 
-On successful completion of the flash programming, the Pico 2 W will be rebooted and the updated operating image will be selected and executed by the RP2350 bootrom.  This process can be repeated as required.
+On successful completion of the flash programming, the Pico 2 W is rebooted and the updated applicating image is selected and executed by the RP2350 bootrom. This process can be repeated as required.
 
 ## More detail
 
 The Pico 2 W listens on TCP port 4242.  The host [python_ota_update.py](python_ota_update.py) script transmits the update image in a series of fixed sized chunks.  Each chunk contains an integer number of UF2 image blocks.  If the update image UF2 block count is not an exact sub-multiple of the number of chunks the script will pad the last chunk as required.
 
-On receipt of pushed chunks, the ota_update image will program the UF2 block stream into flash using the APIs provided by the RP2350 bootrom. In addition to programming, each chunk is 'hashed', using SHA256, and the calculated hash transmitted to the host as an acknowledgement of the received chunk. The host script compares the local and remotely computed hashes and if data corruption has occurred the update will halt.
+On receipt of pushed chunks, the ota_update image will program the UF2 block stream into flash. In addition to programming, each chunk is 'hashed', using SHA256, and the calculated hash transmitted to the host as an acknowledgement of the received chunk. The host script compares the local and remotely computed hashes and if data corruption has occurred the update will halt.
 
 The flash must be appropriately partitioned for this example to work. Two partitions are required, one for the currently running software and the other to be updated with incoming data.
 
-Note: This example _also_ demonstrates how the CYW43 Wi-fi firmware can be stored in a separate flash partition(s). This means the Pico 2 W application can be updated separately which reduces the size of the update download.
+Note: This example _also_ demonstrates how the CYW43 Wi-fi firmware can be stored in a separate flash partition(s). This means the Pico 2 W application can be updated separately which reduces the size of the update download, but also requires four partitions.
 
 For more information flash partitioning and boot image selection please see section 5 of [RP2350 datasheet](https://datasheets.raspberrypi.com/rp2350/rp2350-datasheet.pdf)
 
@@ -38,16 +38,16 @@ picotool reboot -u
 ```
 
 > **NOTE**
-> `reboot -u` reboots back to bootsel mode so we can send more commands to the device, and additionally the device needs to have rebooted in order for the partition table to take effect.
+> `reboot -u` reboots the device (as is required to install the partition table) then returns to BOOTSEL mode so we can send more commands to the device.
 
-WIth the partition table loaded, you then need to load the Wi-Fi firmware UF2 (`picow_ota_update_wifi_firmware.uf2`) followed by loading and executing the main program (`picow_ota_update.uf2`) - either by dragging and dropping them in order, or using `picotool`:
+With the partition table loaded, you then need to load the Wi-Fi firmware UF2 (`picow_ota_update_wifi_firmware.uf2`) and load and execute the main program (`picow_ota_update.uf2`) - either by dragging and dropping them in order, or using `picotool`:
 ```
 picotool load picow_ota_update_wifi_firmware.uf2
 picotool load -x picow_ota_update.uf2
 ```
 
 > **NOTE**
-> The first `load` writes the Wifi Firmware into one of the partitions set aside for that. The second `load -x` loads the main application code into one of the main partitions, then resets the chip to start execution (`-x`)
+> The first `load` writes the Wifi Firmware into one of the partitions set aside for that. The second `load -x` loads the main application code into one of the main partitions, then resets the chip to start execution
 
 ## Operation
 
