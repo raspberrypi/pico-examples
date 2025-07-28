@@ -371,6 +371,13 @@ App|Description
 [max7219_8x7seg_spi](spi/max7219_8x7seg_spi) | Attaching a Max7219 driving an 8 digit 7 segment display via SPI.
 [max7219_32x8_spi](spi/max7219_32x8_spi) | Attaching a Max7219 driving an 32x8 LED display via SPI.
 
+### Status Led
+
+App|Description
+---|---
+[status_blink](status_led/status_blink) | Blink the onboard LED using the status LED API.
+[color_blink](status_led/color_blink) | Blink the onboard colored (WS2812) LED using the status LED API if supported by the board.
+
 ### System
 
 App|Description
