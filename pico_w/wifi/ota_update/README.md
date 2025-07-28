@@ -2,7 +2,7 @@
 
 This example demonstrates how to implement an Over The Air (OTA) software update mechanism using facilities provided by the RP2350 bootrom.
 
-A python script runs on a host machine to _push_ a new (UF2 format) operating software image to a Pico 2 W running the `ota_update` example image. The incoming image is received via the LwIP IP stack and programmed into Pico 2 W flash memory.
+A python script runs on a host machine to _push_ a new (UF2 format) software image to a Pico 2 W running the `ota_update` example image. The incoming image is received via the LwIP IP stack and programmed into Pico 2 W flash memory.
 
 On successful completion of the flash programming, the Pico 2 W will be rebooted and the updated operating image will be selected and executed by the RP2350 bootrom.  This process can be repeated as required.
 
@@ -40,9 +40,9 @@ picotool reboot -u
 > **NOTE**
 > `reboot -u` reboots back to bootsel mode so we can send more commands to the device
 
-Once the partition table is loaded, you then need to load the Wi-Fi firmware UF2 (`picow_ota_update_firmware.uf2`) followed by loading and executing the main program (`picow_ota_update.uf2`) - either by dragging and dropping them in order, or using `picotool`:
+Once the partition table is loaded, you then need to load the Wi-Fi firmware UF2 (`picow_ota_update_wifi_firmware.uf2`) followed by loading and executing the main program (`picow_ota_update.uf2`) - either by dragging and dropping them in order, or using `picotool`:
 ```
-picotool load picow_ota_update_firmware.uf2
+picotool load picow_ota_update_wifi_firmware.uf2
 picotool load -x picow_ota_update.uf2
 ```
 
