@@ -58,7 +58,7 @@ Boot partition was 0
 Starting server at 192.168.0.103 on port 4242
 ```
 
-Once running, you can use [python_ota_update.py](python_ota_update.py) to upload new UF2s from the host to the Pico 2 W using it's IP address.  For example:
+Once running, you can use [python_ota_update.py](python_ota_update.py) to upload new UF2s from the host to the Pico 2 W using its IP address.  For example:
 ```
 python ./python_ota_update.py 192.168.0.103 picow_ota_update.uf2
 ```
