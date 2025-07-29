@@ -25,8 +25,8 @@ typedef struct NTP_T_ {
 #define NTP_MSG_LEN 48
 #define NTP_PORT 123
 #define NTP_DELTA 2208988800 // seconds between 1 Jan 1900 and 1 Jan 1970
-#define NTP_TEST_TIME_MS (30 * 1000)
-#define NTP_RESEND_TIME_MS (10 * 1000)
+#define NTP_REQUEST_TIME_MS (30 * 1000)
+#define NTP_FAILED_HANDLER_TIME_MS (10 * 1000)
 
 // Called with results of operation
 static void ntp_result(NTP_T* state, int status, time_t *result) {
@@ -36,8 +36,8 @@ static void ntp_result(NTP_T* state, int status, time_t *result) {
                utc->tm_hour, utc->tm_min, utc->tm_sec);
     }
     async_context_remove_at_time_worker(cyw43_arch_async_context(), &state->resend_worker);
-    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(),  &state->request_worker, NTP_TEST_TIME_MS)); // repeat the request in future
-    printf("Next request in %ds\n", NTP_TEST_TIME_MS / 1000);
+    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(),  &state->request_worker, NTP_REQUEST_TIME_MS)); // repeat the request in future
+    printf("Next request in %ds\n", NTP_REQUEST_TIME_MS / 1000);
 }
 
 // Make an NTP request
@@ -94,7 +94,7 @@ static void ntp_recv(void *arg, struct udp_pcb *pcb, struct pbuf *p, const ip_ad
 // Called to make a NTP request
 static void request_worker_fn(__unused async_context_t *context, async_at_time_worker_t *worker) {
     NTP_T* state = (NTP_T*)worker->user_data;
-    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &state->resend_worker, NTP_RESEND_TIME_MS)); // in case UDP request is lost
+    hard_assert(async_context_add_at_time_worker_in_ms(cyw43_arch_async_context(), &state->resend_worker, NTP_FAILED_HANDLER_TIME_MS)); // in case UDP request is lost
     int err = dns_gethostbyname(NTP_SERVER, &state->ntp_server_address, ntp_dns_found, state);
     if (err == ERR_OK) {
         ntp_request(state); // Cached DNS result, make NTP request
