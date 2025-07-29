@@ -170,6 +170,196 @@ jobs:
       shell: bash
       run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-12.2.rel1-x86_64-arm-none-eabi -DPICO_BOARD=pico_w; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
 
+    - name: GCC 12.3.1 Debug Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 12.3.1 Debug RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 12.3.1 Release Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 12.3.1 Release RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-12.3.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 13.2.1 Debug Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 13.2.1 Debug RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 13.2.1 Release Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 13.2.1 Release RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-13.2.Rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 13.3.1 Debug Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 13.3.1 Debug RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 13.3.1 Release Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 13.3.1 Release RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 14.0.0 Debug Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-14.0.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 14.0.0 Debug RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-14.0.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 14.0.0 Release Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-14.0.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 14.0.0 Release RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-14.0.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: RISCV GCC 14.1.0 Debug RP2350 RISCV
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350-riscv -DPICO_TOOLCHAIN_PATH=/opt/riscv/riscv32-unknown-elf-gcc-14.1.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: RISCV GCC 14.1.0 Release RP2350 RISCV
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350-riscv -DPICO_TOOLCHAIN_PATH=/opt/riscv/riscv32-unknown-elf-gcc-14.1.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 14.2.1 Debug Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 14.2.1 Debug RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 14.2.1 Release Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: GCC 14.2.1 Release RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350 -DPICO_TOOLCHAIN_PATH=/opt/arm/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 15.0.2 Debug Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-15.0.2; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 15.0.2 Debug RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-15.0.2; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 15.0.2 Release Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-15.0.2; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 15.0.2 Release RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-15.0.2; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 16.0.0 Debug Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-16.0.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 16.0.0 Debug RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-16.0.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 16.0.0 Release Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-16.0.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 16.0.0 Release RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-16.0.0; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 17.0.1 Debug Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-17.0.1; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 17.0.1 Debug RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-17.0.1; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 17.0.1 Release Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-17.0.1; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 17.0.1 Release RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVMEmbeddedToolchainForArm-17.0.1; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 18.1.3 Debug Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVM-ET-Arm-18.1.3-Linux-x86_64; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 18.1.3 Debug RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Debug -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVM-ET-Arm-18.1.3-Linux-x86_64; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 18.1.3 Release Pico W
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_BOARD=pico_w -DPICO_PLATFORM=rp2040 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVM-ET-Arm-18.1.3-Linux-x86_64; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
+    - name: LLVM 18.1.3 Release RP2350
+      if: ${{ !cancelled() }}
+      shell: bash
+      run: cd ${{github.workspace}}/pico-examples; mkdir -p build; rm -rf build/*; cd build; PICO_SDK_PATH=../../pico-sdk cmake ../ -DCMAKE_BUILD_TYPE=Release -DPICO_PLATFORM=rp2350 -DPICO_COMPILER=pico_arm_clang -DPICO_TOOLCHAIN_PATH=/opt/arm/LLVM-ET-Arm-18.1.3-Linux-x86_64; make --output-sync=target --no-builtin-rules --no-builtin-variables -j$(nproc)
+
     - name: Native Debug
       if: always()
       shell: bash
