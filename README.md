@@ -403,6 +403,7 @@ App|Description
 [hello_uart](uart/hello_uart) | Print some text from one of the UART serial ports, without going through `stdio`.
 [lcd_uart](uart/lcd_uart) | Display text and symbols on a 16x02 RGB LCD display via UART.
 [uart_advanced](uart/uart_advanced) | Use some other UART features like RX interrupts, hardware control flow, and data formats other than 8n1.
+[gps_uart](uart/gps_uart) | Interpret standard NMEA data received from a GPS device connected to a UART.
 
 ### Universal
 
