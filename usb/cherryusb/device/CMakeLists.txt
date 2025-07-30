@@ -1,0 +1,1 @@
+add_subdirectory(dev_cdc_msc_hid)

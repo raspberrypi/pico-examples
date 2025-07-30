@@ -1,4 +1,4 @@
-if (TARGET tinyusb_device)
+if ((TARGET tinyusb_device) OR (TARGET cherryusb_device))
     add_executable(hello_usb
             hello_usb.c
             )
@@ -16,5 +16,5 @@ if (TARGET tinyusb_device)
     # add url via pico_set_program_url
     example_auto_set_url(hello_usb)
 elseif(PICO_ON_DEVICE)
-    message("Skipping hello_usb because TinyUSB submodule is not initialized in the SDK")
+    message("Skipping hello_usb because TinyUSB or CherryUSB submodule is not initialized in the SDK")
 endif()
