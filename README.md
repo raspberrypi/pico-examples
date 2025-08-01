@@ -329,6 +329,7 @@ App|Description
 [pio_ws2812](pio/ws2812) | Example of driving a string of WS2812 addressable RGB LEDs.
 [pio_ws2812_parallel](pio/ws2812) | Examples of driving multiple strings of WS2812 addressable RGB LEDs efficiently.
 [pio_addition](pio/addition) | Add two integers together using PIO. Only around 8 billion times slower than Cortex-M0+.
+[pio_rs422_tx](pio/rs422_tx) | Modifies the pio_uart_tx sample to send "Hello, world!" with RS-422 transmit functionality without an external IC.
 
 ### PWM
 
