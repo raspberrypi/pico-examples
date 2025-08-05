@@ -48,10 +48,8 @@ static inline void rs422_tx_program_init(PIO pio, uint sm, uint offset, uint pin
     // OUT shifts to right, no autopull
     sm_config_set_out_shift(&c, true, false, 32);
 
-    // We are mapping both OUT and side-set to the same pin, because sometimes
-    // we need to assert user data onto the pin (with OUT) and sometimes
-    // assert constant values (start/stop bit)
-    sm_config_set_out_pins(&c, pin_tx, 2);
+    // We use side-set to control the RS422 differential pins
+    // Data bits are determined by conditional jumps based on OUT to Y register
     sm_config_set_sideset_pins(&c, pin_tx);
 
     // We only need TX, so get an 8-deep FIFO!

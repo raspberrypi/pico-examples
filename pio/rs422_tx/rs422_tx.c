@@ -19,7 +19,13 @@
 #error "PIO_TXM_PIN must be the next pin after PIO_TXP_PIN."
 #endif
 #if (PIO_TXM_PIN) >= NUM_BANK0_GPIOS
-#error "Attempting to use a pin>=32 on a platform that does not support it"
+#error "Pin number exceeds available GPIOs (30 on RP2040/RP2350A, 48 on RP2350B)"
+#endif
+#if NUM_BANK0_GPIOS > 30
+// On RP2350B, ensure both pins are in the same PIO range
+#if !((PIO_TXP_PIN >= 0 && PIO_TXM_PIN < 32) || (PIO_TXP_PIN >= 16 && PIO_TXM_PIN < 48))
+#error "On RP2350B, both pins must be in the same PIO range: [0-31] or [16-47]"
+#endif
 #endif
 
 int main() {
