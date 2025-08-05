@@ -24,10 +24,10 @@ bitloop:                   ; This loop will run 8 times (8n1)
     out y, 1               ; Shift 1 bit from OSR to the Y register
     jmp !y put0
 put1:
-    jmp next    side 0b01 [3]
+    jmp cont    side 0b01 [3]
 put0:
     nop         side 0b10 [3]
-next:
+cont:
     nop
     jmp x-- bitloop
 
