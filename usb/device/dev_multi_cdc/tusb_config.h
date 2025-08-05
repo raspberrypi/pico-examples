@@ -31,6 +31,11 @@
 #define CFG_TUD_CDC_TX_BUFSIZE  (64)
 #define CFG_TUD_CDC_EP_BUFSIZE  (64)
 
+// Vendor driver used for Microsoft OS 2.0 descriptor
+#define CFG_TUD_VENDOR            (1)
+#define CFG_TUD_VENDOR_RX_BUFSIZE  (256)
+#define CFG_TUD_VENDOR_TX_BUFSIZE  (256)
+
 #ifndef CFG_TUD_ENDPOINT0_SIZE
 #define CFG_TUD_ENDPOINT0_SIZE  (64)
 #endif
