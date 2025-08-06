@@ -15,7 +15,7 @@
 #define CDC_EXAMPLE_VID     0xCafe
 // use _PID_MAP to generate unique PID for each interface
 #define CDC_EXAMPLE_PID     (0x4000 | _PID_MAP(CDC, 0))
-// set USB 2.0
+// set to 2.10 so the MS_OS_20_DESCRIPTOR works
 #define CDC_EXAMPLE_BCD     0x0210
 
 // String descriptors referenced with .i... in the descriptor tables
