@@ -13,7 +13,7 @@ target_link_libraries(picow_ble_temp_reader
     )
 target_include_directories(picow_ble_temp_reader PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/.. # For our common btstack config
+    ${CMAKE_CURRENT_LIST_DIR}/../.. # For our common btstack config
     )
 target_compile_definitions(picow_ble_temp_reader PRIVATE
     RUNNING_AS_CLIENT=1
