@@ -11,9 +11,12 @@ target_sources(dev_multi_cdc PUBLIC
 target_include_directories(dev_multi_cdc PUBLIC
         ${CMAKE_CURRENT_LIST_DIR})
 
+# Enable the reset interface
 target_compile_definitions(dev_multi_cdc PUBLIC
         PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=1
+        # use SDK MS_OS_20 descriptor, as this doesn't have a custom one
         PICO_STDIO_USB_RESET_INTERFACE_SUPPORT_MS_OS_20_DESCRIPTOR=1
+        # pass the interface number to the SDK MS_OS_20 descriptor
         PICO_STDIO_USB_RESET_INTERFACE_MS_OS_20_DESCRIPTOR_ITF=4
         )
 

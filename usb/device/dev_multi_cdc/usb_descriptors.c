@@ -7,7 +7,7 @@
 #include <tusb.h>
 #include <bsp/board_api.h>
 
-#include "pico/usb_reset_interface.h"
+#include "pico/usb_reset_interface_device.h"
 
 // set some example Vendor and Product ID
 // the board will use to identify at the host
