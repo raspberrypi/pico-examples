@@ -9,8 +9,14 @@
 #include <tusb.h>
 
 #include <pico/stdio.h>
+#include <pico/stdlib.h>
 
 void custom_cdc_task(void);
+
+bool tud_task_callback(__unused struct repeating_timer *t) {
+    tud_task();
+    return true;
+}
 
 int main(void)
 {
@@ -26,14 +32,17 @@ int main(void)
     // let pico sdk use the first cdc interface for std io
     stdio_init_all();
 
+    // TinyUSB device task must be called regularly, so we use a repeating timer
+    struct repeating_timer timer;
+    add_repeating_timer_ms(1, tud_task_callback, NULL, &timer);
+
     // main run loop
     while (1) {
-        // TinyUSB device task | must be called regurlarly
-        tud_task();
-        
-        // custom tasks
+        // custom tasks can run in the main loop without blocking the TinyUSB task
         custom_cdc_task();
     }
+
+    cancel_repeating_timer(&timer);
 
     // indicate no error
     return 0;

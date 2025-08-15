@@ -7,14 +7,40 @@
 #include <tusb.h>
 #include <bsp/board_api.h>
 
+#include "pico/usb_reset_interface_device.h"
+
 // set some example Vendor and Product ID
 // the board will use to identify at the host
 #define _PID_MAP(itf, n)  ( (CFG_TUD_##itf) << (n) )
 #define CDC_EXAMPLE_VID     0xCafe
 // use _PID_MAP to generate unique PID for each interface
-#define CDC_EXAMPLE_PID     (0x4000 | _PID_MAP(CDC, 0))
-// set USB 2.0
-#define CDC_EXAMPLE_BCD     0x0200
+#define CDC_EXAMPLE_PID     (0x4100 | _PID_MAP(CDC, 0))
+// set to 2.10 so the MS_OS_20_DESCRIPTOR works
+#define CDC_EXAMPLE_BCD     0x0210
+
+// String descriptors referenced with .i... in the descriptor tables
+
+enum {
+    STRID_LANGID = 0,   // 0: supported language ID
+    STRID_MANUFACTURER, // 1: Manufacturer
+    STRID_PRODUCT,      // 2: Product
+    STRID_SERIAL,       // 3: Serials
+    STRID_CDC_0,        // 4: CDC Interface 0
+    STRID_CDC_1,        // 5: CDC Interface 1
+    STRID_RPI_RESET,    // 6: Reset Interface
+};
+
+// array of pointer to string descriptors
+char const *string_desc_arr[] = {
+    // switched because board is little endian
+    (const char[]) { 0x09, 0x04 },  // 0: supported language is English (0x0409)
+    "Raspberry Pi",                 // 1: Manufacturer
+    "Pico (2)",                     // 2: Product
+    NULL,                           // 3: Serials (null so it uses unique ID if available)
+    "Pico SDK stdio",               // 4: CDC Interface 0
+    "Custom CDC",                   // 5: CDC Interface 1,
+    "Reset"                         // 6: Reset Interface
+};
 
 // defines a descriptor that will be communicated to the host
 tusb_desc_device_t const desc_device = {
@@ -32,9 +58,9 @@ tusb_desc_device_t const desc_device = {
     .idProduct = CDC_EXAMPLE_PID,
     .bcdDevice = 0x0100, // Device release number
 
-    .iManufacturer = 0x01, // Index of manufacturer string
-    .iProduct = 0x02, // Index of product string
-    .iSerialNumber = 0x03, // Index of serial number string
+    .iManufacturer = STRID_MANUFACTURER, // Index of manufacturer string
+    .iProduct = STRID_PRODUCT, // Index of product string
+    .iSerialNumber = STRID_SERIAL, // Index of serial number string
 
     .bNumConfigurations = 0x01 // 1 configuration
 };
@@ -47,11 +73,14 @@ enum {
     ITF_NUM_CDC_0_DATA,
     ITF_NUM_CDC_1,
     ITF_NUM_CDC_1_DATA,
+    ITF_NUM_RPI_RESET,
     ITF_NUM_TOTAL
 };
 
+static_assert(ITF_NUM_RPI_RESET == PICO_STDIO_USB_RESET_INTERFACE_MS_OS_20_DESCRIPTOR_ITF, "ITF_NUM_RPI_RESET must be equal to the PICO_STDIO_USB_RESET_INTERFACE_MS_OS_20_DESCRIPTOR_ITF set in CMakeLists.txt");
+
 // total length of configuration descriptor
-#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
+#define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
 
 // define endpoint numbers
 #define EPNUM_CDC_0_NOTIF   0x81 // notification endpoint for CDC 0
@@ -68,14 +97,17 @@ uint8_t const desc_configuration[] = {
     TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x80, 100),
 
     // CDC 0: Communication Interface - TODO: get 64 from tusb_config.h
-    TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_0, 4, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
+    TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_0, STRID_CDC_0, EPNUM_CDC_0_NOTIF, 8, EPNUM_CDC_0_OUT, EPNUM_CDC_0_IN, 64),
     // CDC 0: Data Interface
     //TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_0_DATA, 4, 0x01, 0x02),
 
     // CDC 1: Communication Interface - TODO: get 64 from tusb_config.h
-    TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_1, 4, EPNUM_CDC_1_NOTIF, 8, EPNUM_CDC_1_OUT, EPNUM_CDC_1_IN, 64),
+    TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_1, STRID_CDC_1, EPNUM_CDC_1_NOTIF, 8, EPNUM_CDC_1_OUT, EPNUM_CDC_1_IN, 64),
     // CDC 1: Data Interface
     //TUD_CDC_DESCRIPTOR(ITF_NUM_CDC_1_DATA, 4, 0x03, 0x04),
+
+    // RPi Reset Interface
+    TUD_RPI_RESET_DESCRIPTOR(ITF_NUM_RPI_RESET, STRID_RPI_RESET),
 };
 
 // called when host requests to get configuration descriptor
@@ -98,29 +130,6 @@ tusb_desc_device_qualifier_t const desc_device_qualifier = {
 
 // called when host requests to get device qualifier descriptor
 uint8_t const* tud_descriptor_device_qualifier_cb(void);
-
-// String descriptors referenced with .i... in the descriptor tables
-
-enum {
-    STRID_LANGID = 0,   // 0: supported language ID
-    STRID_MANUFACTURER, // 1: Manufacturer
-    STRID_PRODUCT,      // 2: Product
-    STRID_SERIAL,       // 3: Serials
-    STRID_CDC_0,        // 4: CDC Interface 0
-    STRID_CDC_1,        // 5: CDC Interface 1
-};
-
-// array of pointer to string descriptors
-char const *string_desc_arr[] = {
-    // switched because board is little endian
-    (const char[]) { 0x09, 0x04 },  // 0: supported language is English (0x0409)
-    "Raspberry Pi",                 // 1: Manufacturer
-    "Pico (2)",                     // 2: Product
-    NULL,                           // 3: Serials (null so it uses unique ID if available)
-    "Pico SDK stdio"                // 4: CDC Interface 0
-    "Custom CDC",                   // 5: CDC Interface 1,
-    "RPiReset"                      // 6: Reset Interface
-};
 
 // buffer to hold the string descriptor during the request | plus 1 for the null terminator
 static uint16_t _desc_str[32 + 1];
