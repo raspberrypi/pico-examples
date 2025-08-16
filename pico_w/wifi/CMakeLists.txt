@@ -17,6 +17,7 @@ else()
     add_subdirectory_exclude_platforms(tcp_client)
     add_subdirectory_exclude_platforms(tcp_server)
     add_subdirectory_exclude_platforms(udp_beacon)
+    add_subdirectory_exclude_platforms(udp_server)
     add_subdirectory_exclude_platforms(http_client)
     add_subdirectory_exclude_platforms(mqtt)
 
