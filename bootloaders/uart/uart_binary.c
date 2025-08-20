@@ -71,8 +71,8 @@ int main() {
     pico_led_init();
 
     // SD2 is UART0 TX, SD3 is UART0 RX (same as the ROM UART bootloader)
-    qspi_gpio_set_function(QSPI_GPIO_SD2, GPIO_FUNC_UART_AUX);
-    qspi_gpio_set_function(QSPI_GPIO_SD3, GPIO_FUNC_UART_AUX);
+    qspi_gpio_set_function(QSPI_GPIO_SD2, GPIO_FUNC1_UART_AUX);
+    qspi_gpio_set_function(QSPI_GPIO_SD3, GPIO_FUNC1_UART_AUX);
 
     uart_init(uart0, 1000000);
 
