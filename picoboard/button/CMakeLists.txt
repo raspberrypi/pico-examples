@@ -3,7 +3,7 @@ add_executable(picoboard_button
         )
 
 # pull in common dependencies
-target_link_libraries(picoboard_button pico_stdlib)
+target_link_libraries(picoboard_button pico_stdlib pico_status_led)
 
 # create map/bin/hex file etc.
 pico_add_extra_outputs(picoboard_button)
