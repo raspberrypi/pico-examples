@@ -14,7 +14,7 @@
 #endif
 
 // Initialize the GPIO for the LED
-static void pico_led_init(void) {
+void pico_led_init(void) {
 #ifdef PICO_DEFAULT_LED_PIN
     // A device like Pico that uses a GPIO for the LED will define PICO_DEFAULT_LED_PIN
     // so we can use normal GPIO functionality to turn the led on and off
@@ -24,7 +24,7 @@ static void pico_led_init(void) {
 }
 
 // Turn the LED on or off
-static void pico_set_led(bool led_on) {
+void pico_set_led(bool led_on) {
 #if defined(PICO_DEFAULT_LED_PIN)
     // Just set the GPIO on or off
     gpio_put(PICO_DEFAULT_LED_PIN, led_on);
@@ -43,7 +43,7 @@ enum qspi_gpio {
 
 // curiously the IO and PAD register banks for the QSPI GPIOs are not in the same order
 // This look up table will map the PAD offset to the IO offset for the same pin
-static const uint QSPI_GPIO_PAD_TO_IO_OFFSET[] = {
+const uint QSPI_GPIO_PAD_TO_IO_OFFSET[] = {
     0, // SCLK
     2, // SD0
     3, // SD1
@@ -53,7 +53,7 @@ static const uint QSPI_GPIO_PAD_TO_IO_OFFSET[] = {
 };
 
 // Set function for QSPI GPIO pin
-static void qspi_gpio_set_function(enum qspi_gpio gpio, gpio_function_t fn) {
+void qspi_gpio_set_function(enum qspi_gpio gpio, gpio_function_t fn) {
     // Set input enable on, output disable off
     hw_write_masked(&pads_qspi_hw->io[gpio],
                    PADS_QSPI_GPIO_QSPI_SD2_IE_BITS,
