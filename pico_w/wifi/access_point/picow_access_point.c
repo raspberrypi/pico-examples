@@ -33,13 +33,7 @@ static const char *switch_cgi_handler(int iIndex, int iNumParams, char *pcParam[
     printf("LED state: %d\n", led_state);
 
     // Now flip the state
-    if (led_state) {
-        // Turn led off
-        status_led_set_state(0);
-    } else {
-        // Turn led on
-        status_led_set_state(1);
-    }
+    status_led_set_state(!led_state);
 
     // Update led state
     led_state = status_led_get_state();
