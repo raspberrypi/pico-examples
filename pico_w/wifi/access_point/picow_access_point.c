@@ -74,10 +74,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen
             }
             break;
         }
-        default: { // unknown tag
-            printed = 0;
-            break;
-        }
     }
   return (u16_t)printed;
 }
@@ -138,6 +134,8 @@ int main() {
     http_set_cgi_handlers(cgi_handlers, LWIP_ARRAYSIZE(cgi_handlers));
     http_set_ssi_handler(ssi_handler, ssi_tags, LWIP_ARRAYSIZE(ssi_tags));
     cyw43_arch_lwip_end();
+
+    printf("Try connecting to '%s' (press 'd' to disable access point)\n", ap_name);
 
     complete = false;
     while(!complete) {
