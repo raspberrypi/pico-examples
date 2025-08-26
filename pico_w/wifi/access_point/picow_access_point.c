@@ -92,11 +92,16 @@ int main() {
     stdio_init_all();
 
     if (cyw43_arch_init()) {
-        DEBUG_printf("failed to initialise\n");
+        DEBUG_printf("failed to initialise WiFi\n");
         return 1;
     }
 
-    // Initialise led state
+    // Initialise led 
+    if (!status_led_init_with_context(cyw43_arch_async_context())) {
+        DEBUG_printf("failed to initialise LED");
+        return 1;
+    }
+
     led_state = status_led_get_state();
 
     // Get notified if the user presses a key
