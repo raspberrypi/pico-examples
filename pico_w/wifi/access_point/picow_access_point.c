@@ -24,17 +24,21 @@
 static absolute_time_t wifi_connected_time;
 bool led_state;
 bool complete;
-bool desired_state;
 
 static const char *switch_cgi_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
-    printf("Switch cgi handler called\n");
-
     // Get desired LED state from GET request and set LED
-    desired_state = !strcmp("ON", pcValue[0]);
-    status_led_set_state(desired_state);
-
-    // Update led state
-    led_state = status_led_get_state();
+    for (int iParam = 0; iParam < iNumParams; iParam++) {
+        if (strcmp("switch", pcParam[iParam]) == 0) {
+            if (strcmp("ON", pcValue[iParam]) == 0) {
+                status_led_set_state(true);
+                led_state = true;
+            } else if (strcmp("OFF", pcValue[iParam]) == 0) {
+                status_led_set_state(false);
+                led_state = false;
+            }
+            break;
+        }
+    }
 
     return "/index.shtml";
 }
