@@ -96,6 +96,9 @@ int main() {
         return 1;
     }
 
+    // Initialise led state
+    led_state = status_led_get_state();
+
     // Get notified if the user presses a key
     stdio_set_chars_available_callback(key_pressed_func, &complete);
 
