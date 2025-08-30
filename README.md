@@ -195,6 +195,7 @@ These networking examples are only available if Wi-Fi is supported by the board.
 App|Description
 ---|---
 [picow_access_point](pico_w/wifi/access_point) | Starts a WiFi access point, and fields DHCP requests.
+[picow_access_point_wifi_provisioning](pico_w/wifi/access_point_wifi_provisioning) | Starts a WiFi access point, and allows WiFi credentials to be provisioned through a web page.
 [picow_blink](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip).
 [picow_blink_slow_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a slower system clock to show how to reconfigure communication with the WiFi chip at run time under those circumstances.
 [picow_blink_fast_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a faster system clock to show how to reconfigure communication with the WiFi chip at build time under those circumstances.
@@ -296,8 +297,11 @@ Some standalone Bluetooth examples (without all the common example build infrast
 App|Description
 ---|---
 [picow_ble_temp_sensor](pico_w/bt/standalone) | Reads from the on board temperature sensor and sends notifications via BLE.
-[picow_ble_temp_sensor_with_wifi](pico_w/bt/standalone) | Same as above but also connects to Wi-Fi and starts an "iperf" server.
-[picow_ble_temp_reader](pico_w/bt/standalone) | Connects to one of the above "sensors" and reads the temperature.
+[picow_ble_temp_reader](pico_w/bt/standalone) | Connects to the above sensor and reads the temperature.
+[picow_ble_pointer](pico_w/bt/standalone/ble_pointer) | Bluetooth HID mouse using mpu6050 to detect angle and move cursor.
+[picow_ble_doorbell](pico_w/bt/standalone/doorbell) | Detects button press on transmitter Pico and illuminates LED on reciever Pico.
+[picow_ble_secure_temp_sensor](pico_w/bt/standalone/secure_temp_sensor) | Variant of picow_ble_temp_sensor which allows exploration of LE_secure configurations.
+[picow_ble_wifi_provisioner](pico_w/bt/standalone/wifi_provisioner) | Allows WiFi credentials to be provisioned over BLE, either using a mobile app or with the included python script.
 
 ### PIO
 
