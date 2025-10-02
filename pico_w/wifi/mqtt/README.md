@@ -34,8 +34,8 @@ When building the code set the host name of the MQTT server, e.g.
 export MQTT_SERVER=myhost
 cmake ..
 ```
-
-The example should publish its core temperature to the /temperature topic. You can subscribe to this topic from another machine.
+The example checks its core temperature every ten seconds and if it has changed, publishes it to the
+/temperature topic. You can subscribe to this topic from another machine.
 
 ```
 mosquitto_sub -h $MQTT_SERVER -t '/temperature'
@@ -47,6 +47,11 @@ You can turn the led on and off by publishing messages.
 mosquitto_pub -h $MQTT_SERVER -t '/led' -m on
 mosquitto_pub -h $MQTT_SERVER -t '/led' -m off
 ```
+You can check the current the state of the led by subscribing to the /led/state topic on another machine.
+```
+mosquitto_sub -h $MQTT_SERVER -t '/led_state'
+```
+
 
 # Security
 
