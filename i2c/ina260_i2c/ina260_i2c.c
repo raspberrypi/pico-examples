@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "pico/status_led.h"
 
 #define CURRENT_REGISTER 0x01
 #define VOLTAGE_REGISTER 0x02
@@ -24,7 +25,7 @@ static uint16_t read_reg(uint8_t reg) {
 }
 
 int main() {
-    setup_default_uart();
+    stdio_init_all();
     printf("ina260 test\n");
 
     // Initialise i2c
@@ -34,7 +35,9 @@ int main() {
     gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
     gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
 
+    hard_assert(status_led_init());
     while(true) {
+        status_led_set_state(true);
 
         // Read current and convert to mA
         float ma = read_reg(CURRENT_REGISTER) * 1.250f;
@@ -45,7 +48,9 @@ int main() {
         uint16_t mw = read_reg(POWER_REGISTER) * 10;
     
         // Display results
-        printf("current: %.2f mA voltage: %.2f v power: %u mW\n", ma, v, mw);
+        printf("current: %.2f mA voltage: %.2f V power: %u mW\n", ma, v, mw);
+
+        status_led_set_state(false);
         sleep_ms(1000);
     }
     return 0;
