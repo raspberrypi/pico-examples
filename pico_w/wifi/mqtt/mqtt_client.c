@@ -374,7 +374,7 @@ int main(void) {
     // because it's a read-only operation
     while (!state.connect_done || mqtt_client_is_connected(state.mqtt_client_inst)) {
         // As supplied the example configures cyw43_arch for thread_safe_background operation
-        // by linking `ico_cyw43_arch_lwip_threadsafe_background` in CMakeLists.txt, so the 
+        // by linking `pico_cyw43_arch_lwip_threadsafe_background` in CMakeLists.txt, so the 
         // following two lines are unnecessary (but do no harm). However you will need them 
         // if you reconfigure the build to use cyw43_arch in polling mode.
         cyw43_arch_poll();
