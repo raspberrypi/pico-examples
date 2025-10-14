@@ -3,8 +3,20 @@
 #include "7_segment_lib.h"
 
 // segment patterns for digits 0-9
+//
+// By convention the segments are labelled as follows:
+//
+//  AAAA
+// F    B
+// F    B
+//  GGGG
+// E    C
+// E    C
+//  DDDD  .
+//
+// the bit ordering should match the way you connect up the GPIOs. Here it is
+//    EDBGACF.
 static const uint8_t segments[] = {
-//    EDBGACF.      NB: these bit patterns should match the way you connect the GPIOs
     0b11101110,     // 0
     0b00100100,     // 1
     0b11111000,     // 2
