@@ -7,7 +7,18 @@ const PIO pio = pio0;
 const uint first_segment_pin = 8;   // gpio 15-8 = segments E,D,B,G,A,C,F,dp
 const uint first_digit_pin = 16;    // gpio 19-16 = common anodes 4,3,2,1
 
-//                      EDBGACF.       bit ordering depends on your display and wiring
+// By convention the segments are labelled as follows:
+//
+//  AAAA
+// F    B
+// F    B
+//  GGGG
+// E    C
+// E    C
+//  DDDD  .
+
+// You can define a custom bit pattern like this:
+// the order here is    EDBGACF.  but should match the way you wire up the GPIOs
 const uint32_t Pico = 0b10111010 << 24 |    // 'P'
                       0b10000000 << 16 |    // 'i'
                       0b11010000 <<  8 |    // 'c'

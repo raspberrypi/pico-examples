@@ -22,12 +22,17 @@ static const uint8_t segments[] = {
 //
 uint32_t int_to_seven_segment (int num) {
     uint32_t word = 0;
-    if (num == 0) {
-        word = segments[0];
-    } else {
-        for (int bitshift = 0; bitshift < 32 && num > 0; bitshift += 8) {
-            word |= segments[num % 10] << bitshift;
-            num /= 10;
+    if (num > 9999) {
+        // argument exceeds 4 digits: display an 'E' symbol
+        word = 0b11011010
+    } else { 
+        if (num == 0) {
+            word = segments[0];
+        } else {
+            for (int bitshift = 0; bitshift < 32 && num > 0; bitshift += 8) {
+                word |= segments[num % 10] << bitshift;
+                num /= 10;
+            }
         }
     }
     return word;

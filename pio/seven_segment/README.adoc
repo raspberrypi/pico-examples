@@ -7,7 +7,7 @@ The total current required is typically more than the GPIO pins can supply so yo
 
 The PIO code uses four `side-set` pins to control the digit multiplex lines and displays the segment patterns received on the FIFO. It uses a non-blocking PULL to keep showing the same segments until the CPU sends new data.
 
-The provided example uses spells out the word **Pico** and then counts from 0 to 9999.
+The provided example spells out the word **Pico** and then counts from 0 to 9999.
 
 == Wiring information
 Connect the display to your board using a circuit like the one below, making any changes for your display and transistors.
