@@ -30,12 +30,15 @@ static const uint8_t segments[] = {
 };
 
 
-// converts an integer into a 32-bit word representing up to four 7-segment digits
+// Simple example of how to convert a positive integer into a 32-bit word 
+// representing up to four 7-segment digits. Could be extended to handle
+// negative numbers.
 //
 uint32_t int_to_seven_segment (int num) {
     uint32_t word = 0;
-    if (num > 9999) {
-        // argument exceeds 4 digits: display an 'E' symbol
+    if (num > 9999 || num < 0) {
+        // number out of range, display 'E' symbol
+        //       EDBGACF.
         word = 0b11011010
     } else { 
         if (num == 0) {
