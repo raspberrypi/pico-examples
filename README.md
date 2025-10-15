@@ -317,6 +317,7 @@ App|Description
 [pio_pwm](pio/pwm) | Pulse width modulation on PIO. Use it to gradually fade the brightness of an LED.
 [pio_quadrature_encoder](pio/quadrature_encoder) | A quadrature encoder using PIO to maintain counts independent of the CPU. 
 [pio_quadrature_encoder_substep](pio/quadrature_encoder_substep) | High resolution speed measurement using a standard quadrature encoder.
+[pio_seven_segment](pio/seven_segment) | Drive a multiplexed four digit 7-segment LED display using the PIO.
 [pio_spi_flash](pio/spi) | Use PIO to erase, program and read an external SPI flash chip.
 [pio_spi_loopback](pio/spi) | Use PIO to run a loopback test with all four CPHA/CPOL combinations.
 [pio_squarewave](pio/squarewave) | Drive a fast square wave onto a GPIO. This example accesses low-level PIO registers directly, instead of using the SDK functions.
