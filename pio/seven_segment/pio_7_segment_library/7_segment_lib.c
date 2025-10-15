@@ -30,23 +30,33 @@ static const uint8_t segments[] = {
 };
 
 
-// Simple example of how to convert a positive integer into a 32-bit word 
-// representing up to four 7-segment digits. Could be extended to handle
-// negative numbers.
+// Simple example of how to convert an integer between -999 and 9999
+// into a 32-bit word representing up to four 7-segment digits.
+// Credit to @lurch for the code to handle negative numbers.
 //
 uint32_t int_to_seven_segment (int num) {
     uint32_t word = 0;
-    if (num > 9999 || num < 0) {
+    if (num < -999 || num > 9999) {
         // number out of range, display 'E' symbol
         //       EDBGACF.
-        word = 0b11011010
+        word = 0b11011010;
     } else { 
         if (num == 0) {
             word = segments[0];
         } else {
-            for (int bitshift = 0; bitshift < 32 && num > 0; bitshift += 8) {
+            bool negative = num < 0;
+            if (negative) {
+                num *= -1;
+            }
+            int bitshift;
+            for (bitshift = 0; bitshift < 32 && num > 0; bitshift += 8) {
                 word |= segments[num % 10] << bitshift;
                 num /= 10;
+            }
+            if (negative) {
+                // display '-' symbol
+                //        EDBGACF.
+                word |= 0b00010000 << bitshift;
             }
         }
     }
