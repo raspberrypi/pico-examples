@@ -105,11 +105,16 @@ int main() {
             get_time_utc(&ts);
 
             // if you just want a string representation of the current time and you're not interested
-            // in the individual date/time fields, you could simply call ctime(&(ts.tv_sec)) here
-            // (if you have set 'TZ' then the result will be in local time, otherwise UTC)
+            // in the individual date/time fields, then here you can simply call:
+            //      printf("%s", ctime(&(ts.tv_sec)));
+            // The string produced is the same as `asctime()` as used below. Note that if you set
+            // 'TZ' then the output will be in local time, otherwise UTC.
 
-            // unpack the individual date/time fields (if you have set 'TZ' then the values will be
-            // in local time, otherwise UTC)
+            // you can unpack the raw UTC seconds count into individual date/time fields like this.
+            // Again, if you set 'TZ' then the values will be in local time, otherwise UTC. Note
+            // that by default `pico_localtime_r()` just calls `localtime_r()` from the standard 'C' 
+            // library, but the declaration is 'weak' so that a user can override it with their own
+            // implementation if desired.
             pico_localtime_r(&(ts.tv_sec), &tm);
 
             // display individual date/time fields in human readable form
