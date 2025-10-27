@@ -75,7 +75,7 @@ For further details refer to the [SDK documentation](https://www.raspberrypi.com
 
 NTP timestamps always refer to universal coordinated time (UTC) in seconds past the epoch. In contrast users and user applications often require **local time**, which varies from region to region and at different times of the year (daylight-saving time or DST).
 
-Converting from UTC to local time often requires inconventient rules, but fortunately the Pico SDK time-conversion functions like `ctime()` and `pico_localtime_r()` can do it automatically if you define a **POSIX timezone (TZ)**.
+Converting from UTC to local time often requires inconvenient rules, but fortunately the Pico SDK time-conversion functions like `ctime()` and `pico_localtime_r()` can do it automatically if you define a **POSIX timezone (TZ)**.
 
 The example shows a suitable definition for the Europe/London timezone:
 ```
