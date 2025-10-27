@@ -63,12 +63,7 @@ int get_time_utc(struct timespec *ts_ptr) {
 int main() {
     stdio_init_all();
 
-    // Set local timezone for London
-
-    // BST starts at 01:00 on the last Sunday in March and ends at 02:00 on the last Sunday in October
-
-
-    // OPTIONAL: if you define a POSIX TZ here then the example will display local time instead of UTC.
+    // If you (optionally) define a POSIX TZ here then the example will display local time instead of UTC.
     // For the format see https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html
     setenv("TZ", "BST0GMT,M3.5.0/1,M10.5.0/2", 1);  // <-- this is the timezone spec for Europe/London
     // there is no need to call tzset()

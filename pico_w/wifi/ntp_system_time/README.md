@@ -2,13 +2,13 @@
 
 Creates a time of day clock that periodically synchronises itself to Internet time servers using simple NTP (see [RFC 4330](https://datatracker.ietf.org/doc/html/rfc4330)).
 
-The example connects to Wi-Fi and displays the local time in the UK or another timezone that you specify, synchronised once an hour to one of the servers from [ntp.pool.org](https://www.ntppool.org/en/). 
+The example connects to Wi-Fi and displays the local time in the UK or another timezone that you specify, synchronised once an hour to one of the servers from [pool.ntp.org](https://www.ntppool.org/en/). 
 
 Uses the SNTP application provided by lwIP and the Pico 'always-on timer' _(RTC on Pico/rp2040, powman timer on Pico-2/rp2350)_.
 
 # Running the example
 
-First provide the SSID and password of your Wi-Fi network by editing `CmakeLists.txt` or from your environment; then build and run the example as usual.
+Provide the SSID and password of your Wi-Fi network by editing `CmakeLists.txt` or on the command line; then build and run the example as usual.
 
 You should see something like this:
 
@@ -56,7 +56,7 @@ The example uses:
 
 ### lwIP SNTP
 
-The lwIP SNTP app provides a straightworward way to obtain and process timestamps from a pool of NTP servers without the complexity of a full NTP implementation. The lwIP documentation covers the [configuration options](https://www.nongnu.org/lwip/2_0_x/group__sntp.html) but the comments in the [source code](https://github.com/lwip-tcpip/lwip/blob/master/src/apps/sntp/sntp.c) are also very helpful.
+The lwIP SNTP app provides a straightforward way to obtain and process timestamps from a pool of NTP servers without the complexity of a full NTP implementation. The lwIP documentation covers the [configuration options](https://www.nongnu.org/lwip/2_0_x/group__sntp.html) but the comments in the [source code](https://github.com/lwip-tcpip/lwip/blob/master/src/apps/sntp/sntp.c) are also very helpful.
 
 SNTP uses the **macros** `SNTP_GET_SYSTEM_TIME(sec, us)` and `SNTP_SET_SYSTEM_TIME(sec, us)` to call user-provided functions for accessing the system clock. The example defines the macros in `lwipopts.h` and the callbacks themselves are near the top of `ntp_system_time.c`.
 
@@ -75,7 +75,7 @@ For further details refer to the [SDK documentation](https://www.raspberrypi.com
 
 NTP timestamps always refer to universal coordinated time (UTC) in seconds past the epoch. In contrast users and user applications often require **local time**, which varies from region to region and at different times of the year (daylight-saving time or DST).
 
-Converting from UTC to local time often requires inconventient rules, but fortunately however the Pico SDK time-conversion functions like `ctime()` and `pico_localtime_r()` do it automatically if you define a **POSIX timezone (TZ)**.
+Converting from UTC to local time often requires inconventient rules, but fortunately the Pico SDK time-conversion functions like `ctime()` and `pico_localtime_r()` can do it automatically if you define a **POSIX timezone (TZ)**.
 
 The example shows a suitable definition for the Europe/London timezone:
 ```
