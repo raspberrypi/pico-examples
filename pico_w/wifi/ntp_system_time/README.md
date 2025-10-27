@@ -4,11 +4,11 @@ Creates a time of day clock that periodically synchronises itself to Internet ti
 
 The example connects to Wi-Fi and displays the local time in the UK or another timezone that you specify, synchronised once an hour to one of the servers from [pool.ntp.org](https://www.ntppool.org/en/). 
 
-Uses the SNTP application provided by lwIP and the Pico 'always-on timer' _(RTC on Pico/rp2040, powman timer on Pico-2/rp2350)_.
+Uses the SNTP application provided by lwIP and the Pico 'always-on timer' _(RTC on Pico/RP2040, powman timer on Pico-2/RP2350)_.
 
 # Running the example
 
-Provide the SSID and password of your Wi-Fi network by editing `CmakeLists.txt` or on the command line; then build and run the example as usual.
+Provide the SSID and password of your Wi-Fi network by editing `CMakeLists.txt` or on the command line; then build and run the example as usual.
 
 You should see something like this:
 
@@ -67,7 +67,7 @@ If you reconfigure it to use _polling mode_ then your user code should periodica
 
 The SDK provides the high level [pico_aon_timer](https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#group_pico_aon_timer) API to provide the same always-on timer functions on Pico and Pico-2 despite their hardware differences.
 
-On the original Pico (rp2040 device) these functions use the real time clock (RTC) and on the Pico-2 (rp2350 device) the POWMAN timer.
+On the original Pico (RP2040) these functions use the real time clock (RTC) and on the Pico-2 (RP2350) the POWMAN timer.
 
 For further details refer to the [SDK documentation](https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#group_pico_aon_timer).
 

@@ -63,11 +63,6 @@ int get_time_utc(struct timespec *ts_ptr) {
 int main() {
     stdio_init_all();
 
-    // If you (optionally) define a POSIX TZ here then the example will display local time instead of UTC.
-    // For the format see https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html
-    setenv("TZ", "BST0GMT,M3.5.0/1,M10.5.0/2", 1);  // <-- this is the timezone spec for Europe/London
-    // there is no need to call tzset()
-
     // Initialise the Wi-Fi chip
     if (cyw43_arch_init()) {
         printf("Wi-Fi init failed\n");
@@ -96,6 +91,12 @@ int main() {
     struct timespec ts;
     struct tm tm;
 
+    // OPTIONAL: set the 'TZ' env variable to the local POSIX timezone (in this case Europe/London,
+    // to create your own see https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html)
+    setenv("TZ", "BST0GMT,M3.5.0/1,M10.5.0/2", 1);
+    // If you set 'TZ' then functions like ctime(), localtime() and their variants will automatically 
+    // give results converted to the local timezone instead of UTC (see below).
+
     while (true) {
 
         if(aon_timer_is_initialised) {
@@ -103,12 +104,16 @@ int main() {
             // read the current time as UTC seconds and ms since the epoch
             get_time_utc(&ts);
 
-            // if you simply want to display the local time you could now do so with
-            // puts(ctime(&(ts.tv_sec)));
+            // if you just want a string representation of the current time and you're not interested
+            // in the individual date/time fields, you could simply call ctime(&(ts.tv_sec)) here
+            // (if you have set 'TZ' then the result will be in local time, otherwise UTC)
 
-            // to unpack the hours/mins/seconds etc for the local time zone (if defined, see above) 
-            pico_localtime_r(&(ts.tv_sec), &tm);    // convert UTC linear time to broken-down local time
-            printf("%s: %s", tm.tm_isdst ? "BST": "GMT", asctime(&tm)); // display as text  
+            // unpack the individual date/time fields (if you have set 'TZ' then the values will be
+            // in local time, otherwise UTC)
+            pico_localtime_r(&(ts.tv_sec), &tm);
+
+            // display individual date/time fields in human readable form
+            printf("%s: %s", tm.tm_isdst ? "BST": "GMT", asctime(&tm));
 
         } else {
             puts("system time not yet initialised");
