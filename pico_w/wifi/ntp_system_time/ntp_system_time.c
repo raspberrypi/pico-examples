@@ -94,21 +94,22 @@ int main() {
     // OPTIONAL: set the 'TZ' env variable to the local POSIX timezone (in this case Europe/London,
     // to create your own see https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html)
     setenv("TZ", "BST0GMT,M3.5.0/1,M10.5.0/2", 1);
-    // If you set 'TZ' then functions like ctime(), localtime() and their variants will automatically 
-    // give results converted to the local timezone instead of UTC (see below).
+    // If the environment contains a valid 'TZ' definition then functions like ctime(), localtime() 
+    // and their variants automatically give results converted to the local timezone instead of UTC 
+    // (see below).
 
     while (true) {
 
         if(aon_timer_is_initialised) {
 
-            // read the current time as UTC seconds and ms since the epoch
+            // safely read the current time as UTC seconds and ms since the epoch
             get_time_utc(&ts);
 
             // if you just want a string representation of the current time and you're not interested
             // in the individual date/time fields, then here you can simply call:
             //      printf("%s", ctime(&(ts.tv_sec)));
-            // The string produced is the same as `asctime()` as used below. Note that if you set
-            // 'TZ' then the output will be in local time, otherwise UTC.
+            // The string produced is the same as `asctime()` (see below). Note that if you set 'TZ'
+            // then the output will be in local time, otherwise UTC.
 
             // you can unpack the raw UTC seconds count into individual date/time fields like this.
             // Again, if you set 'TZ' then the values will be in local time, otherwise UTC. Note
@@ -119,6 +120,8 @@ int main() {
 
             // display individual date/time fields in human readable form
             printf("%s: %s", tm.tm_isdst ? "BST": "GMT", asctime(&tm));
+            // asctime(), ctime() and their variants produce strings of the form "Mon Oct 27 22:06:08 2025\n"
+            // - note the trailing '\n'.
 
         } else {
             puts("system time not yet initialised");
