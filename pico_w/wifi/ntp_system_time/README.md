@@ -52,13 +52,13 @@ The example uses:
 
 1. the [SNTP application](https://www.nongnu.org/lwip/2_0_x/group__sntp.html) provided by the lwIP network stack
 2. the Pico SDK high level "always on timer" abstraction: [pico_aon_timer](https://www.raspberrypi.com/documentation/pico-sdk/high_level.html#group_pico_aon_timer)
-3. a [POSIX timezone](https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html) to convert UTC to local time
+3. an optional [POSIX timezone](https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html) to convert UTC to local time
 
 ### lwIP SNTP
 
 The lwIP SNTP app provides a straightforward way to obtain and process timestamps from a pool of NTP servers without the complexity of a full NTP implementation. The lwIP documentation covers the [configuration options](https://www.nongnu.org/lwip/2_0_x/group__sntp.html) but the comments in the [source code](https://github.com/lwip-tcpip/lwip/blob/master/src/apps/sntp/sntp.c) are also very helpful.
 
-SNTP uses the **macros** `SNTP_GET_SYSTEM_TIME(sec, us)` and `SNTP_SET_SYSTEM_TIME(sec, us)` to call user-provided functions for accessing the system clock. The example defines the macros in `lwipopts.h` and the callbacks themselves are near the top of `ntp_system_time.c`.
+SNTP uses the **macros** `SNTP_GET_SYSTEM_TIME(sec, us)` and `SNTP_SET_SYSTEM_TIME_US(sec, us)` to call user-provided functions for accessing the system clock. The example defines the macros in `lwipopts.h` and the callbacks themselves are near the top of `ntp_system_time.c`.
 
 Note that the example runs lwIP/SNTP from `pico_cyw43_arch` in _threadsafe background mode_ as described in [SDK Networking](https://www.raspberrypi.com/documentation/pico-sdk/networking.html#group_pico_cyw43_arch).
 If you reconfigure it to use _polling mode_ then your user code should periodically call `cyw43_arch_poll()`.
@@ -87,6 +87,6 @@ which means
 Normal time ("GMT") is UTC +0. Daylight-saving time ("BST") runs from 1am on the last Sunday in March to 2am on the last Sunday in October.
 ```
 
-The format to define your own POSIX timezone is pretty straightforward and can be found [here](https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html).
+The format to define your own POSIX timezone is pretty straightforward and can be found [here](https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html); or you can simply choose a pre-defined one from an online resource such as [this](https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv).
 
 _Note that it is entirely optional to create a local timezone: without one the Pico SDK time-conversion functions will simply use UTC._

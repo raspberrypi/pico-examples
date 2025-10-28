@@ -34,12 +34,14 @@
 #define	SNTP_RETRY_TIMEOUT_EXP       1
 #define SNTP_MONITOR_SERVER_REACHABILITY    1
 
-// configure SNTP to use our callback to set the system time
+//* configure SNTP to use our callback functions for reading and setting the system time
+#define SNTP_GET_SYSTEM_TIME(sec, us)  sntp_get_system_time_us(&(sec), &(us))
 #define SNTP_SET_SYSTEM_TIME_US(sec, us)   sntp_set_system_time_us(sec, us)
 
-// declare our callback functions (they are defined in ntp_system_time.c)
+//* declare our callback functions (the implementations are in ntp_system_time.c)
 #include "stdint.h"
 void sntp_set_system_time_us(uint32_t sec, uint32_t us);
 void sntp_get_system_time_us(uint32_t *sec_ptr, uint32_t *us_ptr);
+
 
 #endif /* __LWIPOPTS_H__ */

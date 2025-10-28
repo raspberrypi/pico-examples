@@ -16,8 +16,9 @@
 auto_init_mutex(aon_timer_mutex);
 static bool aon_timer_is_initialised = false;
 
-// callback for lwIP/SNTP to set the aon_timer to UTC (see lwipopts.h)
-// this is called every time the application receives a valid NTP server response
+// callback for lwIP/SNTP to set the aon_timer to UTC
+// we configure SNTP to call this function when it receives a valid NTP timestamp
+// (see lwipopts.h)
 void sntp_set_system_time_us(uint32_t sec, uint32_t us) {    
     static struct timespec ntp_ts;
     ntp_ts.tv_sec = sec;
@@ -40,7 +41,8 @@ void sntp_set_system_time_us(uint32_t sec, uint32_t us) {
 }
 
 // callback for lwIP/SNTP to read system time (UTC) from the aon_timer
-// when it needs to (eg) calculate the roundtrip transmission delay
+// we configure SNTP to call this function to read the current UTC system time,
+// eg to calculate the roundtrip transmission delay (see lwipopts.h)
 void sntp_get_system_time_us(uint32_t *sec_ptr, uint32_t * us_ptr) {
     static struct timespec sys_ts;
     // we don't need exclusive access because we are on the background thread
@@ -91,8 +93,9 @@ int main() {
     struct timespec ts;
     struct tm tm;
 
-    // OPTIONAL: set the 'TZ' env variable to the local POSIX timezone (in this case Europe/London,
-    // to create your own see https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html)
+    // OPTIONAL: set the 'TZ' env variable to the local POSIX timezone (in this case Europe/London)
+    // For the format see: https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html
+    // or just copy one from (eg): https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
     setenv("TZ", "BST0GMT,M3.5.0/1,M10.5.0/2", 1);
 
     // If the environment contains a valid 'TZ' definition then functions like ctime(), localtime() 
@@ -108,15 +111,14 @@ int main() {
 
             // if you just want a string representation of the current time and you're not interested
             // in the individual date/time fields, then here you can simply call:
-            //      printf("%s", ctime(&(ts.tv_sec)));
-            // The string produced is the same as `asctime()` (see below). Note that if you set 'TZ'
-            // then the output will be in local time, otherwise UTC.
 
-            // you can unpack the raw UTC seconds count into individual date/time fields like this.
-            // Again, if you set 'TZ' then the values will be in local time, otherwise UTC. Note
-            // that by default `pico_localtime_r()` just calls `localtime_r()` from the standard 'C' 
-            // library, but the declaration is 'weak' so that a user can override it with their own
-            // implementation if desired.
+            // if you don't need the date/time fields, you can call `ctime()` or one of its variants
+            // here to convert the raw timer value into a string like "Mon Oct 27 22:06:08 2025\n". 
+            // If you have defined a valid 'TZ' the string will be in local time, otherwise UTC.
+            //printf("%s", ctime(&(ts.tv_sec)));
+
+            // you can extract the date/time fields use `localtime()` or one of its variants. If you
+            // have defined a valid 'TZ' then the field values will be in local time, otherwise UTC.
             pico_localtime_r(&(ts.tv_sec), &tm);
 
             // display the name of the currently active local timeszone, if defined
@@ -127,7 +129,8 @@ int main() {
                 printf("UTC: ");
             }
             
-            // display individual date/time fields in the form "Mon Oct 27 22:06:08 2025\n"
+            // you can use `asctime()` and its variants to convert the date/time fields into a string 
+            // like: "Mon Oct 27 22:06:08 2025\n". If you need more flexibility consider `strftime()` 
             printf("%s", asctime(&tm));
 
         } else {
