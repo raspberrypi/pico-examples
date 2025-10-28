@@ -94,6 +94,7 @@ int main() {
     // OPTIONAL: set the 'TZ' env variable to the local POSIX timezone (in this case Europe/London,
     // to create your own see https://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_431.html)
     setenv("TZ", "BST0GMT,M3.5.0/1,M10.5.0/2", 1);
+    
     // If the environment contains a valid 'TZ' definition then functions like ctime(), localtime() 
     // and their variants automatically give results converted to the local timezone instead of UTC 
     // (see below).
@@ -119,9 +120,10 @@ int main() {
             pico_localtime_r(&(ts.tv_sec), &tm);
 
             // display individual date/time fields in human readable form
-            printf("%s: %s", tm.tm_isdst ? "BST": "GMT", asctime(&tm));
+            printf("%s: %s", tm.tm_isdst ? tzname[0]: tzname[1], asctime(&tm));
             // asctime(), ctime() and their variants produce strings of the form "Mon Oct 27 22:06:08 2025\n"
             // - note the trailing '\n'.
+            // extern char *tzname[2] (from time.h) holds the names of the POSIX TZ timezones if defined
 
         } else {
             puts("system time not yet initialised");
