@@ -109,15 +109,12 @@ int main() {
             // safely read the current time as UTC seconds and ms since the epoch
             get_time_utc(&ts);
 
-            // if you just want a string representation of the current time and you're not interested
-            // in the individual date/time fields, then here you can simply call:
-
-            // if you don't need the date/time fields, you can call `ctime()` or one of its variants
-            // here to convert the raw timer value into a string like "Mon Oct 27 22:06:08 2025\n". 
+            // if you don't need the date/time fields you can call `ctime()` or one of its variants
+            // here to convert the UTC seconds count to a string like "Mon Oct 27 22:06:08 2025\n". 
             // If you have defined a valid 'TZ' the string will be in local time, otherwise UTC.
             //printf("%s", ctime(&(ts.tv_sec)));
 
-            // you can extract the date/time fields use `localtime()` or one of its variants. If you
+            // you can extract the date/time fields using `localtime()` or one of its variants. If you
             // have defined a valid 'TZ' then the field values will be in local time, otherwise UTC.
             pico_localtime_r(&(ts.tv_sec), &tm);
 

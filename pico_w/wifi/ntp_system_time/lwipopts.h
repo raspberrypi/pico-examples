@@ -25,10 +25,6 @@
 #define SNTP_RECV_TIMEOUT           15000
 // how often to query the NTP servers, in ms (60000 is the minimum permitted by RFC4330) 
 #define SNTP_UPDATE_DELAY           3600000
-
-// configure SNTP to use our callback to read the system time
-#define SNTP_GET_SYSTEM_TIME(sec, us)  sntp_get_system_time_us(&(sec), &(us))
-
 #define SNTP_RETRY_TIMEOUT           SNTP_RECV_TIMEOUT
 #define SNTP_RETRY_TIMEOUT_MAX       (SNTP_RETRY_TIMEOUT * 10)
 #define	SNTP_RETRY_TIMEOUT_EXP       1
