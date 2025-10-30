@@ -5,6 +5,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>     // needed for setenv(), although also included by lwIP
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 #include "lwip/apps/sntp.h"
