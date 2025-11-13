@@ -215,7 +215,8 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
 
 static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len) {
     MQTT_CLIENT_DATA_T* state = (MQTT_CLIENT_DATA_T*)arg;
-    strncpy(state->topic, topic, sizeof(state->topic));
+    // using strlcpy() ensures the string is properly terminated if truncated
+    strlcpy(state->topic, topic, sizeof(state->topic));
 }
 
 static void temperature_worker_fn(async_context_t *context, async_at_time_worker_t *worker) {
@@ -326,7 +327,8 @@ int main(void) {
     state.mqtt_client_info.client_pass = NULL;
 #endif
     static char will_topic[MQTT_TOPIC_LEN];
-    strncpy(will_topic, full_topic(&state, MQTT_WILL_TOPIC), sizeof(will_topic));
+    // using strlcpy() ensures the string is properly terminated if truncated
+    strlcpy(will_topic, full_topic(&state, MQTT_WILL_TOPIC), sizeof(will_topic));
     state.mqtt_client_info.will_topic = will_topic;
     state.mqtt_client_info.will_msg = MQTT_WILL_MSG;
     state.mqtt_client_info.will_qos = MQTT_WILL_QOS;
