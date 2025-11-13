@@ -375,12 +375,18 @@ int main(void) {
     // We are not in a callback but we can get away with calling mqtt_client_is_connected()
     // because it's a read-only operation
     while (!state.connect_done || mqtt_client_is_connected(state.mqtt_client_inst)) {
-        // As supplied the example configures cyw43_arch for thread_safe_background operation
-        // by linking `pico_cyw43_arch_lwip_threadsafe_background` in CMakeLists.txt, so the 
-        // following two lines are unnecessary (but do no harm). However you will need them 
-        // if you reconfigure the build to use cyw43_arch in polling mode.
+
+    #ifdef PICO_CYW43_ARCH_POLL 
+        // if you use cyw43_arch in lwip_poll mode then you must periodically call
+        // cyw43_arch_poll() from your main loop (see SDK network API documentaion)
         cyw43_arch_poll();
         cyw43_arch_wait_for_work_until(make_timeout_time_ms(10000));
+    #else
+        // as supplied the example configures cyw43_arch for thread_safe_background
+        // operation (see CMakeLists.txt) so there's no need to poll
+        sleep_ms(10000);
+    #endif
+
     }
 
     INFO_printf("mqtt client exiting\n");
