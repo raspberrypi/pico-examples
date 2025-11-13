@@ -259,8 +259,10 @@ static void start_client(MQTT_CLIENT_DATA_T *state) {
     const int port = MQTT_PORT;
     INFO_printf("Warning: Not using TLS\n");
 #endif
-
+    // mqtt_client_new() has LWIP_ASSERT_CORE_LOCKED(), so we should protect this call
+    cyw43_arch_lwip_begin();
     state->mqtt_client_inst = mqtt_client_new();
+    cyw43_arch_lwip_end();
     if (!state->mqtt_client_inst) {
         panic("MQTT client instance creation error");
     }
