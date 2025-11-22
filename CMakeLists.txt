@@ -64,6 +64,7 @@ endif()
 
 # Hardware-specific examples in subdirectories:
 add_subdirectory(adc)
+add_subdirectory(async_context)
 add_subdirectory(binary_info)
 add_subdirectory(bootloaders)
 add_subdirectory(clocks)
