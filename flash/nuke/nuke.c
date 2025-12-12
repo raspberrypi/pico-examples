@@ -25,13 +25,18 @@
 #include "hardware/flash.h"
 #include "pico/bootrom.h"
 
+#define MIN_FLASH_SIZE (1024 * 1024 * 2)
+
 int main() {
-    uint flash_size_bytes;
+    uint flash_size_bytes = 0;
     uint8_t txbuf[4];
     uint8_t rxbuf[4];
     txbuf[0] = 0x9f;
     flash_do_cmd(txbuf, rxbuf, 4);
     flash_size_bytes = 1u << rxbuf[3];
+    if (flash_size_bytes < MIN_FLASH_SIZE || flash_size_bytes > PICO_FLASH_SIZE_BYTES) {
+        flash_size_bytes = PICO_FLASH_SIZE_BYTES;
+    }
     flash_range_erase(0, flash_size_bytes);
     // Leave an eyecatcher pattern in the first page of flash so picotool can
     // more easily check the size:
