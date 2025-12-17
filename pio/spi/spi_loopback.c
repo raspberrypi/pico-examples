@@ -49,19 +49,20 @@ void test(const pio_spi_inst_t *spi) {
 int main() {
     stdio_init_all();
 
-    pio_spi_inst_t spi = {
-            .pio = pio0,
-            .sm = 0
-    };
+    pio_spi_inst_t spi[2];
     float clkdiv = 31.25f;  // 1 MHz @ 125 clk_sys
-    uint cpha0_prog_offs = pio_add_program(spi.pio, &spi_cpha0_program);
-    uint cpha1_prog_offs = pio_add_program(spi.pio, &spi_cpha1_program);
+
+    // pio_claim_free_sm_and_add_program_for_gpio_range finds a free pio and state machine for a program and sets the gpio base correctly
+    const uint pin_base = MIN(PIN_SCK, MIN(PIN_MOSI, PIN_MISO));
+    const uint pin_count = MAX(PIN_SCK, MAX(PIN_MOSI, PIN_MISO)) - pin_base + 1;
+    hard_assert(pio_claim_free_sm_and_add_program_for_gpio_range(&spi_cpha0_program, &spi[0].pio, &spi[0].sm, &spi[0].offset, pin_base, pin_count, true));
+    hard_assert(pio_claim_free_sm_and_add_program_for_gpio_range(&spi_cpha1_program, &spi[1].pio, &spi[1].sm, &spi[1].offset, pin_base, pin_count, true));
 
     for (int cpha = 0; cpha <= 1; ++cpha) {
         for (int cpol = 0; cpol <= 1; ++cpol) {
             printf("CPHA = %d, CPOL = %d\n", cpha, cpol);
-            pio_spi_init(spi.pio, spi.sm,
-                         cpha ? cpha1_prog_offs : cpha0_prog_offs,
+            pio_spi_init(spi[cpha].pio, spi[cpha].sm,
+                         spi[cpha].offset,
                          8,       // 8 bits per SPI frame
                          clkdiv,
                          cpha,
@@ -70,7 +71,7 @@ int main() {
                          PIN_MOSI,
                          PIN_MISO
             );
-            test(&spi);
+            test(&spi[cpha]);
             sleep_ms(10);
         }
     }
