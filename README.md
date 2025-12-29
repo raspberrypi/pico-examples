@@ -371,6 +371,7 @@ App|Description
 [ssd1309_stdout_spi](spi/ssd1309_stdout_spi/) | Display text from stdout and simple graphics on an SSD1309-based OLED panel via SPI.
 [max7219_8x7seg_spi](spi/max7219_8x7seg_spi) | Attaching a Max7219 driving an 8 digit 7 segment display via SPI.
 [max7219_32x8_spi](spi/max7219_32x8_spi) | Attaching a Max7219 driving an 32x8 LED display via SPI.
+[ssd1309_spi](spi/ssd1309_spi) | Display text on a SSD1309-driven OLED display via SPI.
 
 ### Status LED
 
