@@ -27,8 +27,9 @@
 #define PIN_DC          20      // data/command mode (low for command)
 #define PIN_R           21      // reset (active low)
 
-// ssd1309 accepts a maximum SPI clock rate of 10 Mbit/sec 
-#define SPI_BITRATE     10 * 1000 * 1000
+// ssd1309 accepts a maximum SPI clock rate of 10 Mbit/sec, but for
+// this simple example we don't need to go that fast.
+#define SPI_BITRATE     1 * 1000 * 1000
 
 // dimensions of the display
 #define NUM_X_PIXELS    128
@@ -52,6 +53,9 @@ void send_data(uint8_t data_byte) {
 }
 
 // set the text cursor position (row, col)
+//
+// `row` is the text row, from 0 (top) to (NUM_Y_PIXELS / 8) - 1
+// `col` is the text column, from 0 (left) to (NUM_X_PIXELS / 8) - 1
 void set_cursor_pos(uint text_row, uint text_col) {
     send_command(0xb0 + (text_row & 0x07));     // set the text row ('page') start address
     uint col = text_col * 8;
@@ -69,7 +73,7 @@ void display_char(char c) {
         font_index = c - '0' + 27;   // 0-9
     }
     gpio_put(PIN_DC, DC_DATA_MODE);
-    spi_write_blocking(SPI_DEVICE, font + font_index * 8, 8);
+    spi_write_blocking(SPI_DEVICE, &(font[font_index * 8]), 8);
 }
 
 // display a null-terminated string at the cursor position
@@ -124,7 +128,11 @@ int main() {
     // initialise the interface and reset the display
     display_init();
 
-    // show some text
+    // Show some text
+    //
+    // Note: in the display's default addressing mode, over-length 
+    // strings will just wrap on the same row (see the datasheet)
+
     set_cursor_pos(0, 0);
     display_string("abcdefghijklmnop");
 
