@@ -48,7 +48,7 @@ ssd1309_font.h:: A basic 8x8 bit font table used by the example.
 == Bill of Materials
 
 .A list of materials required for the example
-[[BME280-bom-table]]
+[[SSD1309-bom-table]]
 [cols=3]
 |===
 | *Item* | *Quantity* | Details
