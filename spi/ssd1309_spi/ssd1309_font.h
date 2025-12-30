@@ -4,6 +4,13 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+// Indices of different parts of the font table, to help
+// when converting different types of characters
+#define FONT_INDEX_SPACE    0
+#define FONT_INDEX_A        1
+#define FONT_INDEX_0        27
+
+
 // Vertical bitmaps, A-Z, 0-9. Each is 8 pixels high and wide
 // These are defined vertically to make them quick to copy to FB
 

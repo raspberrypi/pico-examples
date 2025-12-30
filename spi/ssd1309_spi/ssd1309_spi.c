@@ -65,12 +65,12 @@ void set_cursor_pos(uint text_row, uint text_col) {
 
 // display a single text character at the cursor position
 void display_char(char c) {
-    uint font_index = 0;             // default (space)
+    uint font_index = FONT_INDEX_SPACE;             // default (space)
     c = toupper(c);
     if (isalpha(c)) {
-        font_index = c - 'A' + 1;    // a-z and A-Z
+        font_index = c - 'A' + FONT_INDEX_A;        // a-z and A-Z
     } else if (isdigit(c)) {
-        font_index = c - '0' + 27;   // 0-9
+        font_index = c - '0' + FONT_INDEX_0;        // 0-9
     }
     gpio_put(PIN_DC, DC_DATA_MODE);
     spi_write_blocking(SPI_DEVICE, &(font[font_index * 8]), 8);
