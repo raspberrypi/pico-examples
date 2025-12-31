@@ -122,7 +122,7 @@ int display_init() {
     dma_channel_config_t dma_config_fb_clear = dma_channel_get_default_config(dma_ch_fb_clear);
     channel_config_set_write_increment(&dma_config_fb_clear, true);     // increment the write address
     channel_config_set_read_increment(&dma_config_fb_clear, false);     // don't increment the read address
-    static uint32_t fb_clear_value = 0x00000000;    // this will be our source data for the transfer
+    static uint32_t fb_clear_value = 0x00000000;    // this will be our source data value for the transfer
     dma_channel_configure(
         dma_ch_fb_clear,
         &dma_config_fb_clear,           // the configuration that we just created
@@ -140,13 +140,12 @@ int display_init() {
     // after a short pause, send the commands to initialise the display
     sleep_ms(1);
     gpio_put(PIN_DC, DC_COMMAND_MODE);  // put the interface into command mode
-    uint8_t cmd_list[] = { 0xaf, 0x20, 0x00 };  // commands for 'display on' and 'horizontal addressing mode' (see datasheet)
+    uint8_t cmd_list[] = { 0xaf, 0x20, 0x00 };  // commands for 'display on' and 'horizontal addr mode' (see datasheet)
     spi_write_blocking(SPI_DEVICE, cmd_list, sizeof(cmd_list));
     gpio_put(PIN_DC, DC_DATA_MODE);     // return the interface to data mode
         
     fb_clear();                         // clear the frame buffer
 }
-
 
 // convenience functions to set and clear pixel positions in the frame buffer
 void set_pixel_xy(uint x, uint y) {
@@ -170,27 +169,21 @@ int main(){
     // start the DMA transfer cycle
     dma_channel_start(dma_ch_fb_transfer);
 
-    // You can now read and write the frame buffer at will, and the results will transparently
-    // appear on the display without any CPU intervention! For details of the address layout
-    // consult the manufacturer's datasheet (reference above).
+    // You can now read and write the frame buffer and the results will automatically be
+    // transferred to the display without any CPU intervention. For details of the memory 
+    // layout consult the manufacturer's datasheet (reference above).
 
-    // NOTE: you can read and write the frame buffer at will, but once you have started the
-    // DMA transfers running don't send any commands or data direct to the display otherwise
-    // it will get very confused.
-    
-    
-    once you have started the DMA transfer cycle, or it
-    // will almost certainly lose sync with
-    // the frame buffer. You could in theory send a command while the frame_delay transfer
-    // is in progress (synchronised by the DMA interupt) but that is out of scope for this
-    // example.
+    // NOTE: you can read and write the frame buffer as you please, but once you have started 
+    // the DMA transfers running don't try to send commands or data direct to the display or
+    // it will get very confused. While you could in theory send a command during the frame_delay
+    // transfer (synchronised by the DMA interupt) that is out of scope for this example.
 
     // simple example: draw a moving 'snake'
     int head_x = NUM_Y_PIXELS - 1, head_y = NUM_Y_PIXELS - 1, head_dx = 1, head_dy = 1;
     int tail_x = 0, tail_y = 0, tail_dx = 1, tail_dy = 1;
     while(true) {
         set_pixel_xy(head_x, head_y);
-        clear_pixel_xy(tail_x, tail_y);   
+        clear_pixel_xy(tail_x, tail_y);
 
         // update head position
         if (head_x + head_dx < 0 || head_x + head_dx >= NUM_X_PIXELS) {
