@@ -4,9 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
 **/
 
-// An example showing how to drive a ssd1309-based OLED panel over an SPI
-// interface from a frame buffer that is transferred in the background under
-// DMA control. It should also work on a ssd1306 device (not tested).
+// An example showing how to drive a ssd1309-based OLED panel from a frame buffer using
+// DMA transfers over SPI. It should also work on a ssd1306 device (not tested).
 //
 // To understand the commands and addressing modes for the display refer to
 // the manufacturer's datasheet at https://www.hpinfotech.ro/SSD1309.pdf
@@ -14,9 +13,8 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/dma.h"
-#include "hardware/clocks.h"
 #include "hardware/spi.h"
-#include "string.h"
+#include "hardware/clocks.h"
 
 // dimensions of our OLED display panel
 #define NUM_X_PIXELS        128
@@ -25,8 +23,7 @@
 // how often we want to refresh the display from the frame buffer
 #define FRAME_REFRESH_HZ    50
 
-// ssd1309 accepts a maximum SPI clock rate of 10 Mbit/sec and for this
-// example we will use it at full speed
+// ssd1309 accepts a maximum SPI clock rate of 10 Mbit/sec
 #define SPI_BITRATE         10 * 1000 * 1000
 
 // define the pins for the SPI interface
@@ -45,26 +42,66 @@
 
 
 // global variables
-int dma_ch_fb_transfer;             // DMA channel for frame buffer transfers
-int dma_ch_refresh_delay;           // DMA channel for the frame period delay 
-int dma_ch_fb_clear;                // DMA channel for clearing the screen
-uint8_t frame_buffer[NUM_X_PIXELS * NUM_Y_PIXELS / 8]__attribute__((aligned(32)));
-                                    // the frame buffer (about 1kByte), aligned to a 32-bit address
-                                    // boundary so that we can clear the screen with 32-bit transfers
+int dma_ch_fb_transfer;
+int dma_ch_refresh_delay;
+int dma_ch_fb_clear;
+uint8_t frame_buffer[NUM_X_PIXELS * NUM_Y_PIXELS / 8]__attribute__((aligned(32)));  // align for 32-bit DMA
 
+// initialise the DMA channels
+void dma_init() {
+    dma_ch_fb_transfer = dma_claim_unused_channel(true);
+    dma_ch_refresh_delay = dma_claim_unused_channel(true);
+    dma_ch_fb_clear = dma_claim_unused_channel(true);
 
-// a function to clear the frame buffer very quickly using a DMA channel
-void fb_clear() {
-    dma_channel_transfer_to_buffer_now(
-        dma_ch_fb_clear, 
-        frame_buffer,
-        dma_encode_transfer_count(sizeof(frame_buffer) / sizeof(uint32_t))
+    // transfer frame buffer to SPI device then trigger frame delay
+    dma_channel_config_t dma_config_fb_transfer = dma_channel_get_default_config(dma_ch_fb_transfer);
+    channel_config_set_transfer_data_size(&dma_config_fb_transfer, DMA_SIZE_8);         // 8-bit transfers
+    channel_config_set_dreq(&dma_config_fb_transfer, spi_get_dreq(SPI_DEVICE, true));   // pace by SPI_TX DREQ
+    channel_config_set_chain(&dma_config_fb_transfer, dma_ch_refresh_delay);            // chain to frame delay
+    dma_channel_configure(
+        dma_ch_fb_transfer,
+        &dma_config_fb_transfer,
+        &spi_get_hw(SPI_DEVICE)->dr,    // write to SPI data reg (non-incrementing)
+        frame_buffer,                   // read from frame buffer (incrementing)
+        dma_encode_transfer_count(count_of(frame_buffer)),
+        false                           // don't trigger yet
     );
-    dma_channel_wait_for_finish_blocking(dma_ch_fb_clear);
+
+    // delay for frame period then trigger buffer transfer
+    int dma_timer_frame_delay = dma_claim_unused_timer(true);               // pacing timer
+    dma_timer_set_fraction(dma_timer_frame_delay, 1, 0xffff);               // slowest possible
+    uint frame_delay_num_transfers = clock_get_hz(clk_sys) / 0xffff;        // number of transfers to get frame delay
+    dma_channel_config_t dma_config_framerate_delay = dma_channel_get_default_config(dma_ch_refresh_delay);
+    channel_config_set_read_increment(&dma_config_framerate_delay, false);  // don't increment read address
+    channel_config_set_dreq(&dma_config_framerate_delay, dma_get_timer_dreq(dma_timer_frame_delay)); // use pacing timer
+    channel_config_set_chain_to(&dma_config_framerate_delay, dma_ch_fb_transfer);   // chain to buffer transfer
+    static uint32_t fb_start = (uint32_t)frame_buffer;
+    dma_channel_configure(
+        dma_ch_refresh_delay,
+        &dma_config_framerate_delay,
+        &dma_hw->ch[dma_ch_fb_transfer].read_addr,  // write to buffer transfer read address reg (non-incrementing)
+        &fb_start,                                  // read frame buffer address (non-incrementing)
+        dma_encode_transfer_count(frame_delay_num_transfers),  // get required delay
+        false                                       // don't trigger yet
+    );
+
+    // quickly zero the frame buffer - optional if you're short of DMA channels (unlikely!)
+    dma_channel_config_t dma_config_fb_clear = dma_channel_get_default_config(dma_ch_fb_clear);
+    channel_config_set_write_increment(&dma_config_fb_clear, true);         // increment write address
+    channel_config_set_read_increment(&dma_config_fb_clear, false);         // don't increment read address
+    static uint32_t fb_clear_value = 0x00000000;    // source data for transfer
+    dma_channel_configure(
+        dma_ch_fb_clear,
+        &dma_config_fb_clear,
+        frame_buffer,                   // write to frame buffer (32-bit writes)
+        &fb_clear_value,                // read from our clear_value (non-incrementing)
+        dma_encode_transfer_count(sizeof(frame_buffer) / sizeof(uint32_t)), // 32-bit words in frame buffer
+        false                           // don't trigger yet
+    );
 }
 
-// initialise the SPI interface, DMA channels and display
-int display_init() {
+// initialise the SPI interface
+void interface_init() {
     // configure the SPI controller for 8-bit transfers using Motorola SPI mode 0
     spi_init(SPI_DEVICE, DISP_SPI_BITRATE);
     spi_set_format(SPI_DEVICE, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
@@ -78,60 +115,8 @@ int display_init() {
     gpio_init(PIN_R);
     gpio_set_dir(PIN_R, GPIO_OUT);
 
-    // claim free DMA channels (or panic)
-    dma_ch_fb_transfer = dma_claim_unused_channel(true);        // used to transfer the frame buffer to SPI
-    dma_ch_refresh_delay = dma_claim_unused_channel(true);      // used to delay for the frame refresh period
-    dma_ch_fb_clear = dma_claim_unused_channel(true);           // used to clear the frame buffer
-
-    // configure a DMA channel that transfers the frame buffer to the SPI device, then triggers the frame delay channel
-    dma_channel_config_t dma_config_fb_transfer = dma_channel_get_default_config(dma_ch_fb_transfer);
-    channel_config_set_transfer_data_size(&dma_config_fb_transfer, DMA_SIZE_8);         // use 8-bit transfers
-    channel_config_set_dreq(&dma_config_fb_transfer, spi_get_dreq(SPI_DEVICE, true));   // paced by SPI TX DREQ
-    channel_config_set_chain_to(&dma_config_fb_transfer, dma_ch_refresh_delay);         // chain to frame_delay
-    dma_channel_configure(
-        dma_ch_fb_transfer,
-        &dma_config_fb_transfer,        // use the configuration that we just created
-        &spi_get_hw(SPI_DEVICE)->dr,    // write to the data register of the SPI device (non-incrementing)
-        frame_buffer,                   // set the initial read address to the start of the frame buffer
-        dma_encode_transfer_count(count_of(frame_buffer)),  // transfer the whole frame buffer
-        false                           // don't trigger yet
-    );
-
-    // claim a DMA pacing timer for the frame delay channel (or panic)
-    int dma_timer_frame_delay = dma_claim_unused_timer(true);
-    dma_timer_set_fraction(dma_timer_frame_delay, 1, 0xffff);           // set the maximum clock divider
-    uint frame_delay_num_transfers = clock_get_hz(clk_sys) / 0xffff;    // calculate number of transfers for the frame delay
-
-    // configure a DMA channel that takes as long as the frame period, then triggers the frame-transfer channel
-    // the transfers aren't wasted: we use them to reset the read address of the other channel 
-    dma_channel_config_t dma_config_framerate_delay = dma_channel_get_default_config(dma_ch_refresh_delay);
-    channel_config_set_read_increment(&dma_config_framerate_delay, false);          // don't increment the read address
-    channel_config_set_dreq(&dma_config_framerate_delay, dma_get_timer_dreq(dma_timer_frame_delay)); // use our pacing timer
-    channel_config_set_chain_to(&dma_config_framerate_delay, dma_ch_fb_transfer);   // chain to frame_transfer
-    static uint32_t fb_start = (uint32_t)frame_buffer;
-    dma_channel_configure(
-        dma_ch_refresh_delay,
-        &dma_config_framerate_delay,    // the configuration that we just created
-        &dma_hw->ch[dma_ch_fb_transfer].read_addr,    // write the frame_transfer channel read address register (32-bits)
-        &fb_start,                      // initial read address: start of frame buffer (increments, 32-bit reads)
-        dma_encode_transfer_count(frame_delay_num_transfers),  // do the transfer enough times to get the required delay
-        false                           // don't trigger yet
-    );
-
-    // configure a DMA channel that fills the frame buffer with zeros
-    dma_channel_config_t dma_config_fb_clear = dma_channel_get_default_config(dma_ch_fb_clear);
-    channel_config_set_write_increment(&dma_config_fb_clear, true);     // increment the write address
-    channel_config_set_read_increment(&dma_config_fb_clear, false);     // don't increment the read address
-    static uint32_t fb_clear_value = 0x00000000;    // this will be our source data value for the transfer
-    dma_channel_configure(
-        dma_ch_fb_clear,
-        &dma_config_fb_clear,           // the configuration that we just created
-        frame_buffer,                   // initial write address: start of frame buffer (increments, 32-bit writes)
-        &fb_clear_value,                // read address: clear_value (does not increment, 32-bit reads)
-        dma_encode_transfer_count(sizeof(frame_buffer) / sizeof(uint32_t)), // number of 32-bit words in the frame buffer
-        false                           // don't trigger yet
-    );
-
+// reset and initialise the display
+void display_init() {
     // initialise display
     gpio_put(PIN_R, 0);                 // generate a reset pulse (active low)
     sleep_ms(1);
@@ -145,6 +130,13 @@ int display_init() {
     gpio_put(PIN_DC, DC_DATA_MODE);     // return the interface to data mode
         
     fb_clear();                         // clear the frame buffer
+}
+
+
+// clear the frame buffer quickly using a DMA channel
+void fb_clear() {
+    dma_channel_set_write_addr(dma_ch_fb_clear, frame_buffer, true);    // reset write address and trigger
+    dma_channel_wait_for_finish_blocking(dma_ch_fb_clear);
 }
 
 // convenience functions to set and clear pixel positions in the frame buffer
@@ -163,22 +155,23 @@ void clear_pixel_xy(uint x, uint y) {
 
 int main(){
     stdio_init_all();
-    display_init();
-    fb_clear();
 
-    // start the DMA transfer cycle
+    // initialise everything
+    dma_init();
+    interface_init();
+    display_init();
+
+    // start the DMA transfer (automatically repeats every frame period)
     dma_channel_start(dma_ch_fb_transfer);
 
-    // You can now read and write the frame buffer and the results will automatically be
-    // transferred to the display without any CPU intervention. For details of the memory 
-    // layout consult the manufacturer's datasheet (reference above).
+    // anything you write to the frame buffer will now be transferred transparently to the
+    // display - for the memory layout consult the manufacturer's datasheet (reference above).
 
-    // NOTE: you can read and write the frame buffer as you please, but once you have started 
-    // the DMA transfers running don't try to send commands or data direct to the display or
-    // it will get very confused. While you could in theory send a command during the frame_delay
-    // transfer (synchronised by the DMA interupt) that is out of scope for this example.
-
-    // simple example: draw a moving 'snake'
+    // NOTE: don't send your own commands or data to the display while it is being controlled
+    // by the DMA channels, as confusion will result. Do all your interaction via the frame
+    // buffer.
+    
+    // simple example: a moving 'snake'
     int head_x = NUM_Y_PIXELS - 1, head_y = NUM_Y_PIXELS - 1, head_dx = 1, head_dy = 1;
     int tail_x = 0, tail_y = 0, tail_dx = 1, tail_dy = 1;
     while(true) {
