@@ -12,10 +12,10 @@
 
 #include <stdint.h>
 
-#define FONT_INDEX_DEFAULT  0
+#define FONT_INDEX_UNDEF    0
 #define FONT_INDEX_START    1
-#define FONT_INDEX_END      95
-#define FONT_CODE_START     32
+#define FONT_CODE_FIRST     32
+#define FONT_CODE_LAST      126
 #define FONT_BYTES_PER_CODE 8
 
 static const uint8_t font[] = {

@@ -23,6 +23,7 @@
 #define NUM_X_PIXELS        128
 #define NUM_Y_PIXELS        64
 #define PIXELS_PER_BYTE     8
+#define TABSTOPS            4
 
 // how often we want to refresh the display from the frame buffer
 #define FRAME_PERIOD_MS     20
@@ -49,7 +50,7 @@
 uint8_t frame_buffer[NUM_X_PIXELS * NUM_Y_PIXELS / PIXELS_PER_BYTE];
 int dma_ch_transfer_fb;
 volatile bool display_needs_refresh;
-volatile uint8_t *printf_write_ptr;
+volatile uint fb_out_index;
 
 // set up the DMA channels
 void dma_init() {
@@ -101,7 +102,7 @@ void display_reset() {
 
     // clear the frame buffer and set it to refresh
     memset(frame_buffer, 0x00, sizeof(frame_buffer));
-    printf_write_ptr = frame_buffer;
+    fb_out_index = 0;
     display_needs_refresh = true;
 }
 
@@ -112,6 +113,38 @@ bool frame_refresh_callback(__unused struct repeating_timer *t) {
         display_needs_refresh = false;
     }
     return true;    // repeat timer
+}
+
+// simple stdout driver for the display
+void fb_out_chars(const char *buf, int len) {
+    while (len) {
+        char code = *buf;
+        uint font_index;
+        buf += 1;
+        len -= 1;
+        // scroll display if needed (using DMA would almost certainly be OTT)
+        while (fb_out_index >= sizeof(frame_buffer)) {
+            memmove(frame_buffer, frame_buffer + NUM_X_PIXELS, sizeof(frame_buffer) - NUM_X_PIXELS);
+            fb_out_index -= NUM_X_PIXELS;
+            memset(&frame_buffer[sizeof(frame_buffer) - NUM_X_PIXELS - 1], 0x00, NUM_X_PIXELS);
+        }
+        // handle control codes
+        if (code == '\n') {
+            fb_out_index = (fb_out_index / NUM_X_PIXELS + 1) * NUM_X_PIXELS;
+        } else if (code == '\t') {
+            fb_out_index = (fb_out_index / (TABSTOPS * FONT_BYTES_PER_CODE) + 1) * TABSTOPS * FONT_BYTES_PER_CODE;
+        } else {
+            // handle alphanumeric codes
+            if (code < FONT_CODE_FIRST || code > FONT_CODE_LAST ) {
+                font_index = FONT_INDEX_UNDEF;
+            } else {
+                font_index = FONT_BYTES_PER_CODE * (FONT_INDEX_START + code - FONT_CODE_FIRST);
+            }
+            memcpy(&frame_buffer[fb_out_index], &font[font_index], FONT_BYTES_PER_CODE);
+            fb_out_index += FONT_BYTES_PER_CODE;
+        }
+    }
+    display_needs_refresh = true;
 }
 
 
@@ -130,20 +163,13 @@ void clear_pixel_xy(uint x, uint y) {
     }
 }
 
-// simple stdout callback for the display
-void fb_out_chars(const char *buf, int len) {
-    while (len) {
-        memcpy(
-            (void *)printf_write_ptr, 
-            &font[FONT_BYTES_PER_CODE * (FONT_INDEX_START + (*buf) - FONT_CODE_START)],
-            FONT_BYTES_PER_CODE
-        );
-        printf_write_ptr += FONT_BYTES_PER_CODE;
-        buf += 1;
-        len -= 1;
-        // TODO: manage scrolling at end of display
+// set text output position in rows and columns
+// rows go from 0 (top) to NUM_Y_PIXELS / 8 - 1
+// columns go from 0 (left) to NUM_X_PIXELS / 8 - 1
+void set_cursor_pos(uint text_row, uint text_col) {
+    if (text_row < NUM_Y_PIXELS / PIXELS_PER_BYTE && text_col < NUM_X_PIXELS / FONT_BYTES_PER_CODE) {
+        fb_out_index = text_row * NUM_X_PIXELS + text_col * FONT_BYTES_PER_CODE;
     }
-    display_needs_refresh = true;
 }
 
 
@@ -155,15 +181,16 @@ int main(){
     interface_init();
     display_reset();
 
-    // start the display referesh timer
+    // start the display refresh timer
     struct repeating_timer timer;
     add_repeating_timer_ms(FRAME_PERIOD_MS, frame_refresh_callback, NULL, &timer);
 
-    // add a simple stdio driver for the display
+    // copy stdout to the frame buffer
     stdio_driver_t fb_stdio_driver = { fb_out_chars };
     stdio_set_driver_enabled(&fb_stdio_driver, true);
 
-    printf("Hello, World!\n");
+    set_cursor_pos(0, 2);
+    printf("Hello, World\n");
 
     // anything you write to the frame buffer will now be transferred transparently to the
     // display - for the memory layout consult the manufacturer's datasheet (reference above).
