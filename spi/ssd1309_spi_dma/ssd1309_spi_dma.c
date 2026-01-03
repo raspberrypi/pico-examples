@@ -11,20 +11,24 @@
 // the manufacturer's datasheet at https://www.hpinfotech.ro/SSD1309.pdf
 
 #include <stdio.h>
+#include "pico/stdio/driver.h"
 #include "pico/stdlib.h"
 #include "hardware/dma.h"
 #include "hardware/spi.h"
-#include "hardware/clocks.h"
+#include "string.h"
+
+#include "font.h"
 
 // dimensions of our OLED display panel
 #define NUM_X_PIXELS        128
 #define NUM_Y_PIXELS        64
+#define PIXELS_PER_BYTE     8
 
 // how often we want to refresh the display from the frame buffer
-#define FRAME_REFRESH_HZ    50
+#define FRAME_PERIOD_MS     20
 
 // ssd1309 accepts a maximum SPI clock rate of 10 Mbit/sec
-#define SPI_BITRATE         10 * 1000 * 1000
+#define DISPLAY_SPI_BITRATE 10 * 1000 * 1000
 
 // define the pins for the SPI interface
 // we will use the spi0 peripheral and the following GPIO pins (see the
@@ -42,60 +46,25 @@
 
 
 // global variables
-int dma_ch_fb_transfer;
-int dma_ch_refresh_delay;
-int dma_ch_fb_clear;
-uint8_t frame_buffer[NUM_X_PIXELS * NUM_Y_PIXELS / 8]__attribute__((aligned(32)));  // align for 32-bit DMA
+uint8_t frame_buffer[NUM_X_PIXELS * NUM_Y_PIXELS / PIXELS_PER_BYTE];
+int dma_ch_transfer_fb;
+volatile bool display_needs_refresh;
+volatile uint8_t *printf_write_ptr;
 
-// initialise the DMA channels
+// set up the DMA channels
 void dma_init() {
-    dma_ch_fb_transfer = dma_claim_unused_channel(true);
-    dma_ch_refresh_delay = dma_claim_unused_channel(true);
-    dma_ch_fb_clear = dma_claim_unused_channel(true);
-
-    // transfer frame buffer to SPI device then trigger frame delay
-    dma_channel_config_t dma_config_fb_transfer = dma_channel_get_default_config(dma_ch_fb_transfer);
-    channel_config_set_transfer_data_size(&dma_config_fb_transfer, DMA_SIZE_8);         // 8-bit transfers
-    channel_config_set_dreq(&dma_config_fb_transfer, spi_get_dreq(SPI_DEVICE, true));   // pace by SPI_TX DREQ
-    channel_config_set_chain(&dma_config_fb_transfer, dma_ch_refresh_delay);            // chain to frame delay
+    // transfer the frame buffer to the SPI
+    // remember to reset the read address after each transfer
+    dma_ch_transfer_fb = dma_claim_unused_channel(true);
+    dma_channel_config_t c = dma_channel_get_default_config(dma_ch_transfer_fb);
+    channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
+    channel_config_set_dreq(&c, spi_get_dreq(SPI_DEVICE, true));
     dma_channel_configure(
-        dma_ch_fb_transfer,
-        &dma_config_fb_transfer,
-        &spi_get_hw(SPI_DEVICE)->dr,    // write to SPI data reg (non-incrementing)
-        frame_buffer,                   // read from frame buffer (incrementing)
+        dma_ch_transfer_fb,
+        &c,
+        &spi_get_hw(SPI_DEVICE)->dr,    // write address (doesn't increment)
+        frame_buffer,                   // initial read address
         dma_encode_transfer_count(count_of(frame_buffer)),
-        false                           // don't trigger yet
-    );
-
-    // delay for frame period then trigger buffer transfer
-    int dma_timer_frame_delay = dma_claim_unused_timer(true);               // pacing timer
-    dma_timer_set_fraction(dma_timer_frame_delay, 1, 0xffff);               // slowest possible
-    uint frame_delay_num_transfers = clock_get_hz(clk_sys) / 0xffff;        // number of transfers to get frame delay
-    dma_channel_config_t dma_config_framerate_delay = dma_channel_get_default_config(dma_ch_refresh_delay);
-    channel_config_set_read_increment(&dma_config_framerate_delay, false);  // don't increment read address
-    channel_config_set_dreq(&dma_config_framerate_delay, dma_get_timer_dreq(dma_timer_frame_delay)); // use pacing timer
-    channel_config_set_chain_to(&dma_config_framerate_delay, dma_ch_fb_transfer);   // chain to buffer transfer
-    static uint32_t fb_start = (uint32_t)frame_buffer;
-    dma_channel_configure(
-        dma_ch_refresh_delay,
-        &dma_config_framerate_delay,
-        &dma_hw->ch[dma_ch_fb_transfer].read_addr,  // write to buffer transfer read address reg (non-incrementing)
-        &fb_start,                                  // read frame buffer address (non-incrementing)
-        dma_encode_transfer_count(frame_delay_num_transfers),  // get required delay
-        false                                       // don't trigger yet
-    );
-
-    // quickly zero the frame buffer - optional if you're short of DMA channels (unlikely!)
-    dma_channel_config_t dma_config_fb_clear = dma_channel_get_default_config(dma_ch_fb_clear);
-    channel_config_set_write_increment(&dma_config_fb_clear, true);         // increment write address
-    channel_config_set_read_increment(&dma_config_fb_clear, false);         // don't increment read address
-    static uint32_t fb_clear_value = 0x00000000;    // source data for transfer
-    dma_channel_configure(
-        dma_ch_fb_clear,
-        &dma_config_fb_clear,
-        frame_buffer,                   // write to frame buffer (32-bit writes)
-        &fb_clear_value,                // read from our clear_value (non-incrementing)
-        dma_encode_transfer_count(sizeof(frame_buffer) / sizeof(uint32_t)), // 32-bit words in frame buffer
         false                           // don't trigger yet
     );
 }
@@ -103,7 +72,7 @@ void dma_init() {
 // initialise the SPI interface
 void interface_init() {
     // configure the SPI controller for 8-bit transfers using Motorola SPI mode 0
-    spi_init(SPI_DEVICE, DISP_SPI_BITRATE);
+    spi_init(SPI_DEVICE, DISPLAY_SPI_BITRATE);
     spi_set_format(SPI_DEVICE, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
 
     // configure our interface pins
@@ -114,66 +83,94 @@ void interface_init() {
     gpio_set_dir(PIN_DC, GPIO_OUT);
     gpio_init(PIN_R);
     gpio_set_dir(PIN_R, GPIO_OUT);
+}
 
 // reset and initialise the display
-void display_init() {
-    // initialise display
-    gpio_put(PIN_R, 0);                 // generate a reset pulse (active low)
+void display_reset() {
+    // send active-low reset pulse
+    gpio_put(PIN_R, 0);
     sleep_ms(1);
     gpio_put(PIN_R, 1);
-
-    // after a short pause, send the commands to initialise the display
     sleep_ms(1);
-    gpio_put(PIN_DC, DC_COMMAND_MODE);  // put the interface into command mode
-    uint8_t cmd_list[] = { 0xaf, 0x20, 0x00 };  // commands for 'display on' and 'horizontal addr mode' (see datasheet)
+
+    // wake the display and set horizontal addressing mode
+    gpio_put(PIN_DC, DC_COMMAND_MODE); 
+    uint8_t cmd_list[] = { 0xaf, 0x20, 0x00 };
     spi_write_blocking(SPI_DEVICE, cmd_list, sizeof(cmd_list));
-    gpio_put(PIN_DC, DC_DATA_MODE);     // return the interface to data mode
-        
-    fb_clear();                         // clear the frame buffer
+    gpio_put(PIN_DC, DC_DATA_MODE);
+
+    // clear the frame buffer and set it to refresh
+    memset(frame_buffer, 0x00, sizeof(frame_buffer));
+    printf_write_ptr = frame_buffer;
+    display_needs_refresh = true;
+}
+
+bool frame_refresh_callback(__unused struct repeating_timer *t) {
+    if (display_needs_refresh) {
+        // reset read address and start transfer
+        dma_channel_set_read_addr(dma_ch_transfer_fb, frame_buffer, true);
+        display_needs_refresh = false;
+    }
+    return true;    // repeat timer
 }
 
 
-// clear the frame buffer quickly using a DMA channel
-void fb_clear() {
-    dma_channel_set_write_addr(dma_ch_fb_clear, frame_buffer, true);    // reset write address and trigger
-    dma_channel_wait_for_finish_blocking(dma_ch_fb_clear);
-}
-
-// convenience functions to set and clear pixel positions in the frame buffer
+// convenience functions to set/clear pixels in the frame buffer
 void set_pixel_xy(uint x, uint y) {
     if (x < NUM_X_PIXELS && y < NUM_Y_PIXELS) {
         frame_buffer[x + (y / 8) * NUM_X_PIXELS] |= (1 << (y % 8));
+        display_needs_refresh = true;
     }
 }
 
 void clear_pixel_xy(uint x, uint y) {
     if (x < NUM_X_PIXELS && y < NUM_Y_PIXELS) {
         frame_buffer[x + (y / 8) * NUM_X_PIXELS] &= ~(1 << (y % 8));
+        display_needs_refresh = true;
     }
+}
+
+// simple stdout callback for the display
+void fb_out_chars(const char *buf, int len) {
+    while (len) {
+        memcpy(
+            (void *)printf_write_ptr, 
+            &font[FONT_BYTES_PER_CODE * (FONT_INDEX_START + (*buf) - FONT_CODE_START)],
+            FONT_BYTES_PER_CODE
+        );
+        printf_write_ptr += FONT_BYTES_PER_CODE;
+        buf += 1;
+        len -= 1;
+        // TODO: manage scrolling at end of display
+    }
+    display_needs_refresh = true;
 }
 
 
 int main(){
     stdio_init_all();
 
-    // initialise everything
+    // initialise the interface and display
     dma_init();
     interface_init();
-    display_init();
+    display_reset();
 
-    // start the DMA transfer (automatically repeats every frame period)
-    dma_channel_start(dma_ch_fb_transfer);
+    // start the display referesh timer
+    struct repeating_timer timer;
+    add_repeating_timer_ms(FRAME_PERIOD_MS, frame_refresh_callback, NULL, &timer);
+
+    // add a simple stdio driver for the display
+    stdio_driver_t fb_stdio_driver = { fb_out_chars };
+    stdio_set_driver_enabled(&fb_stdio_driver, true);
+
+    printf("Hello, World!\n");
 
     // anything you write to the frame buffer will now be transferred transparently to the
     // display - for the memory layout consult the manufacturer's datasheet (reference above).
 
-    // NOTE: don't send your own commands or data to the display while it is being controlled
-    // by the DMA channels, as confusion will result. Do all your interaction via the frame
-    // buffer.
-    
     // simple example: a moving 'snake'
     int head_x = NUM_Y_PIXELS - 1, head_y = NUM_Y_PIXELS - 1, head_dx = 1, head_dy = 1;
-    int tail_x = 0, tail_y = 0, tail_dx = 1, tail_dy = 1;
+    int tail_x = FONT_BYTES_PER_CODE + 1, tail_y = FONT_BYTES_PER_CODE + 1, tail_dx = 1, tail_dy = 1;
     while(true) {
         set_pixel_xy(head_x, head_y);
         clear_pixel_xy(tail_x, tail_y);
@@ -183,7 +180,7 @@ int main(){
             head_dx = -head_dx;
         }
         head_x += head_dx;
-        if (head_y + head_dy < 0 || head_y + head_dy >= NUM_Y_PIXELS) {
+        if (head_y + head_dy <= FONT_BYTES_PER_CODE || head_y + head_dy >= NUM_Y_PIXELS) {
             head_dy = -head_dy;
         }
         head_y += head_dy;
@@ -193,7 +190,7 @@ int main(){
             tail_dx = -tail_dx;
         }
         tail_x += tail_dx;
-        if (tail_y + tail_dy < 0 || tail_y + tail_dy >= NUM_Y_PIXELS) {
+        if (tail_y + tail_dy <= FONT_BYTES_PER_CODE || tail_y + tail_dy >= NUM_Y_PIXELS) {
             tail_dy = -tail_dy;
         }
         tail_y += tail_dy;

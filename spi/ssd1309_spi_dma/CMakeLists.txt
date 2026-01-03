@@ -7,7 +7,6 @@ target_link_libraries(ssd1309_spi_dma
     pico_stdlib
     hardware_spi
     hardware_dma
-    hardware_clocks
     )
 
 # create map/bin/hex file etc.
