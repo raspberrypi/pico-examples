@@ -45,17 +45,15 @@
 #define DC_COMMAND_MODE     0
 #define DC_DATA_MODE        1
 
-
 // global variables
 uint8_t frame_buffer[NUM_X_PIXELS * NUM_Y_PIXELS / PIXELS_PER_BYTE];
 int dma_ch_transfer_fb;
-volatile bool display_needs_refresh;
-volatile uint fb_out_index;
+volatile bool display_needs_refresh = false;
+volatile uint fb_out_index = 0;
 
-// set up the DMA channels
+
+// configure a DMA channel to transmit the frame buffer over SPI
 void dma_init() {
-    // transfer the frame buffer to the SPI
-    // remember to reset the read address after each transfer
     dma_ch_transfer_fb = dma_claim_unused_channel(true);
     dma_channel_config_t c = dma_channel_get_default_config(dma_ch_transfer_fb);
     channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
@@ -94,7 +92,7 @@ void display_reset() {
     gpio_put(PIN_R, 1);
     sleep_ms(1);
 
-    // wake the display and set horizontal addressing mode
+    // wake up the display and set horizontal addressing mode
     gpio_put(PIN_DC, DC_COMMAND_MODE); 
     uint8_t cmd_list[] = { 0xaf, 0x20, 0x00 };
     spi_write_blocking(SPI_DEVICE, cmd_list, sizeof(cmd_list));
@@ -106,6 +104,7 @@ void display_reset() {
     display_needs_refresh = true;
 }
 
+// this will be called every frame period
 bool frame_refresh_callback(__unused struct repeating_timer *t) {
     if (display_needs_refresh) {
         // reset read address and start transfer
@@ -140,6 +139,7 @@ void fb_out_chars(const char *buf, int len) {
             } else {
                 font_index = FONT_BYTES_PER_CODE * (FONT_INDEX_START + code - FONT_CODE_FIRST);
             }
+            // copy bitmap from font table
             memcpy(&frame_buffer[fb_out_index], &font[font_index], FONT_BYTES_PER_CODE);
             fb_out_index += FONT_BYTES_PER_CODE;
         }
@@ -181,27 +181,24 @@ int main(){
     interface_init();
     display_reset();
 
-    // start the display refresh timer
+    // refresh the display from the frame buffer (if needed) once per frame using DMA
     struct repeating_timer timer;
     add_repeating_timer_ms(FRAME_PERIOD_MS, frame_refresh_callback, NULL, &timer);
 
-    // copy stdout to the frame buffer
+    // use a simple driver to copy stdout to the frame buffer
     stdio_driver_t fb_stdio_driver = { fb_out_chars };
     stdio_set_driver_enabled(&fb_stdio_driver, true);
 
+    // show some text on the screen
     set_cursor_pos(0, 2);
     printf("Hello, World\n");
 
-    // anything you write to the frame buffer will now be transferred transparently to the
-    // display - for the memory layout consult the manufacturer's datasheet (reference above).
-
-    // simple example: a moving 'snake'
+    // show a moving 'snake'
     int head_x = NUM_Y_PIXELS - 1, head_y = NUM_Y_PIXELS - 1, head_dx = 1, head_dy = 1;
     int tail_x = FONT_BYTES_PER_CODE + 1, tail_y = FONT_BYTES_PER_CODE + 1, tail_dx = 1, tail_dy = 1;
     while(true) {
         set_pixel_xy(head_x, head_y);
         clear_pixel_xy(tail_x, tail_y);
-
         // update head position
         if (head_x + head_dx < 0 || head_x + head_dx >= NUM_X_PIXELS) {
             head_dx = -head_dx;
@@ -211,7 +208,6 @@ int main(){
             head_dy = -head_dy;
         }
         head_y += head_dy;
-
         // update tail position
         if (tail_x + tail_dx < 0 || tail_x + tail_dx >= NUM_X_PIXELS) {
             tail_dx = -tail_dx;
@@ -221,7 +217,6 @@ int main(){
             tail_dy = -tail_dy;
         }
         tail_y += tail_dy;
-
         sleep_ms(5);
     }
 }
