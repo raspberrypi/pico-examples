@@ -2,13 +2,13 @@
  * Copyright (c) 2026 mjcross
  *
  * SPDX-License-Identifier: BSD-3-Clause
- */
+**/
 
 // Vertical bitmaps for commonly-used characters.
 
-// Each bitmap is 8 pixels wide and 8 pixels high, with the least
-// significant bit at the top. The patterns are based on bitmaps
-// originally credited to IBM.
+// Each bitmap is 8 pixels wide and 8 pixels high, with the least significant bit
+// at the top. The bitmaps were translated from one of the original IBM BIOS fonts
+// released over 45yrs ago (see https://int10h.org/oldschool-pc-fonts/)
 
 #include <stdint.h>
 
