@@ -1,6 +1,6 @@
 = Simple graphics and stdout text on an OLED display via SPI
 
-Ths example displays text and graphics on one of the widely-available small OLED panels based on the *SSD1309* controller. It should also work with compatible devices such as the *SSD1306* (not tested).
+This example displays text and graphics on one of the widely-available small OLED panels based on the *SSD1309* controller. It should also work with compatible devices such as the *SSD1306* (not tested).
 
 These modules typically support either I2C or SPI. For this example you will need one configured for SPI.
 
