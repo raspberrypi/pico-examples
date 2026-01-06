@@ -114,7 +114,7 @@ void fb_out_chars(const char *buf, int len) {
         buf += 1;
         len -= 1;
         while (fb_cursor_index >= sizeof(frame_buffer)) {
-            // scroll frame buffer (on RP2350 you could use a decementing dma transfer but it's probably overkill)
+            // scroll frame buffer (on RP2350 you could use a decrementing dma transfer but it's probably overkill)
             memmove(frame_buffer, frame_buffer + NUM_X_PIXELS, sizeof(frame_buffer) - NUM_X_PIXELS);
             fb_cursor_index -= NUM_X_PIXELS;
             memset(&frame_buffer[sizeof(frame_buffer) - NUM_X_PIXELS - 1], 0x00, NUM_X_PIXELS);
