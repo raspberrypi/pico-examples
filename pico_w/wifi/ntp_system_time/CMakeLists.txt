@@ -17,4 +17,10 @@ target_link_libraries(picow_ntp_system_time
         pico_stdlib
         )
 
+if(${PICO_PLATFORM} MATCHES "rp2040")
+        # disable SNTP round-trip compensation on RP2040 because
+        # its aon_timer hardware only has a resolution of 1 second
+        add_compile_definitions(DISABLE_SNTP_COMP_ROUNDTRIP)
+endif()
+
 pico_add_extra_outputs(picow_ntp_system_time)

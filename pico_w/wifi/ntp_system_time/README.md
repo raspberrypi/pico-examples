@@ -58,6 +58,8 @@ The example uses:
 
 The lwIP SNTP app provides a straightforward way to obtain and process timestamps from a pool of NTP servers without the complexity of a full NTP implementation. The lwIP documentation covers the [configuration options](https://www.nongnu.org/lwip/2_0_x/group__sntp.html) but the comments in the [source code](https://github.com/lwip-tcpip/lwip/blob/master/src/apps/sntp/sntp.c) are also very helpful.
 
+> Note that on RP2040 platforms you should **not** enable `SNTP_COMP_ROUNDTRIP` if you are keeping system time with the `aon_timer`, because on that platform it has a resolution of only one second. The example looks after this with a test in `CMakeLists.txt`.
+
 SNTP uses the **macros** `SNTP_GET_SYSTEM_TIME(sec, us)` and `SNTP_SET_SYSTEM_TIME_US(sec, us)` to call user-provided functions for accessing the system clock. The example defines the macros in `lwipopts.h` and the callbacks themselves are near the top of `ntp_system_time.c`.
 
 Note that the example runs lwIP/SNTP from `pico_cyw43_arch` in _threadsafe background mode_ as described in [SDK Networking](https://www.raspberrypi.com/documentation/pico-sdk/networking.html#group_pico_cyw43_arch).
