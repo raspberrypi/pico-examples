@@ -11,6 +11,13 @@
 #include "hardware/clocks.h"
 #include "blink.pio.h"
 
+/**
+ * This example demonstrates using PIO to flash four LEDs at different frequencies.
+ * On RP2040 and RP2350A those GPIOs are all in the same "PIO range" of 0 - 31 (so a single PIO is used).
+ * On RP2350B the first two GPIOs are in the "lower PIO range" of 0 - 31 and the
+ * next two LEDs are in the "higher PIO range" of 16 - 47 (so two PIOs are used).
+ */
+
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq);
 
 // By default flash LEDs on GPIOs 3 and 4
@@ -39,8 +46,10 @@ int main() {
     setup_default_uart();
 
     // LED1 and LED2 are both expected to be in the "lower" range of PIO-addressable GPIOs
+    assert(PIO_BLINK_LED2_GPIO == PIO_BLINK_LED1_GPIO + 1);
     assert((PIO_BLINK_LED1_GPIO < 32) && (PIO_BLINK_LED2_GPIO < 32));
     // check LED3 and LED4 are both in the same range of PIO-addressable GPIOs
+    assert(PIO_BLINK_LED4_GPIO == PIO_BLINK_LED3_GPIO + 1);
     assert(((PIO_BLINK_LED3_GPIO < 32) && (PIO_BLINK_LED4_GPIO < 32)) || ((PIO_BLINK_LED3_GPIO >= 16) && (PIO_BLINK_LED3_GPIO < 48) && (PIO_BLINK_LED4_GPIO >= 16) && (PIO_BLINK_LED4_GPIO < 48)));
 
     // LED1 and LED2 are both controlled by the program loaded into pio[0] at offset[0]
