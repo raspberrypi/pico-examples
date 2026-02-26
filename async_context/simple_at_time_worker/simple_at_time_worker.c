@@ -40,7 +40,7 @@ static my_data_t my_data = {
 // create an asynchronous at-time worker that points to our callback function and user
 // data (MUST still exist when the worker runs)
 static async_at_time_worker_t worker = {
-    .do_work = worker_cb,
+    .do_work = &worker_cb,
     .user_data = &my_data
 };
 
