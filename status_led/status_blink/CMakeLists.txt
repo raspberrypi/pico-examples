@@ -1,5 +1,5 @@
 # Blink the "status" LED either connected to the GPIO defined by PICO_DEFAULT_LED_PIN for your board
-# or via the WiFi chip on boards like Pico 2 or Pico 2 W
+# or via the WiFi chip on boards like Pico W or Pico 2 W
 
 add_executable(status_blink
     status_blink.c
