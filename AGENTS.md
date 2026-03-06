@@ -34,3 +34,14 @@ There is no centralized unit-test suite in this repository. The expected validat
 Recent commit subjects are short, imperative, and specific, for example `require SDK version 2.2.0` or `Update multi gcc (#689)`. Keep commits focused and descriptive.
 
 Upstream contributions should open PRs against `develop`, not `master`; PRs against `master` are rejected by CI. In the PR description, summarize the example or subsystem changed, list build/board coverage, and link any related issue. Add screenshots or serial output only when they clarify user-visible behavior.
+
+## Agent First-Open Workflow
+When Codex opens this repository for the first time in a session, perform this sequence before other changes:
+
+1. Check `git status --short --branch` and confirm the current branch and worktree state.
+2. Create a dedicated working branch from the current base using a Codex-specific name such as `codex/change-YYYYMMDD`.
+3. Check whether `AGENTS.md` exists locally and on the tracked remote branch.
+4. If `AGENTS.md` is missing, create or update it with repository-specific contributor guidance.
+5. Commit only the intended bootstrap changes with a focused message.
+6. Push the branch to `origin` and set upstream tracking if needed.
+7. Confirm the remote branch now contains `AGENTS.md` before moving on to feature work.
