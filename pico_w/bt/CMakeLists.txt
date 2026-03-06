@@ -5,14 +5,15 @@ set(BTSTACK_EXAMPLE_PATH ${BTSTACK_ROOT}/example)
 set(BTSTACK_3RD_PARTY_PATH ${BTSTACK_ROOT}/3rd-party)
 set(BT_EXAMPLE_COMMON_DIR "${CMAKE_CURRENT_LIST_DIR}")
 
-if (NOT PICO_EXTRAS_PATH)
-        message("Skipping some Pico W BTstack examples that require pico-extras")
-else()
-        add_library(pico_btstack_audio_example INTERFACE)
+add_library(pico_btstack_audio_example INTERFACE)
+target_sources(pico_btstack_audio_example INTERFACE
+        ${PICO_BTSTACK_PATH}/src/btstack_audio.c
+        ${PICO_BTSTACK_PATH}/src/btstack_audio_generator.c
+        )
+if (PICO_EXTRAS_PATH)
         target_sources(pico_btstack_audio_example INTERFACE
-                ${PICO_BTSTACK_PATH}/src/btstack_audio.c
                 ${CMAKE_CURRENT_LIST_DIR}/btstack_audio_pico.c
-                )
+        )
         target_link_libraries(pico_btstack_audio_example INTERFACE
                 pico_audio_i2s
                 )
@@ -22,13 +23,17 @@ endif()
 add_library(pico_btstack_hxcmod_player INTERFACE)
 target_sources(pico_btstack_hxcmod_player INTERFACE
         ${BTSTACK_3RD_PARTY_PATH}/hxcmod-player/hxcmod.c
-        ${BTSTACK_3RD_PARTY_PATH}/hxcmod-player/mods/nao-deceased_by_disease.c
+        ${BTSTACK_3RD_PARTY_PATH}/hxcmod-player/mods/mod.c
         )
 target_include_directories(pico_btstack_hxcmod_player INTERFACE
         ${BTSTACK_3RD_PARTY_PATH}/hxcmod-player
         ${BTSTACK_3RD_PARTY_PATH}/hxcmod-player/mods
         )
-
+if (PICO_EXTRAS_PATH)
+        target_compile_definitions(pico_btstack_hxcmod_player INTERFACE
+                ENABLE_MODPLAYER=1
+                )
+endif()
 add_library(pico_btstack_sco_demo_util INTERFACE)
 target_sources(pico_btstack_sco_demo_util INTERFACE
         # sco demo utils
@@ -53,10 +58,10 @@ target_compile_definitions(picow_bt_example_common INTERFACE
         #WANT_HCI_DUMP=1 # This enables btstack debug
         #ENABLE_SEGGER_RTT=1
         )
-if (TARGET pico_btstack_audio_example)
-        target_link_libraries(picow_bt_example_common INTERFACE
-                pico_btstack_audio_example
-                )
+target_link_libraries(picow_bt_example_common INTERFACE
+        pico_btstack_audio_example
+        )
+if (PICO_EXTRAS_PATH)
         target_compile_definitions(picow_bt_example_common INTERFACE
                 TEST_AUDIO=1
                 )

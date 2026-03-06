@@ -59,7 +59,7 @@
 #define SAMPLES_PER_BUFFER 512
 
 // client
-static void (*playback_callback)(int16_t * buffer, uint16_t num_samples);
+static void (*playback_callback)(int16_t * buffer, uint16_t num_samples, const btstack_audio_context_t * timeinfo);
 
 // timer to fill output ring buffer
 static btstack_timer_source_t  driver_timer_sink;
@@ -117,7 +117,7 @@ static void btstack_audio_pico_sink_fill_buffers(void){
         }
 
         int16_t * buffer16 = (int16_t *) audio_buffer->buffer->bytes;
-        (*playback_callback)(buffer16, audio_buffer->max_sample_count);
+        (*playback_callback)(buffer16, audio_buffer->max_sample_count, 0);
 
         // duplicate samples for mono
         if (btstack_audio_pico_channel_count == 1){
@@ -146,7 +146,7 @@ static void driver_timer_handler_sink(btstack_timer_source_t * ts){
 static int btstack_audio_pico_sink_init(
     uint8_t channels,
     uint32_t samplerate, 
-    void (*playback)(int16_t * buffer, uint16_t num_samples)
+    void (*playback)(int16_t * buffer, uint16_t num_samples, const btstack_audio_context_t * timeinfo)
 ){
     btstack_assert(playback != NULL);
     btstack_assert(channels != 0);
