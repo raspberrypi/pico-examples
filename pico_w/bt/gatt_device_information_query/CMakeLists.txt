@@ -1,1 +1,0 @@
-picow_bt_example(gatt_device_information_query)

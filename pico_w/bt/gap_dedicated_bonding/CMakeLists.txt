@@ -1,1 +1,0 @@
-picow_bt_example(gap_dedicated_bonding)

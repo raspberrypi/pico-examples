@@ -1,0 +1,76 @@
+# Select a security setting to explore the BLE security
+#
+# security setting 0: Just works (pairing), no MITM (Man In The Middle) protection
+#  client and server have no input or output support
+#
+# security setting 1: Numeric comparison with MITM protection
+#  client can query yes or no from the user, server has a display only
+#  server displays passkey
+#  client displays passkey and user can select Yes or No if they agree the passkey is from the server
+#
+# security setting 2:
+#  client has a keyboard and display, server has a display only
+#  server displays passkey
+#  client user enters the passkey displayed by the server
+#
+# security setting 3:
+#  client has a display only, server has a display and keyboard
+#  Client displays passkey
+#  server user enters the passkey displayed by the server
+if (NOT DEFINED SECURITY_SETTING)
+    set(SECURITY_SETTING 1)
+endif()
+
+# Standalone example that reads from the on board temperature sensor and sends notifications via BLE
+# Flashes slowly each second to show it's running
+add_executable(secure_temp_server
+    server.c 
+)
+target_link_libraries(secure_temp_server
+    pico_stdlib
+    pico_btstack_ble
+    pico_btstack_cyw43
+    pico_cyw43_arch_none
+    hardware_adc
+)
+target_include_directories(secure_temp_server PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR} # For our btstack config
+    ${CMAKE_CURRENT_LIST_DIR}/../config # for common btstack config
+)
+target_compile_definitions(secure_temp_server PRIVATE
+    # Wait up to 3s for stdio USB to initialise, to avoid losing any debug on startup
+    PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=3000
+    SECURITY_SETTING=${SECURITY_SETTING}
+    #WANT_HCI_DUMP=1
+)
+pico_btstack_make_gatt_header(secure_temp_server PRIVATE "${CMAKE_CURRENT_LIST_DIR}/temp_sensor.gatt")
+pico_add_extra_outputs(secure_temp_server)
+pico_enable_stdio_usb(secure_temp_server 1)
+pico_enable_stdio_uart(secure_temp_server 1)
+
+# Standalone example that connects to secure_temp_server and reads the temperature 
+# Flahes once quickly each second when it's running but not connected to another device
+# Flashes twice quickly each second when connected to another device and reading it's temperature
+add_executable(secure_temp_client
+    client.c
+    )
+target_link_libraries(secure_temp_client
+    pico_stdlib
+    pico_btstack_ble
+    pico_btstack_cyw43
+    pico_cyw43_arch_none
+    hardware_adc
+    )
+target_include_directories(secure_temp_client PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR} # For our btstack config
+    ${CMAKE_CURRENT_LIST_DIR}/../config # for common btstack config
+    )
+target_compile_definitions(secure_temp_client PRIVATE
+    # Wait up to 3s for stdio USB to initialise, to avoid losing any debug on startup
+    PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=3000
+    SECURITY_SETTING=${SECURITY_SETTING}
+    #WANT_HCI_DUMP=1
+)
+pico_add_extra_outputs(secure_temp_client)
+pico_enable_stdio_usb(secure_temp_client 1)
+pico_enable_stdio_uart(secure_temp_client 1)
