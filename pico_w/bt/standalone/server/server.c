@@ -190,6 +190,11 @@ restart:
         async_context_wait_for_work_until(cyw43_arch_async_context(), at_the_end_of_time);
     }
 
+    att_server_deinit();
+
+    sm_deinit();
+    l2cap_deinit();
+
     cyw43_arch_deinit();
 
     printf("Press the \"S\" key to Start bluetooth\n");
