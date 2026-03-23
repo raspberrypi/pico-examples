@@ -21,9 +21,10 @@ include(ExternalProject)
 # The build will output a TARGET.bin file which can be written using picotool, and a
 # TARGET.uf2 file which can be dragged and dropped onto the device in BOOTSEL mode
 function (add_universal_target TARGET SOURCE)
+    set(zeroValueArgs SEPARATE_RP2040)
     set(oneValueArgs SOURCE_TARGET PADDING PACKADDR BOARD_RP2040 BOARD_RP2350)
     set(multiValueArgs PLATFORMS)
-    cmake_parse_arguments(PARSE_ARGV 2 PARSED "" "${oneValueArgs}" "${multiValueArgs}")
+    cmake_parse_arguments(PARSE_ARGV 2 PARSED "${zeroValueArgs}" "${oneValueArgs}" "${multiValueArgs}")
 
     set(SOURCE_TARGET ${TARGET})
     if (PARSED_SOURCE_TARGET)
@@ -107,13 +108,35 @@ function (add_universal_target TARGET SOURCE)
         message(FATAL_ERROR "Cannot link universal binary without picotool")
     endif()
 
-    # Link the binaries for different platforms into a single block loop, with
-    # appropriate rolling window deltas. This creates a universal binary file,
-    # which will run on any of the platforms when loaded using picotool.
-    add_custom_target(${TARGET}_combined
-            COMMAND picotool link ${COMBINED} ${BINS} --pad ${PADDING}
-            DEPENDS ${DEPS}
-            )
+    list(FIND PLATFORMS "rp2040" idx)
+    if (idx EQUAL 0 AND PARSED_SEPARATE_RP2040)
+        # Don't include RP2040 bin in the combined BIN, just include it in the RP2040 UF2
+        # POP_FRONT only added in CMake 3.15, so use GET and REMOVE_AT instead
+        list(GET BINS 0 RP2040_BIN)
+        list(REMOVE_AT BINS 0)
+        set(RP2040_COMBINED ${RP2040_BIN})
+    else()
+        set(RP2040_COMBINED ${COMBINED})
+    endif()
+
+    list(LENGTH BINS BINS_COUNT)
+    if (BINS_COUNT GREATER 1)
+        # Link the binaries for different platforms into a single block loop, with
+        # appropriate rolling window deltas. This creates a universal binary file,
+        # which will run on any of the platforms when loaded using picotool.
+        add_custom_target(${TARGET}_combined
+                COMMAND picotool link ${COMBINED} ${BINS} --pad ${PADDING}
+                DEPENDS ${DEPS}
+                )
+    else()
+        # Only one binary left, so no picotool link is needed - just copy instead
+        # This could be the case if only building for rp2040 and rp2350-arm-s,
+        # with SEPARATE_RP2040 set
+        add_custom_target(${TARGET}_combined
+                COMMAND ${CMAKE_COMMAND} -E copy ${BINS} ${COMBINED}
+                DEPENDS ${DEPS}
+                )
+    endif()
 
     # Create UF2s targeting the absolute and rp2040 family IDs, then combine these
     # into a single universal UF2. This is required as there isn't a single family
@@ -124,7 +147,7 @@ function (add_universal_target TARGET SOURCE)
             DEPENDS ${TARGET}_combined
             )
     add_custom_target(${TARGET}_rp2040_uf2
-            COMMAND picotool uf2 convert ${COMBINED} ${BINDIR}/rp2040.uf2 --family rp2040 --offset ${PACKADDR}
+            COMMAND picotool uf2 convert ${RP2040_COMBINED} ${BINDIR}/rp2040.uf2 --family rp2040 --offset ${PACKADDR}
             DEPENDS ${TARGET}_combined
             )
     add_custom_target(${TARGET}_uf2
@@ -146,7 +169,7 @@ add_universal_target(blink_universal
     SOURCE_TARGET blink_universal
     BOARD_RP2040 universal
     BOARD_RP2350 universal
-    PLATFORMS "rp2040;rp2350-arm-s" # Skip RISC-V, as wifi firmware takes up lots of space
+    SEPARATE_RP2040 PLATFORMS "rp2040;rp2350-arm-s" # Skip RISC-V and keep RP2040 separate, as wifi firmware takes up lots of space
     )
 
 # nuke binary - is no_flash, so needs to be sent to SRAM on RP2040
