@@ -21,7 +21,7 @@ include(ExternalProject)
 # The build will output a TARGET.bin file which can be written using picotool, and a
 # TARGET.uf2 file which can be dragged and dropped onto the device in BOOTSEL mode
 function (add_universal_target TARGET SOURCE)
-    set(oneValueArgs SOURCE_TARGET PADDING PACKADDR)
+    set(oneValueArgs SOURCE_TARGET PADDING PACKADDR BOARD_RP2040 BOARD_RP2350)
     set(multiValueArgs PLATFORMS)
     cmake_parse_arguments(PARSE_ARGV 2 PARSED "" "${oneValueArgs}" "${multiValueArgs}")
 
@@ -40,6 +40,13 @@ function (add_universal_target TARGET SOURCE)
     set(PLATFORMS "rp2040;rp2350-arm-s;rp2350-riscv")
     if (PARSED_PLATFORMS)
         set(PLATFORMS ${PARSED_PLATFORMS})
+    endif()
+    # these could be set as CMake variables, so only override if explicitly passed as arguments
+    if (PARSED_BOARD_RP2040)
+        set(PICO_BOARD_RP2040 ${PARSED_BOARD_RP2040})
+    endif()
+    if (PARSED_BOARD_RP2350)
+        set(PICO_BOARD_RP2350 ${PARSED_BOARD_RP2350})
     endif()
     # rp2040 must come first, as that has checksum requirements at the start of the binary
     list(FIND PLATFORMS "rp2040" idx)
@@ -135,8 +142,11 @@ add_universal_target(hello_universal
 
 # blink binary
 add_universal_target(blink_universal
-    ${CMAKE_CURRENT_LIST_DIR}/../blink
-    SOURCE_TARGET blink
+    ${CMAKE_CURRENT_LIST_DIR}/blink_universal
+    SOURCE_TARGET blink_universal
+    BOARD_RP2040 universal
+    BOARD_RP2350 universal
+    PLATFORMS "rp2040;rp2350-arm-s" # Skip RISC-V, as wifi firmware takes up lots of space
     )
 
 # nuke binary - is no_flash, so needs to be sent to SRAM on RP2040
