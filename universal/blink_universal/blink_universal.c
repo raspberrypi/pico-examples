@@ -12,7 +12,21 @@
 #define LED_DELAY_MS 250
 #endif
 
-bool detect_is_w_using_adc(void) {
+enum BOARD_TYPE {
+    BOARD_TYPE_PICO,
+    BOARD_TYPE_PICO_W,
+    BOARD_TYPE_UNKNOWN,
+};
+
+// Detects if PICO_VSYS_PIN is actually connected to the VSYS voltage divider,
+// to determine the board type.
+// Also checks that the LED pin is low, which should be the case for both
+// Pico-series and Pico W-series boards.
+// This will work provided that the board is being powered from VSYS (i.e. it
+// is using the onboard voltage regulator).
+// This method is documented in section 2.4 of Connecting to the Internet with
+// Raspberry Pi Pico W-series (https://pip.raspberrypi.com/documents/RP-008257-DS).
+enum BOARD_TYPE detect_board_type(void) {
     adc_init();
     adc_gpio_init(PICO_VSYS_PIN);
     adc_select_input(PICO_VSYS_PIN - ADC_BASE_PIN);
@@ -25,15 +39,20 @@ bool detect_is_w_using_adc(void) {
     bool value = gpio_get(PICO_DEFAULT_LED_PIN);
 
     if (value == 0 && voltage < 0.1) {
-        return true;
+        // Pico W-series board
+        return BOARD_TYPE_PICO_W;
+    } else if (value == 0) {
+        // Pico-series board
+        return BOARD_TYPE_PICO;
     } else {
-        return false;
+        // Unknown board
+        return BOARD_TYPE_UNKNOWN;
     }
 }
 
 // Perform initialisation
-int pico_led_init(bool is_w) {
-    if (is_w) {
+int pico_led_init(enum BOARD_TYPE board_type) {
+    if (board_type == BOARD_TYPE_PICO_W) {
         return cyw43_arch_init();
     } else {
         // A device like Pico that uses a GPIO for the LED will define PICO_DEFAULT_LED_PIN
@@ -45,8 +64,8 @@ int pico_led_init(bool is_w) {
 }
 
 // Turn the led on or off
-void pico_set_led(bool led_on, bool is_w) {
-    if (is_w) {
+void pico_set_led(bool led_on, enum BOARD_TYPE board_type) {
+    if (board_type == BOARD_TYPE_PICO_W) {
         cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
     } else {
         gpio_put(PICO_DEFAULT_LED_PIN, led_on);
@@ -54,13 +73,13 @@ void pico_set_led(bool led_on, bool is_w) {
 }
 
 int main() {
-    bool is_w = detect_is_w_using_adc();
-    int rc = pico_led_init(is_w);
+    enum BOARD_TYPE board_type = detect_board_type();
+    int rc = pico_led_init(board_type);
     hard_assert(rc == PICO_OK);
     while (true) {
-        pico_set_led(true, is_w);
+        pico_set_led(true, board_type);
         sleep_ms(LED_DELAY_MS);
-        pico_set_led(false, is_w);
+        pico_set_led(false, board_type);
         sleep_ms(LED_DELAY_MS);
     }
 }

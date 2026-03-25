@@ -20,6 +20,10 @@ include(ExternalProject)
 #
 # The build will output a TARGET.bin file which can be written using picotool, and a
 # TARGET.uf2 file which can be dragged and dropped onto the device in BOOTSEL mode
+#
+# If SEPARATE_RP2040 is set, the RP2040 binary will not be included in the block loop,
+# so the RP2040 UF2 file will only contain the RP2040 binary, and the RP2350 UF2 file will
+# contain the combined binary excluding the RP2040 binary.
 function (add_universal_target TARGET SOURCE)
     set(zeroValueArgs SEPARATE_RP2040)
     set(oneValueArgs SOURCE_TARGET PADDING PACKADDR BOARD_RP2040 BOARD_RP2350)
@@ -169,7 +173,9 @@ add_universal_target(blink_universal
     SOURCE_TARGET blink_universal
     BOARD_RP2040 universal
     BOARD_RP2350 universal
-    SEPARATE_RP2040 PLATFORMS "rp2040;rp2350-arm-s" # Skip RISC-V and keep RP2040 separate, as wifi firmware takes up lots of space
+    # Skip RISC-V and keep RP2040 separate, as wifi firmware takes up lots of space
+    PLATFORMS "rp2040;rp2350-arm-s"
+    SEPARATE_RP2040
     )
 
 # nuke binary - is no_flash, so needs to be sent to SRAM on RP2040

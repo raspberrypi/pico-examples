@@ -408,12 +408,14 @@ App|Description
 
 These are examples of how to build universal binaries which run on RP2040, and RP2350 Arm & RISC-V.
 These require you to set `PICO_ARM_TOOLCHAIN_PATH` and `PICO_RISCV_TOOLCHAIN_PATH` to appropriate paths, to ensure you have compilers for both architectures.
+These are designed for dragging & dropping onto a device, so may not load as expected when using `picotool`.
+See the separate [README](universal/README.md) for more details of how these work.
 
 App|Description
 ---|---
-[blink_universal](universal/CMakeLists.txt#L126) | Same as the [blink](blink) example, but universal.
+[blink_universal](universal/blink_universal) | A universal blink which works for all Pico-series and Pico W-series boards.
 [hello_universal](universal/hello_universal) | The obligatory Hello World program for Pico (USB and serial output). On RP2350 it will reboot to the other architecture after every 10 prints.
-[nuke_universal](universal/CMakeLists.txt#L132) | Same as the [nuke](flash/nuke) example, but universal. On RP2350 runs as a packaged SRAM binary, so it is written to flash and copied to SRAM by the bootloader.
+[nuke_universal](universal/CMakeLists.txt) | Same as the [nuke](flash/nuke) example, but universal.
 
 ### USB Device
 
