@@ -13,8 +13,8 @@
 #endif
 
 enum BOARD_TYPE {
-    BOARD_TYPE_PICO,
-    BOARD_TYPE_PICO_W,
+    BOARD_TYPE_PICO,    // Pico-series board
+    BOARD_TYPE_PICO_W,  // Pico W-series board
     BOARD_TYPE_UNKNOWN,
 };
 
