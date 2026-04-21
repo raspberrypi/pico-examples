@@ -2,6 +2,7 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "pico/status_led.h"
+#include "pico/binary_info.h"
 
 #define CURRENT_REGISTER 0x01
 #define VOLTAGE_REGISTER 0x02
@@ -26,7 +27,15 @@ static uint16_t read_reg(uint8_t reg) {
 
 int main() {
     stdio_init_all();
-    printf("ina260 test\n");
+#if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
+    #warning i2c / ina260_i2c example requires a board with I2C pins
+    panic("Default I2C pins were not defined");
+#endif
+    // useful information for picotool
+    bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
+    bi_decl(bi_program_description("INA260 I2C example for the Raspberry Pi Pico"));
+
+    printf("ina260 example\n");
 
     // Initialise i2c
     i2c_init(i2c_default, 100 * 1000);
