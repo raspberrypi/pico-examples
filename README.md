@@ -153,6 +153,7 @@ App|Description
 [bus_scan](i2c/bus_scan) | Scan the I2C bus for devices and display results.
 [bmp280_i2c](i2c/bmp280_i2c) | Read and convert temperature and pressure data from a BMP280 sensor, attached to an I2C bus.
 [ina260_i2c](i2c/ina260_i2c) | Monitor power usage of another Pico device ina260 sensor, via I2C.
+[ina228_i2c](i2c/ina228_i2c) | Monitor power usage of another Pico device ina228 sensor, via I2C.
 [lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C.
 [lis3dh_i2c](i2c/lis3dh_i2c) | Read acceleration and temperature value from a LIS3DH sensor via I2C
 [mcp9808_i2c](i2c/mcp9808_i2c) | Read temperature from a MCP9808 sensor, set limits and raise alerts when limits are surpassed.
@@ -165,7 +166,6 @@ App|Description
 [ht16k33_i2c](i2c/ht16k33_i2c) | Drive a 4 digit 14 segment LED with an HT16K33.
 [slave_mem_i2c](i2c/slave_mem_i2c) | i2c slave example where the slave implements a 256 byte memory.
 [slave_mem_i2c_burst](i2c/slave_mem_i2c) | i2c slave example where the slave implements a 256 byte memory. This version inefficiently writes each byte in a separate call to demonstrate read and write burst mode.
-[ina228_i2c](i2c/ina228) | Read voltage, current, temperature, power, energy and charge from INA228 sensor, via I2C.
 
 ### Interpolator
 
