@@ -29,7 +29,7 @@ ina228_i2c.c:: The example code.
 |===
 | *Item* | *Quantity* | Details
 | Breadboard | 1 | generic part
-| Raspberry Pi Pico (any) | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico-2/
+| Raspberry Pi Pico or Pico 2 (any model) | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
 | INA228-based breakout board | 1 | https://www.adafruit.com/product/5832
 | M/M Jumper wires | 8 | generic part
 | LED | 1 | generic part
