@@ -3,9 +3,6 @@
 #include "hardware/i2c.h"
 #include <math.h>
 
-// LED GPIO
-#define EXT_LED_GPIO 2
-
 // INA228 breakout board shunt resistance in Ohms
 #define R_SHUNT 0.015
 
@@ -100,11 +97,6 @@ int main()
 {
     stdio_init_all();
 
-    // Initialise external LED and turn it on (so we can measure some current)
-    gpio_init(EXT_LED_GPIO);
-    gpio_set_dir(EXT_LED_GPIO, GPIO_OUT);
-    gpio_put(EXT_LED_GPIO, true);
-
     // I2C initialisation
     i2c_init(i2c_default, 400*1000);
     
@@ -119,7 +111,11 @@ int main()
 
     while (true) {
         ina228_read(&vshunt, &vbus, &dietemp, &current, &power, &energy, &charge);
+#if 0
         printf("INA228 Measurements:\nVSHUNT: %f V\nVBUS: %f V\nDIETEMP: %f °C\nCURRENT: %f A\nPOWER: %f W\nENERGY: %f J\nCHARGE: %f C\n-----------------\n", vshunt, vbus, dietemp, current, power, energy, charge);
+#else
+        printf("current: %.2f mA voltage: %.2f V power: %.2f mW\n", current * 1000, vbus, power * 1000);
+#endif
         sleep_ms(1000);
     }
 }
