@@ -16,6 +16,8 @@
 #define LOW_POWER_WAKE_GPIO 15
 #endif
 
+uint32_t __persistent_data(run_count);
+
 // The example will repeatedly wait 10 seconds then switch off for 10 seconds
 // The debugger will appear to be unresponsive while the device is off
 int main() {
@@ -25,7 +27,7 @@ int main() {
     status_led_set_state(true);
 
     // Scratch register survives power down
-    printf("Wake up, test run: %u\n", powman_hw->scratch[0]++);
+    printf("Wake up, test run: %u\n", run_count++);
 
     // Wait for gpio to go low
     if (gpio_get(LOW_POWER_WAKE_GPIO)) {

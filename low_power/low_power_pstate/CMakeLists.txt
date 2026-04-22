@@ -6,6 +6,7 @@ target_link_libraries(low_power_pstate_timer PRIVATE
     pico_low_power
     pico_status_led
 )
+pico_set_persistent_data_loc(low_power_pstate_timer 0x20040000) # SRAM1 power domain
 pico_add_extra_outputs(low_power_pstate_timer)
 example_auto_set_url(low_power_pstate_timer)
 pico_enable_stdio_usb(low_power_pstate_timer 0)
@@ -19,6 +20,7 @@ target_link_libraries(low_power_pstate_gpio PRIVATE
     pico_low_power
     pico_status_led
 )
+pico_set_persistent_data_loc(low_power_pstate_gpio 0x20040000) # SRAM1 power domain
 pico_add_extra_outputs(low_power_pstate_gpio)
 example_auto_set_url(low_power_pstate_gpio)
 pico_enable_stdio_usb(low_power_pstate_gpio 0)

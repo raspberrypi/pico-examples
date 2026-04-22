@@ -15,6 +15,8 @@
 #define AWAKE_TIME_MS 10000
 #define SLEEP_TIME_MS 10000
 
+uint32_t __persistent_data(run_count);
+
 // The example will repeatedly wait 10 seconds then switch off for 10 seconds
 // The debugger will appear to be unresponsive while the device is off
 int main() {
@@ -33,7 +35,7 @@ int main() {
     status_led_set_state(true);
 
     // Scratch register survives power down
-    printf("Wake up, test run: %u\n", powman_hw->scratch[0]++);
+    printf("Wake up, test run: %u\n", run_count++);
 
     // Stay awake for a few seconds
     printf("Awake for %dms\n", AWAKE_TIME_MS);
