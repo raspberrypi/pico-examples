@@ -15,31 +15,34 @@
 #define AWAKE_TIME_MS 10000
 #define SLEEP_TIME_MS 10000
 
-// Got to sleep and wakeup after 5 seconds
 // The example will repeatedly wait 10 seconds then switch off for 10 seconds
 // The debugger will appear to be unresponsive while the device is off
 int main() {
-
     stdio_init_all();
+    // Must start the aon timer if needed
+    if (!aon_timer_is_running()) {
+        struct timespec ts = { .tv_sec = 1776858754, .tv_nsec = 0 };
+        hard_assert(aon_timer_start(&ts));
+    }
+#if AWAKE_TIME_MS < 10000
+    // pause for at least 10s to allow the debugger to attach on power up to allow the device to be re-programmed
+    printf("Waiting a bit to allow debugger to attach\n");
+    sleep_ms(10000 - AWAKE_TIME_MS);
+#endif
     hard_assert(status_led_init());
     status_led_set_state(true);
 
     // Scratch register survives power down
     printf("Wake up, test run: %u\n", powman_hw->scratch[0]++);
-    printf("Current power state: 0x%x\n", powman_get_power_state());
 
     // Stay awake for a few seconds
     printf("Awake for %dms\n", AWAKE_TIME_MS);
     sleep_ms(AWAKE_TIME_MS);
 
-    powman_set_debug_power_request_ignored(true);
-    powman_timer_start();
-
     // power off
-    printf("Sleep for %dms\n", SLEEP_TIME_MS);
+    printf("Low power for %dms\n", SLEEP_TIME_MS);
     status_led_set_state(false);
-    absolute_time_t start_time = aon_timer_get_absolute_time();
-    absolute_time_t wakeup_time = delayed_by_ms(start_time, SLEEP_TIME_MS);
+    absolute_time_t wakeup_time = delayed_by_ms(aon_timer_get_absolute_time(), SLEEP_TIME_MS); // note: MUST use aon_timer_get_absolute_time
     int rc = low_power_pstate_until_aon_timer(wakeup_time, NULL, NULL);
     status_led_set_state(true);
     printf("low_power_pstate_until_aon_timer returned error %d\n", rc);

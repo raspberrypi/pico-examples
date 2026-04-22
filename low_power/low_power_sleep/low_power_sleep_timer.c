@@ -23,19 +23,16 @@ int main() {
     while(true) {
         status_led_set_state(true);
 
-        // Scratch register survives power down
         printf("Wake up, test run: %u\n", count++);
 
         // Stay awake for a few seconds
         printf("Awake for %dms\n", AWAKE_TIME_MS);
         sleep_ms(AWAKE_TIME_MS);
 
-        // power off
-        printf("Sleep for %dms\n", SLEEP_TIME_MS);
+        // go to sleep
+        printf("Sleeping for %dms\n", SLEEP_TIME_MS);
         status_led_set_state(false);
-        absolute_time_t start_time = get_absolute_time();
-        absolute_time_t wakeup_time = delayed_by_ms(start_time, SLEEP_TIME_MS);
-        
+        absolute_time_t wakeup_time = delayed_by_ms(get_absolute_time(), SLEEP_TIME_MS);
         int rc = low_power_sleep_until_default_timer(wakeup_time, NULL, true);
         status_led_set_state(true);
         if (rc != PICO_OK) {
