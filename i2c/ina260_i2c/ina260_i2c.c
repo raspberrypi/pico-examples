@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "hardware/clocks.h"
 #include "pico/status_led.h"
 #include "pico/binary_info.h"
 
@@ -10,6 +11,10 @@
 #define I2C_ADDRESS 0x40
 
 #define ByteSwap(u)  (uint16_t)((u << 8)|(u >> 8))
+
+#ifndef RTC_CLOCK_SRC_GPIO_OUT
+#define RTC_CLOCK_SRC_GPIO_OUT 21
+#endif
 
 // Read register value
 static uint16_t read_reg(uint8_t reg) {
@@ -36,6 +41,9 @@ int main() {
     bi_decl(bi_program_description("INA260 I2C example for the Raspberry Pi Pico"));
 
     printf("ina260 example\n");
+
+    // output a clock GP21 that can be used for dormant testing with RP2040
+    clock_gpio_init(RTC_CLOCK_SRC_GPIO_OUT, CLOCKS_CLK_GPOUT3_CTRL_AUXSRC_VALUE_CLK_USB, 1024); // 48kHz
 
     // Initialise i2c
     i2c_init(i2c_default, 100 * 1000);
