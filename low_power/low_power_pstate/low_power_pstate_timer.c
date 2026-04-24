@@ -6,14 +6,17 @@
 
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/powman.h"
 #include "pico/low_power.h"
 #include "pico/aon_timer.h"
 #include "pico/status_led.h"
 
 // How long to wait
+#ifndef AWAKE_TIME_MS
 #define AWAKE_TIME_MS 10000
+#endif
+#ifndef SLEEP_TIME_MS
 #define SLEEP_TIME_MS 10000
+#endif
 
 uint32_t __persistent_data(run_count);
 
@@ -22,9 +25,9 @@ uint32_t __persistent_data(run_count);
 int main() {
     stdio_init_all();
     // Must start the aon timer if needed
+    printf("Current time: %llu\n", aon_timer_get_absolute_time());
     if (!aon_timer_is_running()) {
-        struct timespec ts = { .tv_sec = 1776858754, .tv_nsec = 0 };
-        hard_assert(aon_timer_start(&ts));
+        low_power_start_aon_timer_at_time_ms(1776858754000);
     }
 #if AWAKE_TIME_MS < 10000
     // pause for at least 10s to allow the debugger to attach on power up to allow the device to be re-programmed
@@ -44,10 +47,9 @@ int main() {
     // power off
     printf("Low power for %dms\n", SLEEP_TIME_MS);
     status_led_set_state(false);
-    absolute_time_t wakeup_time = delayed_by_ms(aon_timer_get_absolute_time(), SLEEP_TIME_MS); // note: MUST use aon_timer_get_absolute_time
-    int rc = low_power_pstate_until_aon_timer(wakeup_time, NULL, NULL);
+    int rc = low_power_pstate_for_ms(SLEEP_TIME_MS, NULL, NULL);
     status_led_set_state(true);
-    printf("low_power_pstate_until_aon_timer returned error %d\n", rc);
+    printf("low_power_pstate_for_ms returned error %d\n", rc);
     hard_assert(false); // should never get here!
     return 0;
 }

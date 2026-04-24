@@ -10,8 +10,12 @@
 #include "pico/status_led.h"
 
 // How long to wait
+#ifndef AWAKE_TIME_MS
 #define AWAKE_TIME_MS 10000
+#endif
+#ifndef SLEEP_TIME_MS
 #define SLEEP_TIME_MS 10000
+#endif
 
 // Got to sleep and wakeup after 10 seconds
 int main() {
@@ -32,11 +36,10 @@ int main() {
         // go to sleep
         printf("Sleeping for %dms\n", SLEEP_TIME_MS);
         status_led_set_state(false);
-        absolute_time_t wakeup_time = delayed_by_ms(get_absolute_time(), SLEEP_TIME_MS);
-        int rc = low_power_sleep_until_default_timer(wakeup_time, NULL, true);
+        int rc = low_power_sleep_for_ms(SLEEP_TIME_MS, NULL, true);
         status_led_set_state(true);
         if (rc != PICO_OK) {
-            printf("low_power_sleep_until_default_timer returned error %d\n", rc);
+            printf("low_power_sleep_for_ms returned error %d\n", rc);
             hard_assert(false);
         }
     }

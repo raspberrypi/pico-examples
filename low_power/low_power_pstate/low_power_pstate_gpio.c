@@ -6,7 +6,6 @@
 
 #include <stdio.h>
 #include "pico/stdlib.h"
-#include "hardware/powman.h"
 #include "pico/low_power.h"
 #include "pico/aon_timer.h"
 #include "pico/status_led.h"

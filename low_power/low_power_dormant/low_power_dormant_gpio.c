@@ -14,6 +14,14 @@
 #define LOW_POWER_WAKE_GPIO 15
 #endif
 
+#ifndef CLOCK_SOURCE
+#if PICO_RP2040
+#define CLOCK_SOURCE DORMANT_CLOCK_SOURCE_XOSC
+#else
+#define CLOCK_SOURCE DORMANT_CLOCK_SOURCE_LPOSC
+#endif
+#endif
+
 // Got to sleep and wakeup when gpio goes high
 int main() {
 
@@ -39,13 +47,7 @@ int main() {
         printf("Dormant until gpio %u goes high\n", LOW_POWER_WAKE_GPIO);
         status_led_set_state(false);
         
-        int rc = low_power_dormant_until_gpio_pin_state(LOW_POWER_WAKE_GPIO, true, true, 
-#if PICO_RP2040
-            DORMANT_CLOCK_SOURCE_XOSC,
-#else
-            DORMANT_CLOCK_SOURCE_LPOSC,
-#endif
-            NULL);
+        int rc = low_power_dormant_until_gpio_pin_state(LOW_POWER_WAKE_GPIO, true, true, CLOCK_SOURCE, NULL);
         status_led_set_state(true);
         if (rc != PICO_OK) {
             printf("low_power_dormant_until_aon_timer returned error %d\n", rc);

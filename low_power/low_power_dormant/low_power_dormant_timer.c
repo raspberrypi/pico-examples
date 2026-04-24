@@ -15,11 +15,25 @@
 #endif
 
 // How long to wait
+#ifndef AWAKE_TIME_MS
 #define AWAKE_TIME_MS 10000
+#endif
+#ifndef SLEEP_TIME_MS
 #define SLEEP_TIME_MS 10000
+#endif
 
-#ifndef LOW_POWER_CLKSRC_GPIO_IN
-#define LOW_POWER_CLKSRC_GPIO_IN 20
+#if PICO_RP2040
+#ifndef RTC_CLOCK_SRC_GPIO_IN
+#define RTC_CLOCK_SRC_GPIO_IN 20
+#endif
+#endif
+
+#ifndef CLOCK_SOURCE
+#if PICO_RP2040
+#define CLOCK_SOURCE DORMANT_CLOCK_SOURCE_XOSC
+#else
+#define CLOCK_SOURCE DORMANT_CLOCK_SOURCE_LPOSC
+#endif
 #endif
 
 // Got to sleep and wakeup after 5 seconds
@@ -28,8 +42,7 @@
 int main() {
     stdio_init_all();
     // Must start aon timer
-    struct timespec ts = { .tv_sec = 1776858754, .tv_nsec = 0 };
-    aon_timer_start(&ts);
+    low_power_start_aon_timer_at_time_ms(1776858754000);
 #if AWAKE_TIME_MS < 10000
     // pause for at least 10s to allow the debugger to attach on power up to allow the device to be re-programmed
     printf("Waiting a bit to allow debugger to attach\n");
@@ -50,17 +63,13 @@ int main() {
         printf("Dormant for %dms\n", SLEEP_TIME_MS);
         status_led_set_state(false);
 
-        absolute_time_t wakeup_time = delayed_by_ms(aon_timer_get_absolute_time(), SLEEP_TIME_MS); // note MUST use aon_timer_get_absolute_time
-        int rc = low_power_dormant_until_aon_timer(wakeup_time,
 #if PICO_RP2040
-            DORMANT_CLOCK_SOURCE_XOSC, RTC_CLOCK_FREQ_HZ,
-#else
-            DORMANT_CLOCK_SOURCE_LPOSC, 0,
+        low_power_set_external_clock_source(RTC_CLOCK_FREQ_HZ, RTC_CLOCK_SRC_GPIO_IN);
 #endif
-            LOW_POWER_CLKSRC_GPIO_IN, NULL);
+        int rc = low_power_dormant_for_ms(SLEEP_TIME_MS, CLOCK_SOURCE, NULL);
         status_led_set_state(true);
         if (rc != PICO_OK) {
-            printf("low_power_dormant_until_aon_timer returned error %d\n", rc);
+            printf("low_power_dormant_for_ms returned error %d\n", rc);
             hard_assert(false);
         }
     }
