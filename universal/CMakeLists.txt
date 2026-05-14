@@ -156,7 +156,10 @@ function (add_universal_target TARGET SOURCE)
             )
 
     if (CMAKE_HOST_UNIX)
-        # Can use tail and truncate to make a better UF2 file
+        # If you just concatenate the files, then on Windows you get an alarming 'write error' dialog when copying
+        # large UF2s, because the device reboots too soon. Moving the final RP2040 UF2 block to the end of the file
+        # fixes this, as it won't reboot until the final block is received. This fix requires `tail` and `truncate`,
+        # so only use it when building on Unix-like systems.
         add_custom_target(${TARGET}_uf2
                 COMMAND tail -c 512 ${BINDIR}/rp2040.uf2 > ${BINDIR}/rp2040.end.uf2
                 COMMAND cat ${BINDIR}/rp2040.uf2 > ${BINDIR}/rp2040.start.uf2
@@ -165,7 +168,8 @@ function (add_universal_target TARGET SOURCE)
                 DEPENDS ${TARGET}_absolute_uf2 ${TARGET}_rp2040_uf2
                 )
     else()
-        # Not guaranteed to have tail or truncate, so 
+        # Not guaranteed to have `tail` or `truncate`, so just concatenate the files as before - this still loads
+        # the file onto the device correctly.
         add_custom_target(${TARGET}_uf2
                 COMMAND ${CMAKE_COMMAND} -E cat ${BINDIR}/rp2040.uf2 ${BINDIR}/absolute.uf2 > ${BINDIR}/${TARGET}.uf2
                 DEPENDS ${TARGET}_absolute_uf2 ${TARGET}_rp2040_uf2
