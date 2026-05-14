@@ -146,18 +146,31 @@ function (add_universal_target TARGET SOURCE)
     # into a single universal UF2. This is required as there isn't a single family
     # ID which is accepted by both RP2040 and RP2350. Instead, the 2 UF2 files are
     # concatenated together and the device ignores the part not targeting it.
-    add_custom_target(${TARGET}_rp2350_uf2
-            COMMAND picotool uf2 convert ${COMBINED} ${BINDIR}/rp2350.uf2 --family absolute --offset ${PACKADDR}
+    add_custom_target(${TARGET}_absolute_uf2
+            COMMAND picotool uf2 convert ${COMBINED} ${BINDIR}/absolute.uf2 --family absolute --offset ${PACKADDR}
             DEPENDS ${TARGET}_combined
             )
     add_custom_target(${TARGET}_rp2040_uf2
             COMMAND picotool uf2 convert ${RP2040_COMBINED} ${BINDIR}/rp2040.uf2 --family rp2040 --offset ${PACKADDR}
             DEPENDS ${TARGET}_combined
             )
-    add_custom_target(${TARGET}_uf2
-            COMMAND ${CMAKE_COMMAND} -E cat ${BINDIR}/rp2040.uf2 ${BINDIR}/rp2350.uf2 > ${BINDIR}/${TARGET}.uf2
-            DEPENDS ${TARGET}_rp2350_uf2 ${TARGET}_rp2040_uf2
-            )
+
+    if (CMAKE_HOST_UNIX)
+        # Can use tail and truncate to make a better UF2 file
+        add_custom_target(${TARGET}_uf2
+                COMMAND tail -c 512 ${BINDIR}/rp2040.uf2 > ${BINDIR}/rp2040.end.uf2
+                COMMAND cat ${BINDIR}/rp2040.uf2 > ${BINDIR}/rp2040.start.uf2
+                COMMAND truncate --size=-512 ${BINDIR}/rp2040.start.uf2
+                COMMAND cat ${BINDIR}/rp2040.start.uf2 ${BINDIR}/absolute.uf2 ${BINDIR}/rp2040.end.uf2 > ${BINDIR}/${TARGET}.uf2
+                DEPENDS ${TARGET}_absolute_uf2 ${TARGET}_rp2040_uf2
+                )
+    else()
+        # Not guaranteed to have tail or truncate, so 
+        add_custom_target(${TARGET}_uf2
+                COMMAND ${CMAKE_COMMAND} -E cat ${BINDIR}/rp2040.uf2 ${BINDIR}/absolute.uf2 > ${BINDIR}/${TARGET}.uf2
+                DEPENDS ${TARGET}_absolute_uf2 ${TARGET}_rp2040_uf2
+                )
+    endif()
 
     add_dependencies(${TARGET} ${TARGET}_combined ${TARGET}_uf2)
 endfunction()
