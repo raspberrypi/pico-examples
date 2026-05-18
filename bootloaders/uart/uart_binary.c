@@ -31,8 +31,29 @@ void pico_set_led(bool led_on) {
 #endif
 }
 
+enum qspi_gpio {
+    // arbitrarily choose PAD register bank to set the order
+    QSPI_GPIO_SCLK = 0,
+    QSPI_GPIO_SD0 = 1,
+    QSPI_GPIO_SD1 = 2,
+    QSPI_GPIO_SD2 = 3,
+    QSPI_GPIO_SD3 = 4,
+    QSPI_GPIO_SS = 5,
+};
+
+// curiously the IO and PAD register banks for the QSPI GPIOs are not in the same order
+// This look up table will map the PAD offset to the IO offset for the same pin
+const uint QSPI_GPIO_PAD_TO_IO_OFFSET[] = {
+    0, // SCLK
+    2, // SD0
+    3, // SD1
+    4, // SD2
+    5, // SD3
+    1, // SS
+};
+
 // Set function for QSPI GPIO pin
-void qspi_gpio_set_function(uint gpio, gpio_function_t fn) {
+void qspi_gpio_set_function(enum qspi_gpio gpio, gpio_function_t fn) {
     // Set input enable on, output disable off
     hw_write_masked(&pads_qspi_hw->io[gpio],
                    PADS_QSPI_GPIO_QSPI_SD2_IE_BITS,
@@ -40,7 +61,7 @@ void qspi_gpio_set_function(uint gpio, gpio_function_t fn) {
     );
     // Zero all fields apart from fsel; we want this IO to do what the peripheral tells it.
     // This doesn't affect e.g. pullup/pulldown, as these are in pad controls.
-    io_qspi_hw->io[gpio].ctrl = fn << IO_QSPI_GPIO_QSPI_SD2_CTRL_FUNCSEL_LSB;
+    io_qspi_hw->io[QSPI_GPIO_PAD_TO_IO_OFFSET[gpio]].ctrl = fn << IO_QSPI_GPIO_QSPI_SD2_CTRL_FUNCSEL_LSB;
 
     // Remove pad isolation now that the correct peripheral is in control of the pad
     hw_clear_bits(&pads_qspi_hw->io[gpio], PADS_QSPI_GPIO_QSPI_SD2_ISO_BITS);
@@ -49,9 +70,9 @@ void qspi_gpio_set_function(uint gpio, gpio_function_t fn) {
 int main() {
     pico_led_init();
 
-    // SD2 is QSPI GPIO 3, SD3 is QSPI GPIO 4
-    qspi_gpio_set_function(3, GPIO_FUNC_UART_AUX);
-    qspi_gpio_set_function(4, GPIO_FUNC_UART_AUX);
+    // SD2 is UART0 TX, SD3 is UART0 RX (same as the ROM UART bootloader)
+    qspi_gpio_set_function(QSPI_GPIO_SD2, GPIO_FUNC1_UART_AUX);
+    qspi_gpio_set_function(QSPI_GPIO_SD3, GPIO_FUNC1_UART_AUX);
 
     uart_init(uart0, 1000000);
 

@@ -70,10 +70,13 @@ static err_t internal_header_fn(httpc_state_t *connection, void *arg, struct pbu
 static err_t internal_recv_fn(void *arg, struct altcp_pcb *conn, struct pbuf *p, err_t err) {
     assert(arg);
     EXAMPLE_HTTP_REQUEST_T *req = (EXAMPLE_HTTP_REQUEST_T*)arg;
+    int rc = ERR_OK;
     if (req->recv_fn) {
-        return req->recv_fn(req->callback_arg, conn, p, err);
+        rc = req->recv_fn(req->callback_arg, conn, p, err);
     }
-    return ERR_OK;
+    altcp_recved(conn, p->tot_len);
+    pbuf_free(p);
+    return rc;
 }
 
 static void internal_result_fn(void *arg, httpc_result_t httpc_result, u32_t rx_content_len, u32_t srv_res, err_t err) {
