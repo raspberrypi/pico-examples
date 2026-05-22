@@ -389,14 +389,24 @@ restart:
     };
 
     int y = 0;
-    for (uint i = 0 ;i < count_of(text); i++) {
+    for (uint i = 0; i < count_of(text); i++) {
         WriteString(buf, 5, y, text[i]);
-        y+=8;
+        y += 8;
+        // Height limit reached. Show some lines.
+        if (y == SSD1306_HEIGHT) {
+            render(buf, &frame_area);
+            sleep_ms(3000);
+            memset(buf, 0, SSD1306_BUF_LEN);
+            y = 0;
+        }
     }
-    render(buf, &frame_area);
+    // Check if there's any more text left to display.
+    if (y != 0) {
+        render(buf, &frame_area);
+        sleep_ms(3000);
+    }
 
     // Test the display invert function
-    sleep_ms(3000);
     SSD1306_send_cmd(SSD1306_SET_INV_DISP);
     sleep_ms(3000);
     SSD1306_send_cmd(SSD1306_SET_NORM_DISP);
