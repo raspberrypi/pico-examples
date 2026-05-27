@@ -13,11 +13,11 @@ target_include_directories(dev_multi_cdc PUBLIC
 
 # Enable the reset interface
 target_compile_definitions(dev_multi_cdc PUBLIC
-        PICO_STDIO_USB_ENABLE_RESET_VIA_VENDOR_INTERFACE=1
+        PICO_ENABLE_USB_RESET_VIA_VENDOR_INTERFACE=1
         # use SDK MS_OS_20 descriptor, as this doesn't have a custom one
-        PICO_STDIO_USB_RESET_INTERFACE_SUPPORT_MS_OS_20_DESCRIPTOR=1
+        PICO_USB_RESET_SUPPORT_MS_OS_20_DESCRIPTOR=1
         # pass the interface number to the SDK MS_OS_20 descriptor
-        PICO_STDIO_USB_RESET_INTERFACE_MS_OS_20_DESCRIPTOR_ITF=4
+        PICO_USB_RESET_MS_OS_20_DESCRIPTOR_ITF=4
         )
 
 # In addition to pico_stdlib required for common PicoSDK functionality, add dependency on tinyusb_device

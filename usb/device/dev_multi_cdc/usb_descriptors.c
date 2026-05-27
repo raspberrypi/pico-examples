@@ -7,7 +7,7 @@
 #include <tusb.h>
 #include <bsp/board_api.h>
 
-#include "pico/usb_reset_interface_device.h"
+#include "pico/usb_reset.h"
 
 // set some example Vendor and Product ID
 // the board will use to identify at the host
@@ -77,7 +77,7 @@ enum {
     ITF_NUM_TOTAL
 };
 
-static_assert(ITF_NUM_RPI_RESET == PICO_STDIO_USB_RESET_INTERFACE_MS_OS_20_DESCRIPTOR_ITF, "ITF_NUM_RPI_RESET must be equal to the PICO_STDIO_USB_RESET_INTERFACE_MS_OS_20_DESCRIPTOR_ITF set in CMakeLists.txt");
+static_assert(ITF_NUM_RPI_RESET == PICO_USB_RESET_MS_OS_20_DESCRIPTOR_ITF, "ITF_NUM_RPI_RESET must be equal to the PICO_USB_RESET_MS_OS_20_DESCRIPTOR_ITF set in CMakeLists.txt");
 
 // total length of configuration descriptor
 #define CONFIG_TOTAL_LEN    (TUD_CONFIG_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN + TUD_RPI_RESET_DESC_LEN)
