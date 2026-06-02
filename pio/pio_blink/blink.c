@@ -46,10 +46,8 @@ int main() {
     setup_default_uart();
 
     // LED1 and LED2 are both expected to be in the "lower" range of PIO-addressable GPIOs
-    assert(PIO_BLINK_LED2_GPIO == PIO_BLINK_LED1_GPIO + 1);
     assert((PIO_BLINK_LED1_GPIO < 32) && (PIO_BLINK_LED2_GPIO < 32));
     // check LED3 and LED4 are both in the same range of PIO-addressable GPIOs
-    assert(PIO_BLINK_LED4_GPIO == PIO_BLINK_LED3_GPIO + 1);
     assert(((PIO_BLINK_LED3_GPIO < 32) && (PIO_BLINK_LED4_GPIO < 32)) || ((PIO_BLINK_LED3_GPIO >= 16) && (PIO_BLINK_LED3_GPIO < 48) && (PIO_BLINK_LED4_GPIO >= 16) && (PIO_BLINK_LED4_GPIO < 48)));
 
     // LED1 and LED2 are both controlled by the program loaded into pio[0] at offset[0]
