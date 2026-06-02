@@ -93,19 +93,10 @@ int main() {
     blink_pin_forever(pio[1], sm[3], offset[1], PIO_BLINK_LED4_GPIO, PIO_BLINK_LED4_FREQUENCY);
 
     printf("All LEDs should be flashing\n");
-
-    // free up PIO resources
-    pio_sm_unclaim(pio[1], sm[3]);
-    if ((PIO_BLINK_LED3_GPIO >= 32) || (PIO_BLINK_LED4_GPIO >= 32)) {
-        pio_remove_program_and_unclaim_sm(&blink_program, pio[1], sm[2], offset[1]);
-    } else {
-        pio_sm_unclaim(pio[1], sm[2]);
-    }
-    pio_sm_unclaim(pio[0], sm[1]);
-    pio_remove_program_and_unclaim_sm(&blink_program, pio[0], sm[0], offset[0]);
+    sleep_ms(3000);
 
     // the program exits but the PIO keeps running!
-    printf("All LEDs should continue to flash\n");
+    printf("All LEDs should continue to flash after program exit\n");
 }
 
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
