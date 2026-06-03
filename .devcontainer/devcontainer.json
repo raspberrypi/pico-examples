@@ -1,0 +1,13 @@
+{
+  "name": "Pico DevContainer",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "runArgs": [],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+      ]
+    }
+  }
+}
