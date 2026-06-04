@@ -20,6 +20,11 @@
 
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq);
 
+// Time to flash the LEDs for (in seconds), before cleanly shutting everything down. Set to -1 to keep flashing forever.
+#ifndef PIO_BLINK_FLASH_TIME_SECONDS
+#define PIO_BLINK_FLASH_TIME_SECONDS 60
+#endif
+
 // By default flash LEDs on GPIOs 3 and 4
 #ifndef PIO_BLINK_LED1_GPIO
 #define PIO_BLINK_LED1_GPIO 3
@@ -37,10 +42,18 @@ void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq);
 #define PIO_BLINK_LED4_GPIO (PIO_BLINK_LED3_GPIO + 1)
 #endif
 
+#ifndef PIO_BLINK_LED1_FREQUENCY
 #define PIO_BLINK_LED1_FREQUENCY 4
+#endif
+#ifndef PIO_BLINK_LED2_FREQUENCY
 #define PIO_BLINK_LED2_FREQUENCY 3
+#endif
+#ifndef PIO_BLINK_LED3_FREQUENCY
 #define PIO_BLINK_LED3_FREQUENCY 2
+#endif
+#ifndef PIO_BLINK_LED4_FREQUENCY
 #define PIO_BLINK_LED4_FREQUENCY 1
+#endif
 
 int main() {
     setup_default_uart();
@@ -93,10 +106,41 @@ int main() {
     blink_pin_forever(pio[1], sm[3], offset[1], PIO_BLINK_LED4_GPIO, PIO_BLINK_LED4_FREQUENCY);
 
     printf("All LEDs should be flashing\n");
-    sleep_ms(3000);
+    if (PIO_BLINK_FLASH_TIME_SECONDS < 0) {
+        // the program exits but the PIO keeps running!
+        printf("All LEDs should continue to flash after program exit\n");
+    } else {
+        // Sleep for a bit, and then shut everything down (demonstrates how to release claimed PIO resources)
+        sleep_ms(PIO_BLINK_FLASH_TIME_SECONDS * 1000);
+        printf("Stopping the LEDs\n");
 
-    // the program exits but the PIO keeps running!
-    printf("All LEDs should continue to flash after program exit\n");
+        // stop the PIO state machines
+        if (pio[0] == pio[1]) {
+            // all state machines are running on the same PIO, so can be stopped with a single call
+            pio_set_sm_mask_enabled(pio[0], (1 << sm[0]) | (1 << sm[1]) | (1 << sm[2]) | (1 << sm[3]), false);
+        } else {
+            pio_set_sm_mask_enabled(pio[0], (1 << sm[0]) | (1 << sm[1]), false);
+            pio_set_sm_mask_enabled(pio[1], (1 << sm[2]) | (1 << sm[3]), false);
+        }
+
+        // turn off the LEDs in case any of the state machines stopped while they were on
+        uint led_off_instr = pio_encode_set(pio_pins, 0);
+        pio_sm_exec_wait_blocking(pio[0], sm[0], led_off_instr);
+        pio_sm_exec_wait_blocking(pio[0], sm[1], led_off_instr);
+        pio_sm_exec_wait_blocking(pio[1], sm[2], led_off_instr);
+        pio_sm_exec_wait_blocking(pio[1], sm[3], led_off_instr);
+        printf("All LEDs should be off\n");
+
+        // free up pio resources
+        pio_sm_unclaim(pio[1], sm[3]);
+        if (pio[1] != pio[0]) {
+            pio_remove_program_and_unclaim_sm(&blink_program, pio[1], sm[2], offset[1]);
+        } else {
+            pio_sm_unclaim(pio[1], sm[2]);
+        }
+        pio_sm_unclaim(pio[0], sm[1]);
+        pio_remove_program_and_unclaim_sm(&blink_program, pio[0], sm[0], offset[0]);
+    }
 }
 
 void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
