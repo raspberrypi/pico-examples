@@ -39,6 +39,7 @@ int main() {
     // useful information for picotool
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
     bi_decl(bi_program_description("INA260 I2C example for the Raspberry Pi Pico"));
+    bi_decl(bi_1pin_with_func(RTC_CLOCK_SRC_GPIO_OUT, GPIO_FUNC_GPCK));
 
     printf("ina260 example\n");
 
