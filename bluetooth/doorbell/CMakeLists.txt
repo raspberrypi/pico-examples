@@ -1,7 +1,7 @@
 # Standalone example that connects to the server Pico and flashes an external LED when the button is pressed 
 # Flashes the on-board LED once quickly each second when it's running but not connected to another device
 # Flashes the on-board LED twice quickly each second when connected to another device 
-add_executable(doorbell_client
+add_executable(ble_doorbell_client
     client.c
     )
 target_link_libraries(doorbell_client
