@@ -201,6 +201,7 @@ These networking examples are only available if Wi-Fi is supported by the board.
 App|Description
 ---|---
 [picow_access_point](pico_w/wifi/access_point) | Starts a WiFi access point, and fields DHCP requests.
+[picow_access_point_wifi_provisioning](pico_w/wifi/access_point_wifi_provisioning) | Starts a WiFi access point, and allows WiFi credentials to be provisioned through a web page.
 [picow_blink](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip).
 [picow_blink_slow_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a slower system clock to show how to reconfigure communication with the WiFi chip at run time under those circumstances.
 [picow_blink_fast_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a faster system clock to show how to reconfigure communication with the WiFi chip at build time under those circumstances.
