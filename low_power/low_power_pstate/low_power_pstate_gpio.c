@@ -15,7 +15,7 @@
 #define LOW_POWER_WAKE_GPIO 15
 #endif
 
-uint32_t __persistent_data(run_count);
+static uint32_t __persistent_data(run_count);
 
 // The example will repeatedly wait 10 seconds then switch off for 10 seconds
 // The debugger will appear to be unresponsive while the device is off
