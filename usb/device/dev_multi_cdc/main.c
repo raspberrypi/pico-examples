@@ -13,11 +13,6 @@
 
 void custom_cdc_task(void);
 
-bool tud_task_callback(__unused struct repeating_timer *t) {
-    tud_task();
-    return true;
-}
-
 int main(void)
 {
     // Initialize TinyUSB stack
@@ -32,17 +27,14 @@ int main(void)
     // let pico sdk use the first cdc interface for std io
     stdio_init_all();
 
-    // TinyUSB device task must be called regularly, so we use a repeating timer
-    struct repeating_timer timer;
-    add_repeating_timer_ms(1, tud_task_callback, NULL, &timer);
-
     // main run loop
     while (1) {
-        // custom tasks can run in the main loop without blocking the TinyUSB task
+        // TinyUSB device task | must be called regurlarly
+        tud_task();
+
+        // custom tasks
         custom_cdc_task();
     }
-
-    cancel_repeating_timer(&timer);
 
     // indicate no error
     return 0;
@@ -54,10 +46,14 @@ void custom_cdc_task(void)
 
     // Check if CDC interface 0 (for pico sdk stdio) is connected and ready
 
-    if (tud_cdc_n_connected(0)) {
+    static absolute_time_t next_check = 0;
+    absolute_time_t now = get_absolute_time();
+
+    // check every 5 seconds after first connected
+    if (tud_cdc_n_connected(0) && (absolute_time_diff_us(next_check, now) >= 0)) {
         // print on CDC 0 some debug message
         printf("Connected to CDC 0\n");
-        sleep_ms(5000); // wait for 5 seconds
+        next_check = delayed_by_ms(now, 5000);
     }
 }
 
