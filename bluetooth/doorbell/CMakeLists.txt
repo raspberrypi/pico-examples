@@ -4,41 +4,41 @@
 add_executable(ble_doorbell_client
     client.c
     )
-target_link_libraries(doorbell_client
+target_link_libraries(ble_doorbell_client
     pico_stdlib
     pico_btstack_ble
     pico_btstack_cyw43
     pico_cyw43_arch_none
     )
-target_include_directories(doorbell_client PRIVATE
+target_include_directories(ble_doorbell_client PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/../config # for common btstack config
     )
-target_compile_definitions(doorbell_client PRIVATE
+target_compile_definitions(ble_doorbell_client PRIVATE
     #WANT_HCI_DUMP=1
 )
-pico_add_extra_outputs(doorbell_client)
+pico_add_extra_outputs(ble_doorbell_client)
 
 
 # Standalone example that connects to the client Pico and detects button inputs
 # Flashes slowly each second to show it's running
-add_executable(doorbell_server
+add_executable(ble_doorbell_server
     server.c 
     )
-target_link_libraries(doorbell_server
+target_link_libraries(ble_doorbell_server
     pico_stdlib
     pico_btstack_ble
     pico_btstack_cyw43
     pico_cyw43_arch_none
     )
-target_include_directories(doorbell_server PRIVATE
+target_include_directories(ble_doorbell_server PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/../config # for common btstack config
     )
-target_compile_definitions(doorbell_server PRIVATE
+target_compile_definitions(ble_doorbell_server PRIVATE
     #WANT_HCI_DUMP=1
 )
-pico_btstack_make_gatt_header(doorbell_server PRIVATE "${CMAKE_CURRENT_LIST_DIR}/doorbell.gatt")
+pico_btstack_make_gatt_header(ble_doorbell_server PRIVATE "${CMAKE_CURRENT_LIST_DIR}/doorbell.gatt")
 
-pico_add_extra_outputs(doorbell_server)
+pico_add_extra_outputs(ble_doorbell_server)
 
