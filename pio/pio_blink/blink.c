@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "pico/stdlib.h"
+#include "pico/binary_info.h"
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
 #include "blink.pio.h"
@@ -56,6 +57,15 @@ void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq);
 #endif
 
 int main() {
+    // useful information for picotool
+    bi_decl(bi_program_description("PIO blink example for the Raspberry Pi Pico"));
+#if (PIO_BLINK_LED3_GPIO < 32) && (PIO_BLINK_LED4_GPIO < 32)
+    bi_decl(bi_4pins_with_func(PIO_BLINK_LED1_GPIO, PIO_BLINK_LED2_GPIO, PIO_BLINK_LED3_GPIO, PIO_BLINK_LED4_GPIO, GPIO_FUNC_PIO0));
+#else
+    bi_decl(bi_2pins_with_func(PIO_BLINK_LED1_GPIO, PIO_BLINK_LED2_GPIO, GPIO_FUNC_PIO0));
+    bi_decl(bi_2pins_with_func(PIO_BLINK_LED3_GPIO, PIO_BLINK_LED4_GPIO, GPIO_FUNC_PIO1));
+#endif
+
     setup_default_uart();
 
     // LED1 and LED2 are both expected to be in the "lower" range of PIO-addressable GPIOs
