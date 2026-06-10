@@ -52,5 +52,5 @@ pico_add_extra_outputs(picow_access_point_poll)
 
 pico_add_library(ap_content NOFLAG)
 pico_set_lwip_httpd_content(ap_content INTERFACE
-        ${CMAKE_CURRENT_LIST_DIR}/content/index.shtml
+        ${CMAKE_CURRENT_LIST_DIR}/content/index.shtml ${CMAKE_CURRENT_LIST_DIR}/content/404.html ${CMAKE_CURRENT_LIST_DIR}/content/404.hdr
         )
