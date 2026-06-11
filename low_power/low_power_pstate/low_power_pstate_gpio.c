@@ -28,6 +28,9 @@ int main() {
     // Scratch register survives power down
     printf("Wake up, test run: %u\n", run_count++);
 
+    gpio_init(LOW_POWER_WAKE_GPIO);
+    printf("State of gpio %u is %u\n", LOW_POWER_WAKE_GPIO, gpio_get(LOW_POWER_WAKE_GPIO));
+
     // Wait for gpio to go low
     if (gpio_get(LOW_POWER_WAKE_GPIO)) {
         printf("Awake until gpio %u goes low\n", LOW_POWER_WAKE_GPIO);

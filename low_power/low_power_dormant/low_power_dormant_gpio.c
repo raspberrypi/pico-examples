@@ -28,6 +28,7 @@ int main() {
     stdio_init_all();
     hard_assert(status_led_init());
     gpio_init(LOW_POWER_WAKE_GPIO);
+    printf("State of gpio %u is %u\n", LOW_POWER_WAKE_GPIO, gpio_get(LOW_POWER_WAKE_GPIO));
 
     uint32_t count = 1;
     while(true) {
