@@ -18,7 +18,6 @@
 #include "hardware/flash.h" // for saving succesful credentials
 
 static absolute_time_t wifi_connected_time;
-static bool led_on = false;
 
 // max lengths + 1
 static char ssid[33];
@@ -113,7 +112,7 @@ int main() {
     // If this fails, enable access point
     if (connection_status == false) {
         cyw43_arch_disable_sta_mode();
-        cyw43_arch_enable_ap_mode("picow_test", "12345678", CYW43_AUTH_WPA2_AES_PSK);
+        cyw43_arch_enable_ap_mode("picow_test", "password", CYW43_AUTH_WPA2_AES_PSK);
         printf("\nReady, running server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
 
         #if LWIP_IPV6

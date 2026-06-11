@@ -21,5 +21,5 @@ pico_add_extra_outputs(AP_provisioning)
 
 pico_add_library(ap_provisioning_content NOFLAG)
 pico_set_lwip_httpd_content(ap_provisioning_content INTERFACE
-        ${CMAKE_CURRENT_LIST_DIR}/content/index.shtml
+        ${CMAKE_CURRENT_LIST_DIR}/content/index.shtml ${CMAKE_CURRENT_LIST_DIR}/content/404.html ${CMAKE_CURRENT_LIST_DIR}/content/404.response
         )
