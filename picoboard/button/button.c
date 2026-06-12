@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include "pico/stdlib.h"
+#include "pico/status_led.h"
 #include "hardware/gpio.h"
 #include "hardware/sync.h"
 #include "hardware/structs/ioqspi.h"
@@ -58,13 +59,16 @@ bool __no_inline_not_in_flash_func(get_bootsel_button)() {
 }
 
 int main() {
-#ifndef PICO_DEFAULT_LED_PIN
-#warning picoboard/button example requires a board with a regular LED
+#ifndef PICO_STATUS_LED_AVAILABLE
+#warning picoboard/button example requires a board with status LED
 #else
-    gpio_init(PICO_DEFAULT_LED_PIN);
-    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    int result = status_led_init();
+    hard_assert(result);
+    result = status_led_supported();
+    hard_assert(result);
     while (true) {
-        gpio_put(PICO_DEFAULT_LED_PIN, get_bootsel_button() ^ PICO_DEFAULT_LED_PIN_INVERTED);
+        result = status_led_set_state(get_bootsel_button());
+        hard_assert(result);
         sleep_ms(10);
     }
 #endif
