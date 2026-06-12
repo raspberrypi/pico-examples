@@ -205,6 +205,7 @@ App|Description
 [picow_blink_fast_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a faster system clock to show how to reconfigure communication with the WiFi chip at build time under those circumstances.
 [picow_iperf_server](pico_w/wifi/iperf) | Runs an "iperf" server for WiFi speed testing.
 [picow_ntp_client](pico_w/wifi/ntp_client) | Connects to an NTP server to fetch and display the current time.
+[picow_ntp_system_time](pico_w/wifi/ntp_system_time) | Creates a background time-of-day clock that periodically updates itself from a pool of NTP servers, and uses it to display local time.
 [picow_tcp_client](pico_w/wifi/tcp_client) | A simple TCP client. You can run [python_test_tcp_server.py](pico_w/wifi/python_test_tcp/python_test_tcp_server.py) for it to connect to.
 [picow_tcp_server](pico_w/wifi/tcp_server) | A simple TCP server. You can use [python_test_tcp_client.py](pico_w//wifi/python_test_tcp/python_test_tcp_client.py) to connect to it.
 [picow_tls_client](pico_w/wifi/tls_client) | Demonstrates how to make a HTTPS request using TLS.
