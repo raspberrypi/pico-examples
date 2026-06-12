@@ -413,8 +413,7 @@ static void packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *pack
     }
 }
 
-int main(void) {
-    stdio_init_all();
+void run_ble_pointer(void) {
 
     // Make the I2C pins available to picotool
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
@@ -470,5 +469,4 @@ int main(void) {
         sleep_ms(1000);
     }
 #endif
-    return 0;
 }
