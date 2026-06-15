@@ -7,9 +7,3 @@ build-*
 build_*
 .DS_Store
 *.pdf
-pio/squarewave/generated/squarewave_wrap.pio.h
-pio/squarewave/generated/squarewave.hex
-pio/squarewave/generated/squarewave.pio.h
-pio/ws2812/generated/ws2812.pio.h
-pio/ws2812/generated/ws2812.py
-.gitignore
