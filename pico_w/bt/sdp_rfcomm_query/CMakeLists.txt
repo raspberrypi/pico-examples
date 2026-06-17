@@ -1,1 +1,0 @@
-picow_bt_example(sdp_rfcomm_query)

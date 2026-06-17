@@ -1,1 +1,0 @@
-picow_bt_example(hog_boot_host_demo)

@@ -1,1 +1,0 @@
-picow_bt_example(le_credit_based_flow_control_mode_client)

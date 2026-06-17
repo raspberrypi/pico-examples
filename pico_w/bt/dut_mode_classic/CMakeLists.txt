@@ -1,1 +1,0 @@
-picow_bt_example(dut_mode_classic)

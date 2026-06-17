@@ -302,9 +302,13 @@ Some standalone Bluetooth examples (without all the common example build infrast
 
 App|Description
 ---|---
-[picow_ble_temp_sensor](pico_w/bt/standalone) | Reads from the on board temperature sensor and sends notifications via BLE.
-[picow_ble_temp_sensor_with_wifi](pico_w/bt/standalone) | Same as above but also connects to Wi-Fi and starts an "iperf" server.
-[picow_ble_temp_reader](pico_w/bt/standalone) | Connects to one of the above "sensors" and reads the temperature.
+[pointer](bluetooth/pointer) | Bluetooth HID mouse using mpu6050 to detect angle and move cursor.
+[doorbell](bluetooth/doorbell) | Detects button press on transmitter Pico and illuminates LED on reciever Pico.
+[temp_server](bluetooth/temp_sensor) | Reads from the on board temperature sensor and sends notifications via BLE.
+[temp_client](bluetooth/temp_sensor) | Connects to the above temp_server and reads the temperature.
+[secure_temp_server](bluetooth/secure_temp_sensor) | Variant of temp_server which allows exploration of LE_secure configurations.
+[secure_temp_client](bluetooth/secure_temp_sensor) | Connects to the above secure_temp_server and reads the temperature.
+[wifi_provisioner](bluetooth/wifi_provisioner) | Allows WiFi credentials to be provisioned over BLE, either using a mobile app or with the included python script.
 
 ### PIO
 
