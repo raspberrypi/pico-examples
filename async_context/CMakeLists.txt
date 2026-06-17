@@ -1,1 +1,1 @@
-add_subdirectory_exclude_platforms(simple_at_time_worker)
+add_subdirectory_exclude_platforms(simple_at_time_worker host)
