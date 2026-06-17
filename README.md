@@ -302,7 +302,7 @@ Some standalone Bluetooth examples (without all the common example build infrast
 
 App|Description
 ---|---
-[pointer](bluetooth/pointer) | Bluetooth HID mouse using mpu6050 to detect angle and move cursor.
+[ble_pointer](bluetooth/ble_pointer) | Bluetooth HID mouse using mpu6050 to detect angle and move cursor.
 [doorbell](bluetooth/doorbell) | Detects button press on transmitter Pico and illuminates LED on reciever Pico.
 [temp_server](bluetooth/temp_sensor) | Reads from the on board temperature sensor and sends notifications via BLE.
 [temp_client](bluetooth/temp_sensor) | Connects to the above temp_server and reads the temperature.
