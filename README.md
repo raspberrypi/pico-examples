@@ -303,12 +303,12 @@ Some standalone Bluetooth examples (without all the common example build infrast
 App|Description
 ---|---
 [ble_pointer](bluetooth/ble_pointer) | Bluetooth HID mouse using mpu6050 to detect angle and move cursor.
-[doorbell](bluetooth/doorbell) | Detects button press on transmitter Pico and illuminates LED on reciever Pico.
-[temp_server](bluetooth/temp_sensor) | Reads from the on board temperature sensor and sends notifications via BLE.
-[temp_client](bluetooth/temp_sensor) | Connects to the above temp_server and reads the temperature.
-[secure_temp_server](bluetooth/secure_temp_sensor) | Variant of temp_server which allows exploration of LE_secure configurations.
-[secure_temp_client](bluetooth/secure_temp_sensor) | Connects to the above secure_temp_server and reads the temperature.
-[wifi_provisioner](bluetooth/wifi_provisioner) | Allows WiFi credentials to be provisioned over BLE, either using a mobile app or with the included python script.
+[ble_doorbell](bluetooth/ble_doorbell) | Detects button press on transmitter Pico and illuminates LED on reciever Pico.
+[ble_temp_server](bluetooth/ble_temp_sensor) | Reads from the on board temperature sensor and sends notifications via BLE.
+[ble_temp_client](bluetooth/ble_temp_sensor) | Connects to the above temp_server and reads the temperature.
+[ble_secure_temp_server](bluetooth/ble_secure_temp_sensor) | Variant of temp_server which allows exploration of LE_secure configurations.
+[ble_secure_temp_client](bluetooth/ble_secure_temp_sensor) | Connects to the above secure_temp_server and reads the temperature.
+[ble_wifi_provisioner](bluetooth/ble_wifi_provisioner) | Allows WiFi credentials to be provisioned over BLE, either using a mobile app or with the included python script.
 
 ### PIO
 
