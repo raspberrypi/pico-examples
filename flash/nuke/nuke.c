@@ -28,6 +28,13 @@
 #define MIN_FLASH_SIZE (1024 * 1024 * 2)
 
 int main() {
+#ifdef PICO_DEFAULT_LED_PIN
+    // Turn on LED to show erase starting
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+    gpio_put(PICO_DEFAULT_LED_PIN, 1);
+#endif
+
     uint flash_size_bytes = 0;
     uint8_t txbuf[4];
     uint8_t rxbuf[4];
@@ -45,14 +52,13 @@ int main() {
 
 #ifdef PICO_DEFAULT_LED_PIN
     // Flash LED for success
-    gpio_init(PICO_DEFAULT_LED_PIN);
-    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
     for (int i = 0; i < 3; ++i) {
-        gpio_put(PICO_DEFAULT_LED_PIN, 1);
-        sleep_ms(100);
         gpio_put(PICO_DEFAULT_LED_PIN, 0);
         sleep_ms(100);
+        gpio_put(PICO_DEFAULT_LED_PIN, 1);
+        sleep_ms(100);
     }
+    gpio_put(PICO_DEFAULT_LED_PIN, 0);
 #endif
 
     // Pop back up as an MSD drive
