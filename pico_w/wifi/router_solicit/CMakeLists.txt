@@ -3,7 +3,7 @@ add_executable(picow_router_solicit
 )
 target_link_libraries(picow_router_solicit
     pico_stdlib
-    pico_cyw43_arch_none 
+    pico_cyw43_arch_none
 )
 target_compile_definitions(picow_router_solicit PRIVATE
     WIFI_SSID=\"${WIFI_SSID}\"

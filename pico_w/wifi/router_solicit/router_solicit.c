@@ -2,7 +2,7 @@
  * Copyright (c) 2026 Raspberry Pi (Trading) Ltd.
  *
  * SPDX-License-Identifier: BSD-3-Clause
- * 
+ *
  * router_solicitation — Pico W  (no lwIP)
  *
  * Connects to Wi-Fi, builds a raw Ethernet frame containing an ICMPv6
@@ -333,31 +333,31 @@ static bool send_rs(void)
 
     // Ethernet header
     uint8_t *eth = frame;
-    memcpy(&eth[0], dst_mac, 6);              // destination MAC     
-    memcpy(&eth[6], g_mac,   6);              // source MAC          
-    wr16(&eth[12], ETHERTYPE_IPV6);           // EtherType           
+    memcpy(&eth[0], dst_mac, 6);              // destination MAC
+    memcpy(&eth[6], g_mac,   6);              // source MAC
+    wr16(&eth[12], ETHERTYPE_IPV6);           // EtherType
 
     // IPv6 header
     uint8_t *ip = frame + ETH_HDR_LEN;
-    ip[0] = 0x60;                             // version 6, TC = 0   
-    // ip[1..3] = 0 — traffic class (cont.) + flow label             
-    wr16(&ip[4], icmpv6_len);                 // payload length      
-    ip[6] = IPV6_NEXT_ICMPV6;                 // next header         
+    ip[0] = 0x60;                             // version 6, TC = 0
+    // ip[1..3] = 0 — traffic class (cont.) + flow label
+    wr16(&ip[4], icmpv6_len);                 // payload length
+    ip[6] = IPV6_NEXT_ICMPV6;                 // next header
     ip[7] = 255;                              // hop limit (RFC 4861)
-    memcpy(&ip[8],  g_link_local, 16);        // source address      
-    memcpy(&ip[24], dst_ip,       16);        // destination address 
+    memcpy(&ip[8],  g_link_local, 16);        // source address
+    memcpy(&ip[24], dst_ip,       16);        // destination address
 
     // ICMPv6 Router Solicitation
     uint8_t *rs = ip + IPV6_HDR_LEN;
-    rs[0] = ICMPV6_TYPE_RS;                   // type                
-    // rs[1] = 0;   code                                              
-    // rs[2..3] = 0;  checksum placeholder                            
-    // rs[4..7] = 0;  reserved                                        
+    rs[0] = ICMPV6_TYPE_RS;                   // type
+    // rs[1] = 0;   code
+    // rs[2..3] = 0;  checksum placeholder
+    // rs[4..7] = 0;  reserved
 
     // Source Link-Layer Address option
-    rs[8]  = ND_OPT_SRC_LLADDR;              // option type          
+    rs[8]  = ND_OPT_SRC_LLADDR;              // option type
     rs[9]  = 1;                               // length = 1 × 8 bytes
-    memcpy(&rs[10], g_mac, 6);                // our MAC             
+    memcpy(&rs[10], g_mac, 6);                // our MAC
 
     // Checksum
     uint16_t cksum = icmpv6_checksum(g_link_local, dst_ip, rs, icmpv6_len);
@@ -377,7 +377,7 @@ static bool send_rs(void)
 int main(void)
 {
     stdio_init_all();
-    sleep_ms(2000);                    // let USB-serial attach         
+    sleep_ms(2000);                    // let USB-serial attach
 
     printf("\n=============================\n");
     printf(" Pico W  Router Solicitation\n");
@@ -425,7 +425,7 @@ int main(void)
     uint8_t all_nodes_mac[6] = { 0x33, 0x33, 0x00, 0x00, 0x00, 0x01 };
     cyw43_wifi_update_multicast_filter(&cyw43_state, all_nodes_mac, true);
 
-    sleep_ms(500);                     // let the association settle    
+    sleep_ms(500);                     // let the association settle
 
     // 5. Send the Router Solicitation
     printf("Sending RS to ff02::2 ...\n");
