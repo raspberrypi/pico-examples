@@ -43,8 +43,10 @@ int main(void) {
     // This is for testing
     printf("Press 'w' in the next 3s to wipe stored ssid and password\n");
     int c = getchar_timeout_us(3000000);
+    bool wipe = false;
     if (c == 'w' || c == 'W') {
-        printf("Wiping stored ssid and password\n");
+        wipe = true;
+        printf("Wiping stored ssid, password and bonds\n");
         erase_credentials();
     }
 
@@ -56,7 +58,7 @@ int main(void) {
 
     // if unable to connect with saved ssid and password, waits 120 seconds
     // for new credentials to be provisioned over BLE
-    int rc = start_ble_wifi_provisioning(PROV_TIMEOUT_MS);
+    int rc = start_ble_wifi_provisioning(PROV_TIMEOUT_MS, wipe);
     printf("finished provisioning result=%d\n", rc);
     if (rc != PICO_OK) {
         panic("Wifi provisioning failed");

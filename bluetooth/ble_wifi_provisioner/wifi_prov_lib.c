@@ -10,6 +10,7 @@
 #include "pico/cyw43_arch.h"
 #include "pico/btstack_cyw43.h"
 #include "pico/stdlib.h"
+#include "pico/btstack_flash_bank.h"
 #include "provisioning.h"
 #include "wifi_prov_lib.h"
 #include "hardware/gpio.h"
@@ -46,19 +47,8 @@ static uint8_t adv_data[] = {
 };
 static const uint8_t adv_data_len = sizeof(adv_data);
 
-// Define flash offset towards end of flash
-#ifndef PICO_FLASH_BANK_TOTAL_SIZE
-#define PICO_FLASH_BANK_TOTAL_SIZE (FLASH_SECTOR_SIZE * 2u)
-#endif
-
-#ifndef PICO_FLASH_BANK_STORAGE_OFFSET
-#if PICO_RP2350 && PICO_RP2350_A2_SUPPORTED
-// picotool stores a "marker" in the last block of the last sector
-#define FLASH_TARGET_OFFSET (PICO_FLASH_SIZE_BYTES - (2 * FLASH_SECTOR_SIZE) - PICO_FLASH_BANK_TOTAL_SIZE)
-#else
-#define FLASH_TARGET_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE - PICO_FLASH_BANK_TOTAL_SIZE)
-#endif
-#endif
+// Chose a safe place to store the WiFi credentials - well away from btstack tlv storage
+#define FLASH_TARGET_OFFSET (PICO_FLASH_BANK_STORAGE_OFFSET - 2 * FLASH_SECTOR_SIZE)
 
 static const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
@@ -76,24 +66,24 @@ static void call_flash_range_program(void *param) {
 }
 
 // Security Manager Packet Handler 
-static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
+static void my_sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
     UNUSED(channel);
     UNUSED(size);
 
     if (packet_type != HCI_EVENT_PACKET) return;
 
-    hci_con_handle_t con_handle;
     bd_addr_t addr;
     bd_addr_type_t addr_type;
     uint8_t status;
 
-    switch (hci_event_packet_get_type(packet)) {
+    int type = hci_event_packet_get_type(packet);
+    switch (type) {
         case HCI_EVENT_META_GAP:
             switch (hci_event_gap_meta_get_subevent_code(packet)) {
                 case GAP_SUBEVENT_LE_CONNECTION_COMPLETE:
                     DEBUG_LOG("Connection complete\n");
+                    hard_assert(!con_handle);
                     con_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
-                    UNUSED(con_handle);
                     sm_request_pairing(con_handle);
                     break;
                 default:
@@ -119,8 +109,9 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
         case SM_EVENT_PAIRING_STARTED:
             DEBUG_LOG("Pairing started\n");
             break;
-        case SM_EVENT_PAIRING_COMPLETE:
-            switch (sm_event_pairing_complete_get_status(packet)){
+        case SM_EVENT_PAIRING_COMPLETE: {
+            int status = sm_event_pairing_complete_get_status(packet);
+            switch (status){
                 case ERROR_CODE_SUCCESS:
                     DEBUG_LOG("Pairing complete, success\n");
                     break;
@@ -137,13 +128,15 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                     break;
             }
             break;
+        }
         case SM_EVENT_REENCRYPTION_STARTED:
             sm_event_reencryption_complete_get_address(packet, addr);
             DEBUG_LOG("Bonding information exists for addr type %u, identity addr %s -> re-encryption started\n",
                    sm_event_reencryption_started_get_addr_type(packet), bd_addr_to_str(addr));
             break;
-        case SM_EVENT_REENCRYPTION_COMPLETE:
-            switch (sm_event_reencryption_complete_get_status(packet)){
+        case SM_EVENT_REENCRYPTION_COMPLETE: {
+            int status = sm_event_reencryption_complete_get_status(packet);
+            switch (status){
                 case ERROR_CODE_SUCCESS:
                     DEBUG_LOG("Re-encryption complete, success\n");
                     break;
@@ -165,6 +158,7 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
                     break;
             }
             break;
+        }
         case GATT_EVENT_QUERY_COMPLETE:
             status = gatt_event_query_complete_get_att_status(packet);
             switch (status){
@@ -190,7 +184,7 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
     }
 }
 
-static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
+static void my_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
     UNUSED(size);
     UNUSED(channel);
     bd_addr_t local_addr;
@@ -202,8 +196,8 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             switch (hci_event_gap_meta_get_subevent_code(packet)) {
                 case GAP_SUBEVENT_LE_CONNECTION_COMPLETE:
                     DEBUG_LOG("Connection complete\n");
+                    hard_assert(!con_handle);
                     con_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
-                    UNUSED(con_handle);
                     sm_request_pairing(con_handle);
                     break;
                 default:
@@ -241,6 +235,22 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
     }
 }
 
+static void my_att_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
+    UNUSED(size);
+    UNUSED(channel);
+    if (packet_type != HCI_EVENT_PACKET) return;
+
+    uint8_t event_type = hci_event_packet_get_type(packet);
+    switch(event_type){
+        case ATT_EVENT_CAN_SEND_NOW:
+            att_server_notify(con_handle, ATT_CHARACTERISTIC_b1829813_e8ec_4621_b9b5_6c1be43fe223_01_VALUE_HANDLE, (uint8_t*)ssid, sizeof(ssid));
+            att_server_notify(con_handle, ATT_CHARACTERISTIC_410f5077_9e81_4f3b_b888_bf435174fa58_01_VALUE_HANDLE, (uint8_t*)password, sizeof(password));
+            break;
+        default:
+            break;
+    }
+}
+
 static uint16_t att_read_callback(hci_con_handle_t connection_handle, uint16_t att_handle, uint16_t offset, uint8_t * buffer, uint16_t buffer_size) {
     UNUSED(connection_handle);
 
@@ -263,7 +273,7 @@ static int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_h
     UNUSED(buffer_size);
     
     le_notification_enabled = little_endian_read_16(buffer, 0) == GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION;
-    con_handle = connection_handle;
+    hard_assert(con_handle);
     if (le_notification_enabled) {
         att_server_request_can_send_now_event(con_handle);
         //This occurs when the client enables notification (the download button on nrf scanner)
@@ -387,8 +397,22 @@ static void read_credentials(void) {
     memcpy(password, t_password, sizeof(t_password));
 }
 
+static void delete_all_le_bonds(void) {
+    int max = le_device_db_max_count();
+    for (int i = 0; i < max; i++) {
+        bd_addr_t addr;
+        int addr_type;
+        le_device_db_info(i, &addr_type, addr, NULL);
+        // valid entries have a real address type; empty slots report BD_ADDR_TYPE_UNKNOWN
+        if (addr_type != BD_ADDR_TYPE_UNKNOWN) {
+            gap_delete_bonding((bd_addr_type_t)addr_type, addr);
+        }
+    }
+}
+
 // this function carries out the BLE credential provisioning and also wifi connection
-int start_ble_wifi_provisioning(int ble_timeout_ms) {
+int start_ble_wifi_provisioning(int ble_timeout_ms, bool wipe_bonds) {
+
     absolute_time_t timeout_time = make_timeout_time_ms(ble_timeout_ms);
     l2cap_init();
     sm_init();
@@ -396,11 +420,11 @@ int start_ble_wifi_provisioning(int ble_timeout_ms) {
     att_server_init(profile_data, att_read_callback, att_write_callback);    
 
     // inform about BTstack state
-    hci_event_callback_registration.callback = &packet_handler;
+    hci_event_callback_registration.callback = &my_packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
 
     // secure manager register handler
-    sm_event_callback_registration.callback = &sm_packet_handler;
+    sm_event_callback_registration.callback = &my_sm_packet_handler;
     sm_add_event_handler(&sm_event_callback_registration);
 
     // configure secure BLE (Just works) (legacy pairing)
@@ -409,12 +433,16 @@ int start_ble_wifi_provisioning(int ble_timeout_ms) {
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_BONDING);
 
     // register for ATT event
-    att_server_register_packet_handler(packet_handler);
+    att_server_register_packet_handler(my_att_handler);
 
     // set one-shot btstack timer
     heartbeat.process = &heartbeat_handler;
     btstack_run_loop_set_timer(&heartbeat, HEARTBEAT_PERIOD_MS);
     btstack_run_loop_add_timer(&heartbeat);
+
+    if (wipe_bonds) {
+        delete_all_le_bonds();
+    }
 
     // turn on bluetooth!
     hci_power_control(HCI_POWER_ON);
