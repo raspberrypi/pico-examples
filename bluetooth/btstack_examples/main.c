@@ -77,6 +77,9 @@ int main() {
 
     btstack_run_loop_execute(); // run until btstack_run_loop_trigger_exit is called
 
+#if defined(WIFI_SSID) && defined(WIFI_PASSWORD)
+    cyw43_arch_disable_sta_mode();
+#endif
     cyw43_arch_deinit();
     return 0;
 }

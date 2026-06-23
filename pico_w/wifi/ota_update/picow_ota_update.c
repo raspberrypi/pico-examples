@@ -356,6 +356,7 @@ int main() {
         sleep_ms(250);
     }
 
+    cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
     ret = rom_reboot(REBOOT2_FLAG_REBOOT_TYPE_FLASH_UPDATE, 1000, state->flash_update, 0);
     printf("Done - rebooting for a flash update boot %d\n", ret);

@@ -263,6 +263,7 @@ int main() {
         printf("Connected.\n");
     }
     run_tcp_server_test();
+    cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
     return 0;
 }
