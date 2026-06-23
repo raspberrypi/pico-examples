@@ -406,7 +406,7 @@ int start_ble_wifi_provisioning(int ble_timeout_ms) {
     // configure secure BLE (Just works) (legacy pairing)
     gatt_client_set_required_security_level(LEVEL_2);
     sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
-    sm_set_authentication_requirements(0);
+    sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION);
 
     // register for ATT event
     att_server_register_packet_handler(packet_handler);
