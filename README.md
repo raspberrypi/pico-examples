@@ -172,6 +172,19 @@ App|Description
 ---|---
 [hello_interp](interp/hello_interp) | A bundle of small examples, showing how to access the core-local interpolator hardware, and use most of its features.
 
+### Low Power
+
+These examples demonstrate how to use the pico_low_power library.
+
+App|Description
+---|---
+[low_power_domant_timer](low_power/low_power_dormant) | Go dormant (disable clocks) and wakeup on a timer. Requires an external clock for when testing with RP2040. See [low_power_clksrc](low_power/low_power_dormant).
+[low_power_dormant_gpio](low_power/low_power_dormant) | Go dormant (disable clocks) and wakeup on a GPIO.
+[low_power_pstate_timer](low_power/low_power_pstate) | Go to a lower power state (RP2350 only) and restart on an AON timer.
+[low_power_pstate_gpio](low_power/low_power_pstate) | Go to a lower power state (RP2350 only) and restart on a GPIO.
+[low_power_sleep_timer](low_power/low_power_sleep) | Go to sleep and wakeup on a timer.
+[low_power_sleep_gpio](low_power/low_power_sleep) | Go to sleep and wakeup on a GPIO.
+
 ### Multicore
 
 App|Description
