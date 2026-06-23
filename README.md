@@ -240,10 +240,7 @@ App|Description
 These Bluetooth examples are only available for boards that support Bluetooth.
 They are examples from the Blue Kitchen Bluetooth stack, see [here](https://bluekitchen-gmbh.com/btstack/#examples/examples/index.html) for a full description.
 
-By default, the Bluetooth examples are only built in one "mode" only (*background*, *poll*, or *freertos*), with the 
-default being *background*. This can be changed by passing `-DBTSTACK_EXAMPLE_TYPE=poll` etc. to `CMake`, or all 
-examples can be built (which may be slow) by passing `-DBTSTACK_EXAMPLE_TYPE=all`
-Freertos versions can only be built if `FREERTOS_KERNEL_PATH` is defined.
+Only a subset of examples are built by default. All examples can be built (which may be slow) by passing `-DBTSTACK_EXAMPLES_ALL=1`
 
 The Bluetooth examples that use audio require code in [pico-extras](https://github.com/raspberrypi/pico-extras). Pass `-DPICO_EXTRAS_PATH=${HOME}/pico-extras` on the cmake command line or define `PICO_EXTRAS_PATH=${HOME}/pico-extras` in your environment and re-run cmake to include them in the build.
 
@@ -303,16 +300,16 @@ App|Description
 [spp_streamer_with_wifi](https://github.com/bluekitchen/btstack/tree/master/example/spp_streamer.c) | Performance - Stream Data over SPP (Server, with Wi-Fi).
 [ublox_spp_le_counter](https://github.com/bluekitchen/btstack/blob/master/example/ublox_spp_le_counter.c) | LE u-blox SPP-like Heartbeat Server.
 
-Some standalone Bluetooth examples (without all the common example build infrastructure) are also available:
+Some standalone Bluetooth examples are also available:
 
 App|Description
 ---|---
 [ble_pointer](bluetooth/ble_pointer) | Bluetooth HID mouse using mpu6050 to detect angle and move cursor.
-[ble_doorbell](bluetooth/ble_doorbell) | Detects button press on transmitter Pico and illuminates LED on reciever Pico.
+[ble_doorbell](bluetooth/ble_doorbell) | Detects button press on transmitter Pico and illuminates LED on receiver Pico.
 [ble_temp_server](bluetooth/ble_temp_sensor) | Reads from the on board temperature sensor and sends notifications via BLE.
-[ble_temp_client](bluetooth/ble_temp_sensor) | Connects to the above temp_server and reads the temperature.
-[ble_secure_temp_server](bluetooth/ble_secure_temp_sensor) | Variant of temp_server which allows exploration of LE_secure configurations.
-[ble_secure_temp_client](bluetooth/ble_secure_temp_sensor) | Connects to the above secure_temp_server and reads the temperature.
+[ble_temp_client](bluetooth/ble_temp_sensor) | Connects to the above ble_temp_server and reads the temperature.
+[ble_secure_temp_server](bluetooth/ble_secure_temp_sensor) | Variant of ble_temp_server which allows exploration of LE Secure configurations.
+[ble_secure_temp_client](bluetooth/ble_secure_temp_sensor) | Connects to the above ble_secure_temp_server and reads the temperature.
 [ble_wifi_provisioner](bluetooth/ble_wifi_provisioner) | Allows WiFi credentials to be provisioned over BLE, either using a mobile app or with the included python script.
 
 ### PIO
