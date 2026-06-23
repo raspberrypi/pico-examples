@@ -408,6 +408,7 @@ int main(void)
                  CYW43_AUTH_WPA2_AES_PSK, 30000);
     if (rc) {
         printf("Wi-Fi connection failed (%d)\n", rc);
+        cyw43_arch_disable_sta_mode();
         cyw43_arch_deinit();
         return 1;
     }
@@ -430,6 +431,7 @@ int main(void)
     // 5. Send the Router Solicitation
     printf("Sending RS to ff02::2 ...\n");
     if (!send_rs()) {
+        cyw43_arch_disable_sta_mode();
         cyw43_arch_deinit();
         return 1;
     }
@@ -469,6 +471,7 @@ int main(void)
     }
 
     // 7. Tidy up
+    cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
     printf("\nDone.\n");
     return 0;
