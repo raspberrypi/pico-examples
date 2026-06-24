@@ -33,7 +33,7 @@ static char ssid[33] = "";
 static char password[64] = "";
 static bool connection_status = false;
 static int le_notification_enabled;
-static hci_con_handle_t con_handle;
+static hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
 static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 static btstack_packet_callback_registration_t sm_event_callback_registration;
@@ -66,7 +66,7 @@ static void call_flash_range_program(void *param) {
 }
 
 // Security Manager Packet Handler 
-static void my_sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
+static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
     UNUSED(channel);
     UNUSED(size);
 
@@ -78,18 +78,6 @@ static void my_sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t 
 
     int type = hci_event_packet_get_type(packet);
     switch (type) {
-        case HCI_EVENT_META_GAP:
-            switch (hci_event_gap_meta_get_subevent_code(packet)) {
-                case GAP_SUBEVENT_LE_CONNECTION_COMPLETE:
-                    DEBUG_LOG("Connection complete\n");
-                    hard_assert(!con_handle);
-                    con_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
-                    sm_request_pairing(con_handle);
-                    break;
-                default:
-                    break;
-            }
-            break;
         case SM_EVENT_JUST_WORKS_REQUEST:
             DEBUG_LOG("Just Works requested\n");
             sm_just_works_confirm(sm_event_just_works_request_get_handle(packet));
@@ -184,7 +172,7 @@ static void my_sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t 
     }
 }
 
-static void my_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
+static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
     UNUSED(size);
     UNUSED(channel);
     bd_addr_t local_addr;
@@ -196,9 +184,12 @@ static void my_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
             switch (hci_event_gap_meta_get_subevent_code(packet)) {
                 case GAP_SUBEVENT_LE_CONNECTION_COMPLETE:
                     DEBUG_LOG("Connection complete\n");
-                    hard_assert(!con_handle);
+                    hard_assert(con_handle == HCI_CON_HANDLE_INVALID);
                     con_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
-                    sm_request_pairing(con_handle);
+                    // We don't need sm_request_pairing because the characteristics have ENCRYPTION_KEY_SIZE_16,
+                    // so will trigger encryption on demand?
+                    // also see https://github.com/bluekitchen/btstack/issues/738
+                    // sm_request_pairing(con_handle);
                     break;
                 default:
                     break;
@@ -225,17 +216,12 @@ static void my_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
         case HCI_EVENT_DISCONNECTION_COMPLETE:
             le_notification_enabled = 0;
             break;
-        case ATT_EVENT_CAN_SEND_NOW:
-            att_server_notify(con_handle, ATT_CHARACTERISTIC_b1829813_e8ec_4621_b9b5_6c1be43fe223_01_VALUE_HANDLE, (uint8_t*)ssid, sizeof(ssid));
-            att_server_notify(con_handle, ATT_CHARACTERISTIC_410f5077_9e81_4f3b_b888_bf435174fa58_01_VALUE_HANDLE, (uint8_t*)password, sizeof(password));
-            break;
-        
         default:
             break;
     }
 }
 
-static void my_att_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
+static void att_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, uint16_t size) {
     UNUSED(size);
     UNUSED(channel);
     if (packet_type != HCI_EVENT_PACKET) return;
@@ -420,11 +406,11 @@ int start_ble_wifi_provisioning(int ble_timeout_ms, bool wipe_bonds) {
     att_server_init(profile_data, att_read_callback, att_write_callback);    
 
     // inform about BTstack state
-    hci_event_callback_registration.callback = &my_packet_handler;
+    hci_event_callback_registration.callback = &hci_packet_handler;
     hci_add_event_handler(&hci_event_callback_registration);
 
     // secure manager register handler
-    sm_event_callback_registration.callback = &my_sm_packet_handler;
+    sm_event_callback_registration.callback = &sm_packet_handler;
     sm_add_event_handler(&sm_event_callback_registration);
 
     // configure secure BLE (Just works) (legacy pairing)
@@ -433,7 +419,7 @@ int start_ble_wifi_provisioning(int ble_timeout_ms, bool wipe_bonds) {
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_BONDING);
 
     // register for ATT event
-    att_server_register_packet_handler(my_att_handler);
+    att_server_register_packet_handler(att_handler);
 
     // set one-shot btstack timer
     heartbeat.process = &heartbeat_handler;

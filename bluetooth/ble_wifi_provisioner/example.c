@@ -41,7 +41,7 @@ int main(void) {
     stdio_init_all();
 
     // This is for testing
-    printf("Press 'w' in the next 3s to wipe stored ssid and password\n");
+    printf("Press 'w' in the next 3s to wipe stored ssid, password and bonds\n");
     int c = getchar_timeout_us(3000000);
     bool wipe = false;
     if (c == 'w' || c == 'W') {
