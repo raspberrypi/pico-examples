@@ -41,13 +41,19 @@ int main(void) {
     stdio_init_all();
 
     // This is for testing
-    printf("Press 'w' in the next 3s to wipe stored ssid, password and bonds\n");
+    printf("Press 'w' in the next 3s to wipe stored ssid, password\n");
     int c = getchar_timeout_us(3000000);
-    bool wipe = false;
+    bool wipe_bonds = false;
     if (c == 'w' || c == 'W') {
-        wipe = true;
-        printf("Wiping stored ssid, password and bonds\n");
+        printf("Wiping stored ssid, password\n");
         erase_credentials();
+
+        printf("Press 'w' in the next 3s to wipe bonds\n");
+        c = getchar_timeout_us(3000000);
+        if (c == 'w' || c == 'W') {
+            printf("Wiping bonds\n");
+            wipe_bonds = true;
+        }
     }
 
     // initialize CYW43 driver architecture (will enable BT because CYW43_ENABLE_BLUETOOTH == 1)
@@ -58,7 +64,7 @@ int main(void) {
 
     // if unable to connect with saved ssid and password, waits 120 seconds
     // for new credentials to be provisioned over BLE
-    int rc = start_ble_wifi_provisioning(PROV_TIMEOUT_MS, wipe);
+    int rc = start_ble_wifi_provisioning(PROV_TIMEOUT_MS, wipe_bonds);
     printf("finished provisioning result=%d\n", rc);
     if (rc != PICO_OK) {
         panic("Wifi provisioning failed");

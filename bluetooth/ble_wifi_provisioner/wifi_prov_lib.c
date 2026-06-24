@@ -184,7 +184,6 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
             switch (hci_event_gap_meta_get_subevent_code(packet)) {
                 case GAP_SUBEVENT_LE_CONNECTION_COMPLETE:
                     DEBUG_LOG("Connection complete\n");
-                    hard_assert(con_handle == HCI_CON_HANDLE_INVALID);
                     con_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
                     // We don't need sm_request_pairing because the characteristics have ENCRYPTION_KEY_SIZE_16,
                     // so will trigger encryption on demand?
@@ -414,7 +413,6 @@ int start_ble_wifi_provisioning(int ble_timeout_ms, bool wipe_bonds) {
     sm_add_event_handler(&sm_event_callback_registration);
 
     // configure secure BLE (Just works) (legacy pairing)
-    gatt_client_set_required_security_level(LEVEL_2);
     sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_BONDING);
 
