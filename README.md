@@ -218,6 +218,7 @@ App|Description
 [picow_http_client_verify](pico_w/wifi/http_client) | Demonstrates how to make a https request with server authentication.
 [picow_mqtt_client](pico_w/wifi/mqtt) | Demonstrates how to implement a MQTT client application.
 [picow_ota_update](pico_w/wifi/ota_update) | A minimal OTA update server (RP235x only). See the separate [README](pico_w/wifi/ota_update/README.md) for more details.
+[picow_router_solicit](pico_w/wifi/router_solicit) | Demonstrates how to use WiFi without LwIP by sending an IPv6 router solicitation.
 
 #### FreeRTOS Networking
 

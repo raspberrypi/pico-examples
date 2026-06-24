@@ -20,6 +20,7 @@ else()
     add_subdirectory_exclude_platforms(udp_beacon)
     add_subdirectory_exclude_platforms(http_client)
     add_subdirectory_exclude_platforms(mqtt)
+    add_subdirectory_exclude_platforms(router_solicit)
 
     if (NOT TARGET pico_mbedtls)
         message("Skipping tls_client and ota_update examples as Mbed TLS is not available")
