@@ -170,6 +170,7 @@ int main() {
     cyw43_arch_disable_ap_mode();
     dns_server_deinit(&dns_server);
     dhcp_server_deinit(&dhcp_server);
+    cyw43_arch_disable_ap_mode();
     cyw43_arch_deinit();
     printf("Complete\n");
     return 0;

@@ -78,6 +78,9 @@ int main(void) {
         cyw43_arch_wait_for_work_until(at_the_end_of_time);
     }
 
+    // Switch off wifi nicely
+    cyw43_arch_disable_sta_mode();
+
     printf("Rebooting example...\n");
     watchdog_enable(500, true);
     sleep_ms(1000);

@@ -75,6 +75,7 @@ void main_task(__unused void *params) {
         panic("test failed");
     }
 
+    cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
     panic("Test passed");
 }

@@ -51,6 +51,7 @@ int main() {
     if (result != 0) {
         panic("test failed");
     }
+    cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
     printf("Test passed\n");
     sleep_ms(100);
