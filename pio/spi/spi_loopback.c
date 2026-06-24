@@ -66,8 +66,10 @@ int main() {
     hard_assert(pio_claim_free_sm_and_add_program_for_gpio_range(&spi_cpha0_program, &spi[0].pio, &spi[0].sm, &spi[0].offset, pin_base, pin_count, true));
     hard_assert(pio_claim_free_sm_and_add_program_for_gpio_range(&spi_cpha1_program, &spi[1].pio, &spi[1].sm, &spi[1].offset, pin_base, pin_count, true));
 
+    int spi_example_runs = 0;
     for (int cpha = 0; cpha <= 1; ++cpha) {
         for (int cpol = 0; cpol <= 1; ++cpol) {
+            spi_example_runs++;
             printf("CPHA = %d, CPOL = %d\n", cpha, cpol);
             pio_spi_init(spi[cpha].pio, spi[cpha].sm,
                          spi[cpha].offset,
@@ -83,6 +85,6 @@ int main() {
             sleep_ms(10);
         }
     }
-    printf("Example %s\n", match_count == 4 ? "passed" : "failed");
+    printf("Example %s\n", match_count == spi_example_runs ? "PASSED" : "FAILED");
     assert(match_count == 4);
 }
