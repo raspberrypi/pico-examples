@@ -76,3 +76,9 @@ finished provisioning result=0
 
 Ready, running iperf server at 10.3.194.230
 ```
+
+If you have issues, try removing the device on the PC you are running set_credentials.py from.
+
+```
+bluetoothctl remove 2C:CF:67:BE:08:05
+```
