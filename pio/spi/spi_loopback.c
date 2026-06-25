@@ -86,5 +86,5 @@ int main() {
         }
     }
     printf("Example %s\n", match_count == spi_example_runs ? "PASSED" : "FAILED");
-    assert(match_count == 4);
+    assert(match_count == spi_example_runs);
 }
