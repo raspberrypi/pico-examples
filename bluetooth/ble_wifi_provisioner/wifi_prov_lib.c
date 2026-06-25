@@ -34,6 +34,18 @@ static char password[64] = "";
 static bool connection_status = false;
 static int le_notification_enabled;
 static hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
+
+// Provisioning status reported to the client over the status characteristic.
+// Only this status byte is ever notified - credentials are never echoed back.
+typedef enum {
+    PROV_STATUS_IDLE = 0,
+    PROV_STATUS_CREDENTIALS_RECEIVED = 1,
+    PROV_STATUS_CONNECTING = 2,
+    PROV_STATUS_CONNECTED = 3,
+    PROV_STATUS_FAILED_AUTH = 4,
+    PROV_STATUS_FAILED = 5,
+} prov_status_t;
+static uint8_t prov_status = PROV_STATUS_IDLE;
 static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 static btstack_packet_callback_registration_t sm_event_callback_registration;
@@ -193,9 +205,19 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
             break;
         case HCI_EVENT_DISCONNECTION_COMPLETE:
             le_notification_enabled = 0;
+            con_handle = HCI_CON_HANDLE_INVALID;
             break;
         default:
             break;
+    }
+}
+
+// Update the provisioning status and, if the client has subscribed, notify it.
+// Safe to call from the BTstack run loop context (e.g. the connection logic).
+static void set_prov_status(prov_status_t status) {
+    prov_status = (uint8_t)status;
+    if (le_notification_enabled && con_handle != HCI_CON_HANDLE_INVALID) {
+        att_server_request_can_send_now_event(con_handle);
     }
 }
 
@@ -207,8 +229,9 @@ static void att_handler(uint8_t packet_type, uint16_t channel, uint8_t *packet, 
     uint8_t event_type = hci_event_packet_get_type(packet);
     switch(event_type){
         case ATT_EVENT_CAN_SEND_NOW:
-            att_server_notify(con_handle, ATT_CHARACTERISTIC_b1829813_e8ec_4621_b9b5_6c1be43fe223_01_VALUE_HANDLE, (uint8_t*)ssid, sizeof(ssid));
-            att_server_notify(con_handle, ATT_CHARACTERISTIC_410f5077_9e81_4f3b_b888_bf435174fa58_01_VALUE_HANDLE, (uint8_t*)password, sizeof(password));
+            // Only the provisioning status byte is notified (never credentials),
+            // so a single notification per can-send-now event is sufficient.
+            att_server_notify(con_handle, ATT_CHARACTERISTIC_6072c5a6_e1a2_4068_b30b_8f3f0e5c8634_01_VALUE_HANDLE, &prov_status, sizeof(prov_status));
             break;
         default:
             break;
@@ -235,34 +258,41 @@ static int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_h
     UNUSED(transaction_mode);
     UNUSED(offset);
     UNUSED(buffer_size);
-    
-    le_notification_enabled = little_endian_read_16(buffer, 0) == GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION;
-    hard_assert(con_handle);
-    if (le_notification_enabled) {
-        att_server_request_can_send_now_event(con_handle);
-        //This occurs when the client enables notification (the download button on nrf scanner)
+
+    // Client Characteristic Configuration write for the status characteristic:
+    // the client is subscribing/unsubscribing to status notifications.
+    if (att_handle == ATT_CHARACTERISTIC_6072c5a6_e1a2_4068_b30b_8f3f0e5c8634_01_CLIENT_CONFIGURATION_HANDLE) {
+        le_notification_enabled = little_endian_read_16(buffer, 0) == GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION;
+        hard_assert(con_handle);
+        if (le_notification_enabled) {
+            // Push the current status straight away so a freshly-subscribed client
+            // learns where provisioning currently stands.
+            att_server_request_can_send_now_event(con_handle);
+        }
+        return 0;
     }
 
-    // First characteristic (SSID)
+    // SSID characteristic (write-only sink - never echoed back).
     if (att_handle == ATT_CHARACTERISTIC_b1829813_e8ec_4621_b9b5_6c1be43fe223_01_VALUE_HANDLE){
         DEBUG_LOG("Setting SSID\n");
-        att_server_request_can_send_now_event(con_handle);
         memset(ssid, 0, sizeof(ssid));
         memcpy(ssid, buffer, buffer_size);
-        //This occurs when the client sends a write request to the ssid characteristic (up arrow on nrf scanner)
         DEBUG_LOG("Current saved SSID: \"%s\"\n", ssid);
         DEBUG_LOG("Current saved password length: %u\n", strlen(password));
     }
 
-    // Second characteristic (Password)
+    // Password characteristic (write-only sink - never echoed back).
     if (att_handle == ATT_CHARACTERISTIC_410f5077_9e81_4f3b_b888_bf435174fa58_01_VALUE_HANDLE){
         DEBUG_LOG("Setting password\n");
-        att_server_request_can_send_now_event(con_handle);
         memset(password, 0, sizeof(password));
         memcpy(password, buffer, buffer_size);
-        //This occurs when the client sends a write request to the password characteristic (up arrow on nrf scanner)
         DEBUG_LOG("Current saved SSID: \"%s\"\n", ssid);
         DEBUG_LOG("Current saved password length: %u\n", strlen(password));
+    }
+
+    // Once both have arrived, let a subscribed client know we have what we need.
+    if (ssid[0] && password[0]) {
+        set_prov_status(PROV_STATUS_CREDENTIALS_RECEIVED);
     }
 
     return 0;
@@ -436,20 +466,25 @@ int start_ble_wifi_provisioning(int ble_timeout_ms, bool wipe_bonds) {
     if (connection_status == false) {
         while (true) {
             if (ssid[0] && password[0]) {
+                set_prov_status(PROV_STATUS_CONNECTING);
                 result = cyw43_arch_wifi_connect_timeout_ms(ssid, password, CYW43_AUTH_WPA2_AES_PSK, us_to_ms(absolute_time_diff_us(get_absolute_time(), timeout_time)));
                 if (result == PICO_ERROR_TIMEOUT) {
                     ERROR_LOG("Timed out - failed provisioning!\n");
+                    set_prov_status(PROV_STATUS_FAILED);
                     break;
                 } else if (result == PICO_OK) {
                     connection_status = true;
                     DEBUG_LOG("Succesfully provisioned credentials using wifi_prov_lib!\n");
+                    set_prov_status(PROV_STATUS_CONNECTED);
                     // since connected, save credentiald for future use
                     result = save_credentials(ssid, password);
                     break;
                 } else if (result == PICO_ERROR_BADAUTH) {
                     DEBUG_LOG("Incorrect password - retrying\n");
+                    set_prov_status(PROV_STATUS_FAILED_AUTH);
                 } else {
                     DEBUG_LOG("Connection error - failed provisioning!\n");
+                    set_prov_status(PROV_STATUS_FAILED);
                     break;
                 }
             } else {
