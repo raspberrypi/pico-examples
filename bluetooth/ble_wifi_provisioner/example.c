@@ -45,7 +45,7 @@ int main(void) {
     int c = getchar_timeout_us(3000000);
     bool wipe_bonds = false;
     if (c == 'w' || c == 'W') {
-        printf("Wiping stored ssid, password\n");
+        printf("Wiping stored ssid and password\n");
         erase_credentials();
 
         printf("Press 'w' in the next 3s to wipe bonds\n");
