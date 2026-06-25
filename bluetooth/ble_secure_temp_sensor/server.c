@@ -46,28 +46,31 @@ static btstack_timer_source_t heartbeat;
 static btstack_packet_callback_registration_t hci_event_callback_registration;
 static btstack_packet_callback_registration_t sm_event_callback_registration;
 
-// Select a security setting to explore the BLE security
-//
-// security setting 0: Just works (pairing), no MITM (Man In The Middle) protection
-//  client and server have no input or output support
-//
-// security setting 1: Numeric comparison with MITM protection
-//  client can query yes or no from the user, server has a display only
-//  server generates and displays passkey
-//  client displays passkey and user can select Yes or No if they agree the passkey is from the server
-//
-// security setting 2:
-//  client has a keyboard and display, server has a display only
-//  server generates and displays passkey
-//  client user enters the passkey displayed by the server
-//
-// security setting 3:
-//  client has a display only, server has a display and keyboard
-//  Client generates and displays passkey
-//  server user enters the passkey displayed by the server
+// Select a security setting to explore the BLE security. See README.md for details
 #ifndef SECURITY_SETTING
 #error define SECURITY_SETTING
 #endif
+
+static int choose_security(int setting) {
+    printf("Choose security in the next 5s (default %d)\n", setting);
+    printf("0: IO_CAPABILITY_NO_INPUT_NO_OUTPUT\n");
+    printf("1: IO_CAPABILITY_DISPLAY_YES_NO and SM_AUTHREQ_MITM_PROTECTION\n");
+    printf("2: IO_CAPABILITY_KEYBOARD_DISPLAY and SM_AUTHREQ_MITM_PROTECTION\n");
+    printf("3: IO_CAPABILITY_DISPLAY_ONLY and SM_AUTHREQ_MITM_PROTECTION\n");
+    printf("all are using SM_AUTHREQ_SECURE_CONNECTION\n");
+
+    int c = getchar_timeout_us(5000000);
+    if (c >= 0) {
+        if (c >= '0' && c <= '3') {
+            setting = c - '0';
+        } else {
+            printf("Invalid input\n");
+        }
+    }
+    printf("Using security setting %d\n", setting);
+
+    return setting;
+}
 
 static void configure_security(int security_setting) {
     DEBUG_LOG("Security setting %u selected.\n", security_setting);
@@ -87,11 +90,11 @@ static void configure_security(int security_setting) {
             sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION|SM_AUTHREQ_MITM_PROTECTION);
             break;
         case 2:
-            sm_set_io_capabilities(IO_CAPABILITY_DISPLAY_ONLY);
+            sm_set_io_capabilities(IO_CAPABILITY_KEYBOARD_DISPLAY);
             sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION|SM_AUTHREQ_MITM_PROTECTION);
             break;
         case 3:
-            sm_set_io_capabilities(IO_CAPABILITY_KEYBOARD_ONLY);
+            sm_set_io_capabilities(IO_CAPABILITY_DISPLAY_ONLY);
             sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION|SM_AUTHREQ_MITM_PROTECTION);
             break;
         default:
@@ -410,7 +413,8 @@ int main() {
     sm_add_event_handler(&sm_event_callback_registration);
 
     // apply security configuration settings
-    configure_security(SECURITY_SETTING);
+    int chosen_security_setting = choose_security(SECURITY_SETTING);
+    configure_security(chosen_security_setting);
 
     // register for ATT event
     att_server_register_packet_handler(packet_handler);
