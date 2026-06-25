@@ -64,7 +64,9 @@ and macOS.
 ## Testing
 
 When the example starts it waits 3 seconds for you to press `W`, which wipes any
-stored SSID, password, and bonding information. This is handy for repeated testing.
+stored SSID, password.
+Press `W` again in another 3 seconds to wipe bonding information.
+This is handy for repeated testing.
 
 While provisioning, the Pico's console shows something like:
 
@@ -112,7 +114,7 @@ Ready, running iperf server at 10.3.194.230
 
 **Pairing or connection fails, often after re-flashing the Pico.** The two devices
 may be holding mismatched bonding keys. Bonds must be cleared on *both* sides: press
-`W` on the Pico at startup to wipe its bonds, and remove the device on the host
+`W` on the Pico twice at startup to wipe its bonds, and remove the device on the host
 running `set_credentials.py`:
 
 ```

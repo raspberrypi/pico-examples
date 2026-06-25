@@ -461,7 +461,7 @@ int start_ble_wifi_provisioning(int ble_timeout_ms, bool wipe_bonds) {
 
     // If this fails, wait for user to provision credentials over BLE until timeout
     // cyw43_arch_wifi_connect_timeout_ms returns -2 for timeout and -7 for incorrect password
-    // wish to keep trying if password incorrect 
+    // keep trying if password is incorrect
     int result = PICO_OK;
     if (connection_status == false) {
         while (true) {
