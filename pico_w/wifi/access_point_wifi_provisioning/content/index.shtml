@@ -1,57 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-<style>
-body {background-color: whitesmoke;}
-h1   {color: crimson;}
-p    {color: black;}
-.grid-container {
-  display: grid;
-  grid-template-columns: 50% 50%;
-}
-</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+  body {
+    background-color: whitesmoke;
+    font-family: sans-serif;
+    margin: 1em;
+  }
+  h1 {color: crimson;}
+  p  {color: black;}
+  form {
+    margin-bottom: 1.5em;
+  }
+  input[type="text"] {
+    font-size: 1em;
+    padding: 0.3em;
+  }
+  input[type="submit"] {
+    font-size: 1em;
+    padding: 0.5em 1em;
+  }
+  </style>
 </head>
 <body>
+  <h1>AP provisioning</h1>
+  <p>Enter new credentials, submit, then connect, or select from previously saved.</p>
+  <p>Current SSID:<!--#ssid--></p>
+  <p>Current password:<!--#password--></p>
 
-<h1>AP provisioning</h1>
+  <form action="/credentials.cgi" method="get">
+    <label for="ssid">SSID:</label><br>
+    <input type="text" id="ssid" name="ssid" value=""><br>
+    <label for="password">Password:</label><br>
+    <input type="text" id="password" name="password" value=""><br>
+    <input type="submit" value="Submit">
+  </form>
 
-<p>Enter new credentials, submit, then connect, or select from previously saved.</p>
+  <form action="/connect.cgi" method="get">
+    <input type="submit" value="Connect">
+  </form>
 
-<div class="grid-container">
+  <form action="/clear.cgi" method="get">
+    <input type="submit" value="Clear saved credentials">
+  </form>
 
-<div>
-    <p>Current SSID:<!--#ssid--></p>
-    <p>Current password:<!--#password--></p>
-
-    <form action="/credentials.cgi" method="get">
-      <label for="ssid">SSID:</label><br>
-      <input type="text" id="ssid" name="ssid" value=""><br>
-      <label for="password">Password:</label><br>
-      <input type="text" id="password" name="password" value=""><br>
-      <input type="submit" value="Submit">
-    </form>
-
-    <form action="/connect.cgi" method="get">
-      <button name="foo" value="connect">Connect</button>
-    </form>
-
-    <form action="/clear.cgi" method="get">
-      <button name="foo" value="clear">Clear saved credentials</button>
-    </form>
-
-</div>
-
-<div>
-    <p>List of saved credentials:<!--#wifilist--></p>
-    <form action="/connect_from_saved.cgi" method="get">
-      <label for="index">Load from index :</label><br>
-      <input type="text" id="index" name="index" value=""><br>
-      <input type="submit" value="Connect">
-    </form>
-</div>
-
-
-</div>
-
+  <p>Select a saved network:</p>
+  <form action="/connect_from_saved.cgi" method="get">
+    <!--#wifilist-->
+    <input type="submit" value="Connect">
+  </form>
 </body>
 </html>
