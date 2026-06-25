@@ -74,7 +74,6 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
 
     bd_addr_t addr;
     bd_addr_type_t addr_type;
-    uint8_t status;
 
     int type = hci_event_packet_get_type(packet);
     switch (type) {
@@ -147,26 +146,6 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
             }
             break;
         }
-        case GATT_EVENT_QUERY_COMPLETE:
-            status = gatt_event_query_complete_get_att_status(packet);
-            switch (status){
-                case ATT_ERROR_INSUFFICIENT_ENCRYPTION:
-                    ERROR_LOG("GATT Query failed, Insufficient Encryption\n");
-                    break;
-                case ATT_ERROR_INSUFFICIENT_AUTHENTICATION:
-                    ERROR_LOG("GATT Query failed, Insufficient Authentication\n");
-                    break;
-                case ATT_ERROR_BONDING_INFORMATION_MISSING:
-                    ERROR_LOG("GATT Query failed, Bonding Information Missing\n");
-                    break;
-                case ATT_ERROR_SUCCESS:
-                    DEBUG_LOG("GATT Query successful\n");
-                    break;
-                default:
-                    ERROR_LOG("GATT Query failed, status 0x%02x\n", gatt_event_query_complete_get_att_status(packet));
-                    break;
-            }
-            break;
         default:
             break;
     }
@@ -412,7 +391,7 @@ int start_ble_wifi_provisioning(int ble_timeout_ms, bool wipe_bonds) {
     sm_event_callback_registration.callback = &sm_packet_handler;
     sm_add_event_handler(&sm_event_callback_registration);
 
-    // configure secure BLE (Just works) (legacy pairing)
+    // configure secure BLE: LE Secure Connections, Just Works (no IO), with bonding
     sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
     sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION | SM_AUTHREQ_BONDING);
 
