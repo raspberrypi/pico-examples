@@ -36,7 +36,7 @@ static uint8_t adv_data[] = {
 static const uint8_t adv_data_len = sizeof(adv_data);
 
 int le_notification_enabled;
-static hci_con_handle_t con_handle;
+static hci_con_handle_t con_handle = HCI_CON_HANDLE_INVALID;
 static uint16_t current_temp;
 
 extern uint8_t const profile_data[];
@@ -66,7 +66,7 @@ static btstack_packet_callback_registration_t sm_event_callback_registration;
 //  Client generates and displays passkey
 //  server user enters the passkey displayed by the server
 #ifndef SECURITY_SETTING
-#define SECURITY_SETTING 1
+#error define SECURITY_SETTING
 #endif
 
 static void configure_security(int security_setting) {
@@ -75,6 +75,11 @@ static void configure_security(int security_setting) {
     switch (security_setting) {
         case 0:
             sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
+            // Note: SM_AUTHREQ_BONDING is deliberately omitted. This means keys
+            // are not saved to persistent storage and the device re-pairs on every
+            // connection. This keeps the example simple and avoids flash wear and
+            // stale bonding issues during testing. Add SM_AUTHREQ_BONDING here and
+            // in the client if you want to persist bonds across power cycles.
             sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION);
             break;
         case 1:
@@ -123,10 +128,19 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
             poll_temp();
 
             break;
+        case HCI_EVENT_META_GAP:
+            if (hci_event_gap_meta_get_subevent_code(packet) == GAP_SUBEVENT_LE_CONNECTION_COMPLETE) {
+                con_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
+                INFO_LOG("Connection complete, con_handle=0x%04x\n", con_handle);
+                sm_request_pairing(con_handle);
+            }
+            break;
         case HCI_EVENT_DISCONNECTION_COMPLETE:
             le_notification_enabled = 0;
+            con_handle = HCI_CON_HANDLE_INVALID;
             break;
         case ATT_EVENT_CAN_SEND_NOW:
+            INFO_LOG("Sending notification: temp=%d\n", current_temp);
             att_server_notify(con_handle, ATT_CHARACTERISTIC_ORG_BLUETOOTH_CHARACTERISTIC_TEMPERATURE_01_VALUE_HANDLE, (uint8_t*)&current_temp, sizeof(current_temp));
             break;
         default:
@@ -184,22 +198,13 @@ static void sm_packet_handler (uint8_t packet_type, uint16_t channel, uint8_t *p
 
     if (packet_type != HCI_EVENT_PACKET) return;
 
-    hci_con_handle_t con_handle;
     bd_addr_t addr;
     bd_addr_type_t addr_type;
     uint8_t status;
 
     switch (hci_event_packet_get_type(packet)) {
         case HCI_EVENT_META_GAP:
-            switch (hci_event_gap_meta_get_subevent_code(packet)) {
-                case GAP_SUBEVENT_LE_CONNECTION_COMPLETE:
-                    DEBUG_LOG("Connection complete\n");
-                    con_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
-                    sm_request_pairing(con_handle);
-                    break;
-                default:
-                    break;
-            }
+            // con_handle capture and sm_request_pairing handled in packet_handler
             break;
         case SM_EVENT_JUST_WORKS_REQUEST:
             INFO_LOG("Just Works requested\n");
@@ -324,10 +329,11 @@ static int att_write_callback(hci_con_handle_t connection_handle, uint16_t att_h
     UNUSED(transaction_mode);
     UNUSED(offset);
     UNUSED(buffer_size);
-    
+
+    INFO_LOG("ATT write: handle=0x%04x value=0x%04x\n", att_handle, little_endian_read_16(buffer, 0));
     if (att_handle != ATT_CHARACTERISTIC_ORG_BLUETOOTH_CHARACTERISTIC_TEMPERATURE_01_CLIENT_CONFIGURATION_HANDLE) return 0;
     le_notification_enabled = little_endian_read_16(buffer, 0) == GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION;
-    con_handle = connection_handle;
+    INFO_LOG("Notifications %s\n", le_notification_enabled ? "enabled" : "disabled");
     if (le_notification_enabled) {
         att_server_request_can_send_now_event(con_handle);
     }
@@ -360,6 +366,7 @@ static void heartbeat_handler(struct btstack_timer_source *ts) {
     // Update the temp every 10s
     if (counter % 10 == 0) {
         poll_temp();
+        INFO_LOG("Heartbeat: le_notification_enabled=%d con_handle=0x%04x\n", le_notification_enabled, con_handle);
         if (le_notification_enabled) {
             att_server_request_can_send_now_event(con_handle);
         }

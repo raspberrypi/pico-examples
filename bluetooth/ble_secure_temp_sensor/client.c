@@ -38,7 +38,7 @@ static btstack_packet_callback_registration_t sm_event_callback_registration;
 static gc_state_t state = TC_OFF;
 static bd_addr_t server_addr;
 static bd_addr_type_t server_addr_type;
-static hci_con_handle_t connection_handle;
+static hci_con_handle_t con_handle;
 static gatt_client_service_t server_service;
 static gatt_client_characteristic_t server_characteristic;
 static bool listener_registered;
@@ -65,8 +65,29 @@ static btstack_timer_source_t heartbeat;
 //  Client generates and displays passkey
 //  server user enters the passkey displayed by the server
 #ifndef SECURITY_SETTING
-#define SECURITY_SETTING 1
+#error define SECURITY_SETTING
 #endif
+
+static int choose_security(int setting) {
+    printf("Choose security in the next 5s (default %d)\n", setting);
+    printf("0: IO_CAPABILITY_NO_INPUT_NO_OUTPUT\n");
+    printf("1: IO_CAPABILITY_DISPLAY_YES_NO and SM_AUTHREQ_MITM_PROTECTION\n");
+    printf("2: IO_CAPABILITY_KEYBOARD_DISPLAY and SM_AUTHREQ_MITM_PROTECTION\n");
+    printf("3: IO_CAPABILITY_DISPLAY_ONLY and SM_AUTHREQ_MITM_PROTECTION\n");
+    printf("all are using SM_AUTHREQ_SECURE_CONNECTION\n");
+
+    int c = getchar_timeout_us(5000000);
+    if (c >= 0) {
+        if (c >= '0' && c <= '3') {
+            setting = c - '0';
+        } else {
+            printf("Invalid input\n");
+        }
+    }
+    printf("Using security setting %d\n", setting);
+
+    return setting;
+}
 
 static void configure_security(int security_setting) {
     DEBUG_LOG("Security setting %u selected.\n", security_setting);
@@ -74,6 +95,11 @@ static void configure_security(int security_setting) {
     switch (security_setting) {
         case 0:
             sm_set_io_capabilities(IO_CAPABILITY_NO_INPUT_NO_OUTPUT);
+            // Note: SM_AUTHREQ_BONDING is deliberately omitted. This means keys
+            // are not saved to persistent storage and the device re-pairs on every
+            // connection. This keeps the example simple and avoids flash wear and
+            // stale bonding issues during testing. Add SM_AUTHREQ_BONDING here and
+            // in the server if you want to persist bonds across power cycles.
             sm_set_authentication_requirements(SM_AUTHREQ_SECURE_CONNECTION);
             break;
         case 1:
@@ -144,13 +170,13 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                     att_status = gatt_event_query_complete_get_att_status(packet);
                     if (att_status != ATT_ERROR_SUCCESS){
                         ERROR_LOG("SERVICE_QUERY_RESULT, ATT Error 0x%02x.\n", att_status);
-                        gap_disconnect(connection_handle);
+                        gap_disconnect(con_handle);
                         break;  
                     } 
                     // service query complete, look for characteristic
                     state = TC_W4_CHARACTERISTIC_RESULT;
                     DEBUG_LOG("Search for env sensing characteristic.\n");
-                    gatt_client_discover_characteristics_for_service_by_uuid16(handle_gatt_client_event, connection_handle, &server_service, ORG_BLUETOOTH_CHARACTERISTIC_TEMPERATURE);
+                    gatt_client_discover_characteristics_for_service_by_uuid16(handle_gatt_client_event, con_handle, &server_service, ORG_BLUETOOTH_CHARACTERISTIC_TEMPERATURE);
                     break;
                 default:
                     break;
@@ -166,16 +192,16 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                     att_status = gatt_event_query_complete_get_att_status(packet);
                     if (att_status != ATT_ERROR_SUCCESS){
                         ERROR_LOG("CHARACTERISTIC_QUERY_RESULT, ATT Error 0x%02x.\n", att_status);
-                        gap_disconnect(connection_handle);
+                        gap_disconnect(con_handle);
                         break;  
                     } 
                     // register handler for notifications
                     listener_registered = true;
-                    gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, &server_characteristic);
+                    gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, con_handle, &server_characteristic);
                     // enable notifications
                     DEBUG_LOG("Enable notify on characteristic.\n");
                     state = TC_W4_ENABLE_NOTIFICATIONS_COMPLETE;
-                    gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,
+                    gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, con_handle,
                         &server_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
                     break;
                 default:
@@ -223,7 +249,6 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
     UNUSED(channel);
     bd_addr_t local_addr;
     if (packet_type != HCI_EVENT_PACKET) return;
-    hci_con_handle_t con_handle;
     uint8_t status;
 
     uint8_t event_type = hci_event_packet_get_type(packet);
@@ -255,12 +280,12 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
             switch (hci_event_le_meta_get_subevent_code(packet)) {
                 case HCI_SUBEVENT_LE_CONNECTION_COMPLETE:
                     if (state != TC_W4_CONNECT) return;
-                    connection_handle = hci_subevent_le_connection_complete_get_connection_handle(packet);
-                    // initialize gatt client context with handle, and add it to the list of active clients
-                    // query primary services
-                    DEBUG_LOG("Search for env sensing service.\n");
-                    state = TC_W4_SERVICE_RESULT;
-                    gatt_client_discover_primary_services_by_uuid16(handle_gatt_client_event, connection_handle, ORG_BLUETOOTH_SERVICE_ENVIRONMENTAL_SENSING);
+                    con_handle = hci_subevent_le_connection_complete_get_connection_handle(packet);
+                    // Note: GATT service discovery is NOT started here. The server requires
+                    // ENCRYPTION_KEY_SIZE_16 so all ATT requests are rejected until the link
+                    // is encrypted. Discovery is deferred to SM_EVENT_PAIRING_COMPLETE so
+                    // that the link is always encrypted before any GATT traffic is sent.
+                    DEBUG_LOG("Connection complete, waiting for pairing.\n");
                     break;
                 default:
                     break;
@@ -296,7 +321,7 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
             break;
         case HCI_EVENT_DISCONNECTION_COMPLETE:
             // unregister listener
-            connection_handle = HCI_CON_HANDLE_INVALID;
+            con_handle = HCI_CON_HANDLE_INVALID;
             if (listener_registered){
                 listener_registered = false;
                 gatt_client_stop_listening_for_characteristic_value_updates(&notification_listener);
@@ -422,6 +447,10 @@ static void sm_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
             switch (sm_event_pairing_complete_get_status(packet)){
                 case ERROR_CODE_SUCCESS:
                     DEBUG_LOG("Pairing complete, success\n");
+                    // Now that the link is encrypted, start GATT service discovery.
+                    DEBUG_LOG("Search for env sensing service.\n");
+                    state = TC_W4_SERVICE_RESULT;
+                    gatt_client_discover_primary_services_by_uuid16(handle_gatt_client_event, con_handle, ORG_BLUETOOTH_SERVICE_ENVIRONMENTAL_SENSING);
                     break;
                 case ERROR_CODE_CONNECTION_TIMEOUT:
                     ERROR_LOG("Pairing failed, timeout\n");
@@ -514,7 +543,8 @@ int main() {
     sm_add_event_handler(&sm_event_callback_registration);
 
     // apply security configuration settings
-    configure_security(SECURITY_SETTING);
+    int chosen_security_setting = choose_security(SECURITY_SETTING);
+    configure_security(chosen_security_setting);
 
     // set one-shot btstack timer
     heartbeat.process = &heartbeat_handler;

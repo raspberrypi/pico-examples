@@ -18,7 +18,7 @@
 #  Client displays passkey
 #  server user enters the passkey displayed by the server
 if (NOT DEFINED SECURITY_SETTING)
-    set(SECURITY_SETTING 1)
+    set(SECURITY_SETTING 0)
 endif()
 
 # Standalone example that reads from the on board temperature sensor and sends notifications via BLE
