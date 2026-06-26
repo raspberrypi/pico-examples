@@ -270,10 +270,27 @@ static void dhcp_server_process(void *arg, struct udp_pcb *upcb, struct pbuf *p,
             }
             d->lease[yi].expiry = (cyw43_hal_ticks_ms() + DEFAULT_LEASE_TIME_S * 1000) >> 16;
             dhcp_msg.yiaddr[3] = DHCPS_BASE_IP + yi;
+
+            // Read the client's host name (option 12, RFC 2132) from the
+            // *incoming* options BEFORE opt_write_* below reuses this buffer to
+            // build the reply. It is optional and client-controlled, so it can
+            // be absent (some phones omit it or send a randomised name).
+            char hostname[32] = "";
+            uint8_t *hn = opt_find(opt, DHCP_OPT_HOST_NAME);
+            if (hn != NULL) {
+                uint8_t hn_len = hn[1];
+                if (hn_len > sizeof(hostname) - 1) {
+                    hn_len = sizeof(hostname) - 1;
+                }
+                memcpy(hostname, hn + 2, hn_len);
+                hostname[hn_len] = '\0';
+            }
+
             opt_write_u8(&opt, DHCP_OPT_MSG_TYPE, DHCPACK);
-            printf("DHCPS: client connected: MAC=%02x:%02x:%02x:%02x:%02x:%02x IP=%u.%u.%u.%u\n",
+            printf("DHCPS: client connected: MAC=%02x:%02x:%02x:%02x:%02x:%02x IP=%u.%u.%u.%u host=\"%s\"\n",
                 dhcp_msg.chaddr[0], dhcp_msg.chaddr[1], dhcp_msg.chaddr[2], dhcp_msg.chaddr[3], dhcp_msg.chaddr[4], dhcp_msg.chaddr[5],
-                dhcp_msg.yiaddr[0], dhcp_msg.yiaddr[1], dhcp_msg.yiaddr[2], dhcp_msg.yiaddr[3]);
+                dhcp_msg.yiaddr[0], dhcp_msg.yiaddr[1], dhcp_msg.yiaddr[2], dhcp_msg.yiaddr[3],
+                hostname);
             break;
         }
 
@@ -294,7 +311,7 @@ ignore_request:
     pbuf_free(p);
 }
 
-void dhcp_server_init(dhcp_server_t *d, ip_addr_t *ip, ip_addr_t *nm) {
+void dhcp_server_init(dhcp_server_t *d, struct netif *nif, ip_addr_t *ip, ip_addr_t *nm) {
     ip_addr_copy(d->ip, *ip);
     ip_addr_copy(d->nm, *nm);
     memset(d->lease, 0, sizeof(d->lease));
@@ -302,6 +319,13 @@ void dhcp_server_init(dhcp_server_t *d, ip_addr_t *ip, ip_addr_t *nm) {
         return;
     }
     dhcp_socket_bind(&d->udp, PORT_DHCP_SERVER);
+    // Restrict the server to a single interface (the AP). Without this the PCB
+    // is bound to the port on all netifs, so once a second netif exists (e.g. an
+    // active STA connection) the server could receive and answer DHCP requests
+    // arriving on it. udp_bind_netif guarantees rx and tx stay on this netif.
+    if (nif != NULL) {
+        udp_bind_netif(d->udp, nif);
+    }
 }
 
 void dhcp_server_deinit(dhcp_server_t *d) {
