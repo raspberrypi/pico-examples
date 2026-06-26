@@ -21,16 +21,25 @@
 
 static absolute_time_t wifi_connected_time;
 
-// max lengths + 1
-static char ssid[33];
-static char password[64];
+// Maximum credential content lengths (excluding the null terminator).
+// 32 is the 802.11 SSID limit; 63 is the WPA/WPA2 passphrase limit.
+#define MAX_SSID_LEN 32
+#define MAX_PASSWORD_LEN 63
+
+// buffers are content length + 1 for the null terminator
+static char ssid[MAX_SSID_LEN + 1];
+static char password[MAX_PASSWORD_LEN + 1];
 static int num_credentials;
 
-// how many sectors would you like to reserve
-// each sector is 4096 bytes, so can hold 40 pairs of max length credentials
-#define DESIRED_FLASH_SECTORS 1
-static char ssid_list[40 * DESIRED_FLASH_SECTORS][33];
-static char password_list[40 * DESIRED_FLASH_SECTORS][64];
+// Credentials are stored in a single 4096-byte flash sector as a stream of
+// null-separated strings: count byte, then ssid0\0password0\0ssid1\0...
+// MAX_CREDENTIALS must be small enough that that many (ssid + password)
+// pairs fit in FLASH_SECTOR_SIZE (4096) bytes. Worst case per pair is
+// MAX_SSID_LEN + 1 + MAX_PASSWORD_LEN + 1 = 97 bytes, so 4094/97 ~= 42;
+// 20 leaves comfortable margin.
+#define MAX_CREDENTIALS 20
+static char ssid_list[MAX_CREDENTIALS][MAX_SSID_LEN + 1];
+static char password_list[MAX_CREDENTIALS][MAX_PASSWORD_LEN + 1];
 
 // Define flash offset towards end of flash
 #ifndef PICO_FLASH_BANK_TOTAL_SIZE
@@ -39,9 +48,9 @@ static char password_list[40 * DESIRED_FLASH_SECTORS][64];
 
 #ifndef PICO_FLASH_BANK_STORAGE_OFFSET
 #if PICO_RP2350 && PICO_RP2350_A2_SUPPORTED 
-#define FLASH_TARGET_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE - PICO_FLASH_BANK_TOTAL_SIZE - FLASH_SECTOR_SIZE * DESIRED_FLASH_SECTORS)
+#define FLASH_TARGET_OFFSET (PICO_FLASH_SIZE_BYTES - FLASH_SECTOR_SIZE - PICO_FLASH_BANK_TOTAL_SIZE - FLASH_SECTOR_SIZE)
 #else
-#define FLASH_TARGET_OFFSET (PICO_FLASH_SIZE_BYTES - PICO_FLASH_BANK_TOTAL_SIZE - FLASH_SECTOR_SIZE * DESIRED_FLASH_SECTORS)
+#define FLASH_TARGET_OFFSET (PICO_FLASH_SIZE_BYTES - PICO_FLASH_BANK_TOTAL_SIZE - FLASH_SECTOR_SIZE)
 #endif
 #endif
 
@@ -51,7 +60,7 @@ static const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLAS
 static void call_flash_range_erase(void *param);
 static void call_flash_range_program(void *param);
 
-static void save_credentials(char ssid[], char password[]);
+static void save_credentials(const char *new_ssid, const char *new_password);
 static void read_credentials(void);
 
 static void attempt_wifi_connection(void);
@@ -153,7 +162,7 @@ int main() {
     }
 
     // Enter a loop until wifi is connected
-    while(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != CYW43_LINK_JOIN) {
+    while(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != CYW43_LINK_UP) {
         if (!CYW43_STA_IS_ACTIVE(&cyw43_state) && !CYW43_AP_IS_ACTIVE(&cyw43_state)) {
             // If STA is not active, enable access point
             cyw43_arch_enable_ap_mode(AP_SSID, AP_PASSWORD, CYW43_AUTH_WPA2_AES_PSK);
@@ -208,7 +217,7 @@ int main() {
         cyw43_arch_poll();
         cyw43_arch_wait_for_work_until(make_timeout_time_ms(1000));
     }
-    printf("Finished provisioning credentials.\n");
+    printf("Finished provisioning credentials. %d\n", cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA));
 
     // We should be connected now - run iperf to do something useful
     cyw43_arch_lwip_begin();
@@ -232,60 +241,70 @@ int main() {
 // This function will be called when it's safe to call flash_range_erase
 static void call_flash_range_erase(void *param) {
     uint32_t offset = (uint32_t)param;
-    flash_range_erase(offset, FLASH_SECTOR_SIZE * DESIRED_FLASH_SECTORS);
+    flash_range_erase(offset, FLASH_SECTOR_SIZE);
 }
 
 // This function will be called when it's safe to call flash_range_program
 static void call_flash_range_program(void *param) {
     uint32_t offset = ((uintptr_t*)param)[0];
     const uint8_t *data = (const uint8_t *)((uintptr_t*)param)[1];
-    flash_range_program(offset, data, FLASH_SECTOR_SIZE * DESIRED_FLASH_SECTORS);
+    flash_range_program(offset, data, FLASH_SECTOR_SIZE);
 }
 
 // Functions for saving and reading credentials from flash
-static void save_credentials(char ssid[], char password[]) {
-    // create empty 256 byte list
-    uint8_t flash_data[FLASH_SECTOR_SIZE * DESIRED_FLASH_SECTORS] = {0};
+// Saves (new_ssid, new_password). If an entry with the same ssid already exists,
+// its password is updated in place (preserving list order); otherwise the entry
+// is appended. Passing "" for new_ssid is treated as the "initialise empty
+// store" case. Serializes from the in-memory ssid_list/password_list, so
+// read_credentials must have populated them (it runs at boot and after each save).
+static void save_credentials(const char *new_ssid, const char *new_password) {
+    // create empty sector-sized buffer
+    uint8_t flash_data[FLASH_SECTOR_SIZE] = {0};
 
-    uint ssid_len = strlen(ssid);
-    uint password_len = strlen(password);
-    uint credential_count;
-
-    // first check how many credentials are already saved
-    if (flash_target_contents[1] != 255) {
-        credential_count = flash_target_contents[1];
-        // increment this count since we are about to add a credential
-        credential_count++;
-        flash_data[1] = credential_count;
+    // Special case: empty init write, just lay down count = 0.
+    if (new_ssid[0] == '\0') {
+        flash_data[1] = 0;
     } else {
-        // first (empty) save, so dont want to increment
-        credential_count = 0;
-    }
-
-    // now need to find how far through the flash to start writing, and also add previous stuff to flash data
-    uint write_start_location = 2;
-    if (credential_count != 0) {
-        uint count = 0;
-        while (count < 2 * credential_count - 2) {
-            flash_data[write_start_location] = flash_target_contents[write_start_location];
-            if (flash_target_contents[write_start_location] == 0) {
-                count++;
+        // Find an existing entry with the same ssid.
+        int match = -1;
+        for (int i = 0; i < num_credentials; i++) {
+            if (strcmp(ssid_list[i], new_ssid) == 0) {
+                match = i;
+                break;
             }
-            write_start_location++;
         }
-    }
 
-    // no character has ascii value 0, so we can seperate our ssid and password with a single 0
-    // first add ssid 
-    for (uint i = 0; i < ssid_len; i++) {
-        int ascii = (int) ssid[i];
-        flash_data[i + write_start_location] = ascii;
-    }
+        // Update in place, or append, in the in-memory lists.
+        if (match >= 0) {
+            // overwrite password only; ssid and position unchanged
+            strncpy(password_list[match], new_password, sizeof(password_list[0]) - 1);
+            password_list[match][sizeof(password_list[0]) - 1] = '\0';
+        } else if (num_credentials < MAX_CREDENTIALS) {
+            int i = num_credentials;
+            strncpy(ssid_list[i], new_ssid, sizeof(ssid_list[0]) - 1);
+            ssid_list[i][sizeof(ssid_list[0]) - 1] = '\0';
+            strncpy(password_list[i], new_password, sizeof(password_list[0]) - 1);
+            password_list[i][sizeof(password_list[0]) - 1] = '\0';
+            num_credentials++;
+        }
+        // else: list full, silently keep existing entries
 
-    // next add password
-    for (uint i = 0; i < password_len; i++) {
-        int ascii = (int) password[i];
-        flash_data[i + ssid_len + write_start_location + 1] = ascii;
+        // Serialize the lists back to flash in their current order.
+        // no character has ascii value 0, so a single 0 separates each field:
+        // ssid0\0password0\0ssid1\0password1\0...
+        uint count = 0;
+        uint pos = 2;  // byte 0 reserved, byte 1 holds the count
+        for (int i = 0; i < num_credentials; i++) {
+            uint sl = strlen(ssid_list[i]);
+            uint pl = strlen(password_list[i]);
+            if (pos + sl + 1 + pl + 1 > sizeof(flash_data)) break;  // out of room
+            memcpy(&flash_data[pos], ssid_list[i], sl);     pos += sl;
+            flash_data[pos++] = 0;
+            memcpy(&flash_data[pos], password_list[i], pl); pos += pl;
+            flash_data[pos++] = 0;
+            count++;
+        }
+        flash_data[1] = (uint8_t)count;
     }
 
     // must always erase flash before write
@@ -307,19 +326,24 @@ static void read_credentials(void) {
         save_credentials("", "");
     }
 
-    // second byte saves credential count (allows 255 sets of credentials, should be enough)
+    // second byte saves credential count
     credential_count = flash_target_contents[1];
+    // clamp to capacity: a corrupt/unexpected count byte must not overflow the
+    // parse arrays below (we index t_*_list[space_count / 2])
+    if (credential_count > MAX_CREDENTIALS) {
+        credential_count = MAX_CREDENTIALS;
+    }
     num_credentials = credential_count;
     printf("read_credentials %d\n", num_credentials);
 
-    // initialise temporary ssid and password as 1 bigger than max to ensure null termination
-    char t_ssid_list[20][33] = {0};
-    char t_password_list[20][64] = {0};
+    // initialise temporary ssid and password lists (zeroed to ensure null termination)
+    char t_ssid_list[MAX_CREDENTIALS][MAX_SSID_LEN + 1] = {0};
+    char t_password_list[MAX_CREDENTIALS][MAX_PASSWORD_LEN + 1] = {0};
 
     uint space_count = 0;
     uint start_index = 1;
 
-    for (uint i = 2; i < FLASH_SECTOR_SIZE * DESIRED_FLASH_SECTORS; i++) {
+    for (uint i = 2; i < FLASH_SECTOR_SIZE; i++) {
         if (space_count >= 2*credential_count) {
             break;
         } else if (flash_target_contents[i] == 0) {
