@@ -21,7 +21,8 @@
 
 #define BUF_SIZE 20
 
-static uint32_t match_count;
+static int spi_example_passes;
+static int spi_example_runs;
 
 void test(const pio_spi_inst_t *spi) {
     static uint8_t txbuf[BUF_SIZE];
@@ -46,7 +47,7 @@ void test(const pio_spi_inst_t *spi) {
         printf("\nNope\n");
     } else {
         printf("\nOK\n");
-        match_count++;
+        spi_example_passes++;
     }
 }
 
@@ -66,7 +67,6 @@ int main() {
     hard_assert(pio_claim_free_sm_and_add_program_for_gpio_range(&spi_cpha0_program, &spi[0].pio, &spi[0].sm, &spi[0].offset, pin_base, pin_count, true));
     hard_assert(pio_claim_free_sm_and_add_program_for_gpio_range(&spi_cpha1_program, &spi[1].pio, &spi[1].sm, &spi[1].offset, pin_base, pin_count, true));
 
-    int spi_example_runs = 0;
     for (int cpha = 0; cpha <= 1; ++cpha) {
         for (int cpol = 0; cpol <= 1; ++cpol) {
             spi_example_runs++;
@@ -85,6 +85,6 @@ int main() {
             sleep_ms(10);
         }
     }
-    printf("Example %s\n", match_count == spi_example_runs ? "PASSED" : "FAILED");
-    assert(match_count == spi_example_runs);
+    printf("Example %s\n", spi_example_passes == spi_example_runs ? "PASSED" : "FAILED");
+    assert(spi_example_passes == spi_example_runs);
 }
