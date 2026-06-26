@@ -162,7 +162,7 @@ int main() {
             printf("Trying to connect with STA \"%s\" at index %d\n", ssid_list[i], i);
             int rc = cyw43_arch_wifi_connect_timeout_ms(ssid_list[i], password_list[i], CYW43_AUTH_WPA2_AES_PSK, WIFI_CONNECT_TIME_S * 1000);
             if (rc) { 
-                printf("failed to connect with saved credentials status=%d\n", rc);
+                printf("failed to connect with saved credentials %d\n", rc);
                 cyw43_arch_disable_sta_mode();
             } else {
                 printf("Connected.\n");
@@ -248,9 +248,22 @@ int main() {
                 netif_set_default(&cyw43_state.netif[CYW43_ITF_AP]);
             } else {
                 printf("Connected.\n");
-                // Success: tear down the AP and its services so the device runs
-                // STA-only on the router's channel.
+                // Success: shut down the provisioning services. The DHCP/DNS
+                // server UDP PCBs are bound to ports 67/53 independent of the AP
+                // netif, so just disabling AP mode leaves them listening and
+                // still answering requests from any lingering AP-side clients.
+                // Deinit them explicitly (frees the PCBs / unbinds the ports),
+                // then drop the AP netif. httpd has no deinit in the lwIP API,
+                // but with the AP down and STA-only routing it is no longer
+                // reachable on the AP subnet.
+                cyw43_arch_lwip_begin();
+                dns_server_deinit(&dns_server);
+                dhcp_server_deinit(&dhcp_server);
+                cyw43_arch_lwip_end();
+                services_up = false;
+
                 cyw43_arch_disable_ap_mode();
+                printf("AP active after disable: %d\n", CYW43_AP_IS_ACTIVE(&cyw43_state));
                 connected = true;
             }
         }
