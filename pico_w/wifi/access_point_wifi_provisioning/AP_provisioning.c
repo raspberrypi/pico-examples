@@ -9,6 +9,7 @@
 
 #include "lwip/ip4_addr.h"
 #include "lwip/init.h"
+#include "lwip/netif.h"
 #include "lwip/apps/httpd.h"
 #include "lwip/pbuf.h"
 #include "lwip/apps/lwiperf.h"
@@ -20,6 +21,11 @@
 #include "hardware/flash.h" // for saving succesful credentials
 
 static absolute_time_t wifi_connected_time;
+
+// Set by the CGI handlers (running in lwIP context) to ask the main loop to
+// attempt a STA connection using the current ssid/password globals. The main
+// loop owns all radio mode transitions; the handlers only signal intent.
+static volatile bool connect_requested = false;
 
 // Maximum credential content lengths (excluding the null terminator).
 // 32 is the 802.11 SSID limit; 63 is the WPA/WPA2 passphrase limit.
@@ -143,6 +149,12 @@ int main() {
         try_connect = false;
     }
 
+    // Loop completion is driven by the return code of the blocking connect
+    // calls, not by polling link status: cyw43_arch_wifi_connect_timeout_ms
+    // only returns success once an IP address has been obtained (CYW43_LINK_UP),
+    // so its rc is an authoritative "connected" signal.
+    bool connected = false;
+
     read_credentials();
     if (try_connect) {
         // First, try to connect to network using one of the saved credentials
@@ -152,19 +164,34 @@ int main() {
             printf("Trying to connect with STA \"%s\" at index %d\n", ssid_list[i], i);
             int rc = cyw43_arch_wifi_connect_timeout_ms(ssid_list[i], password_list[i], CYW43_AUTH_WPA2_AES_PSK, WIFI_CONNECT_TIME_S * 1000);
             if (rc) { 
-                printf("failed to connect with saved credentials %d\n", rc);
+                printf("failed to connect with saved credentials status=%d\n", rc);
                 cyw43_arch_disable_sta_mode();
             } else {
                 printf("Connected.\n");
+                connected = true;
                 break;
             }
         }
     }
 
-    // Enter a loop until wifi is connected
-    while(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != CYW43_LINK_UP) {
-        if (!CYW43_STA_IS_ACTIVE(&cyw43_state) && !CYW43_AP_IS_ACTIVE(&cyw43_state)) {
-            // If STA is not active, enable access point
+    // Enter a loop until wifi is connected.
+    // The DHCP server and DNS server structs are declared here so they outlive
+    // every loop iteration - lwIP callbacks hold pointers to them. They (and
+    // httpd) are initialised once, guarded by services_up.
+    dhcp_server_t dhcp_server;
+    dns_server_t dns_server;
+    bool services_up = false;
+
+    // The AP (and its DHCP/DNS/http services) is brought up once and kept up
+    // for the whole provisioning session, so the user's browser stays connected
+    // to the captive portal across failed connection attempts. The CYW43439 is
+    // a single-radio part, so AP and STA share a channel: when STA associates,
+    // the AP is dragged to the router's channel and notifies its client via a
+    // CSA so the phone can follow. On a *successful* connect we tear the AP down
+    // so the device settles cleanly onto the STA channel.
+    while(!connected) {
+        // Bring up the AP + services once, at the start (neither itf active yet).
+        if (!CYW43_STA_IS_ACTIVE(&cyw43_state) && !CYW43_AP_IS_ACTIVE(&cyw43_state) && !services_up) {
             cyw43_arch_enable_ap_mode(AP_SSID, AP_PASSWORD, CYW43_AUTH_WPA2_AES_PSK);
             printf("\nReady, running web server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
             printf("Connect to ssid \"%s\" with password \"%s\"\n", AP_SSID, AP_PASSWORD);
@@ -181,10 +208,8 @@ int main() {
             IP(mask).addr = PP_HTONL(CYW43_DEFAULT_IP_MASK);
 
             #undef IP
-            dhcp_server_t dhcp_server;
-            dhcp_server_init(&dhcp_server, &gw, &mask);
 
-            dns_server_t dns_server;
+            dhcp_server_init(&dhcp_server, &gw, &mask);
             dns_server_init(&dns_server, &gw);
 
             char hostname[sizeof(CYW43_HOST_NAME) + 4];
@@ -201,23 +226,43 @@ int main() {
             http_set_cgi_handlers(cgi_handlers, LWIP_ARRAYSIZE(cgi_handlers));
             http_set_ssi_handler(ssi_handler, ssi_tags, LWIP_ARRAYSIZE(ssi_tags));
             cyw43_arch_lwip_end();
-        } else if (CYW43_STA_IS_ACTIVE(&cyw43_state) && cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_DOWN) {
-            // If STA is active, assume we need to try and connect
-            cyw43_arch_disable_ap_mode();
+
+            services_up = true;
+        }
+
+        if (connect_requested) {
+            // The user submitted credentials (via a CGI handler). Attempt the
+            // connect here on the main loop, leaving the AP up so the portal
+            // stays reachable. STA is enabled alongside the running AP.
+            connect_requested = false;
+            cyw43_arch_enable_sta_mode();
+            // With both interfaces up, lwIP needs a default route for traffic
+            // that isn't on the AP subnet (i.e. the join to the router). Make
+            // the STA netif the default so the connect can route out.
+            netif_set_default(&cyw43_state.netif[CYW43_ITF_STA]);
             printf("Trying to connect with STA \"%s\"\n", ssid);
             int rc = cyw43_arch_wifi_connect_timeout_ms(ssid, password, CYW43_AUTH_WPA2_AES_PSK, WIFI_CONNECT_TIME_S * 1000);
-            if (rc) { 
-                printf("failed to connect with saved credentials %d\n", rc);
+            if (rc) {
+                printf("failed to connect with credentials %d\n", rc);
+                // Leave the AP up; just drop the failed STA attempt and restore
+                // the AP as the default netif so the portal keeps working.
                 cyw43_arch_disable_sta_mode();
+                netif_set_default(&cyw43_state.netif[CYW43_ITF_AP]);
             } else {
                 printf("Connected.\n");
-                break;
+                // Success: tear down the AP and its services so the device runs
+                // STA-only on the router's channel.
+                cyw43_arch_disable_ap_mode();
+                connected = true;
             }
         }
-        cyw43_arch_poll();
-        cyw43_arch_wait_for_work_until(make_timeout_time_ms(1000));
+
+        if (!connected) {
+            cyw43_arch_poll();
+            cyw43_arch_wait_for_work_until(make_timeout_time_ms(1000));
+        }
     }
-    printf("Finished provisioning credentials. %d\n", cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA));
+    printf("Finished provisioning credentials. status=%d\n", cyw43_tcpip_link_status(&cyw43_state, CYW43_ITF_STA));
 
     // We should be connected now - run iperf to do something useful
     cyw43_arch_lwip_begin();
@@ -369,7 +414,10 @@ static void read_credentials(void) {
 static void attempt_wifi_connection(void) {
     save_credentials(ssid, password);
     read_credentials();
-    cyw43_arch_enable_sta_mode(); // should trigger a connection attempt
+    // Signal the main loop to do the actual connect. We deliberately do not
+    // change radio mode here: this runs in lwIP/network context, and all
+    // cyw43 mode transitions are owned by the main loop where polling happens.
+    connect_requested = true;
 }
 
 // Decodes application/x-www-form-urlencoded text in place.
