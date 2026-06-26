@@ -27,7 +27,7 @@ input[type="password"] {
 </head>
 <body>
   <h1>AP provisioning</h1>
-  <p>Enter new credentials, submit, then connect, or select from previously saved.</p>
+  <p>Enter new credentials and connect, or select from previously saved.</p>
   <p>Current SSID:<!--#ssid--></p>
   <p>Current password:<!--#password--></p>
 
@@ -36,10 +36,6 @@ input[type="password"] {
     <input type="text" id="ssid" name="ssid" value=""><br>
     <label for="password">Password:</label><br>
     <input type="password" id="password" name="password" value=""><br>
-    <input type="submit" value="Submit">
-  </form>
-
-  <form action="/connect.cgi" method="get">
     <input type="submit" value="Connect">
   </form>
 

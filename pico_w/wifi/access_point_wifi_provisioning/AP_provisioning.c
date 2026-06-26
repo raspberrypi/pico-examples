@@ -71,7 +71,6 @@ static void read_credentials(void);
 
 static void attempt_wifi_connection(void);
 
-static const char *connect_cgi_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]);
 static const char *connect_from_saved_cgi_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]);
 static const char *clear_cgi_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]);
 
@@ -82,7 +81,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen
 );
 
 static tCGI cgi_handlers[] = {
-    { "/connect.cgi", connect_cgi_handler },
     { "/connect_from_saved.cgi", connect_from_saved_cgi_handler},
     {"/clear.cgi", clear_cgi_handler}
 };
@@ -483,12 +481,16 @@ static char *post_param_value(struct pbuf *p, const char *param_name, char *valu
 
 // Only one POST is handled at a time; track which connection owns it.
 static void *current_post_connection;
+// Set true once a POST body has been successfully decoded into ssid/password,
+// so httpd_post_finished knows to kick off a connection attempt.
+static bool post_credentials_ok;
 
 err_t httpd_post_begin(void *connection, const char *uri, __unused const char *http_request,
                        __unused u16_t http_request_len, __unused int content_len, char *response_uri,
                        u16_t response_uri_len, u8_t *post_auto_wnd) {
     if (strcmp(uri, "/credentials.cgi") == 0) {
         current_post_connection = connection;
+        post_credentials_ok = false;
         // default redirect; overwritten on success in httpd_post_finished
         snprintf(response_uri, response_uri_len, "/index.shtml");
         *post_auto_wnd = 1;
@@ -512,6 +514,7 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
             url_decode(ssid, s, sizeof(ssid));
             url_decode(password, pw, sizeof(password));
             printf("SSID AND PASSWORD: >%s< >%s<\n", ssid, password);
+            post_credentials_ok = true;
             ret = ERR_OK;
         } else {
             printf("missing ssid/password in POST body\n");
@@ -524,6 +527,10 @@ err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
 void httpd_post_finished(void *connection, char *response_uri, u16_t response_uri_len) {
     if (connection == current_post_connection) {
         snprintf(response_uri, response_uri_len, "/index.shtml");
+        if (post_credentials_ok) {
+            // Store the new credentials and ask the main loop to connect.
+            attempt_wifi_connection();
+        }
     }
     current_post_connection = NULL;
 }
@@ -547,18 +554,6 @@ static const char *connect_from_saved_cgi_handler(__unused int iIndex, int iNumP
     ssid[sizeof(ssid) - 1] = '\0';
     strncpy(password, password_list[idx], sizeof(password) - 1);
     password[sizeof(password) - 1] = '\0';
-
-    attempt_wifi_connection();
-    return "/index.shtml";
-}
-
-static const char *connect_cgi_handler(__unused int iIndex, __unused int iNumParams, __unused char *pcParam[], __unused char *pcValue[]) {
-    printf("connect_cgi_handler called\n");
-
-    if (ssid[0] == 0) {
-        printf("no ssid set\n");
-        return "/index.shtml";
-    }
 
     attempt_wifi_connection();
     return "/index.shtml";
