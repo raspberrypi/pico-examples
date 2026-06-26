@@ -11,8 +11,9 @@ target_include_directories(AP_provisioning PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/dnsserver
         )
 target_link_libraries(AP_provisioning PRIVATE
-        pico_cyw43_arch_lwip_poll
+        pico_cyw43_arch_lwip_threadsafe_background
         pico_lwip_http
+        pico_lwip_iperf
         ap_provisioning_content
         pico_stdlib
         hardware_flash

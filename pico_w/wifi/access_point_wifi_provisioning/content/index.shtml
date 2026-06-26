@@ -13,10 +13,12 @@
   form {
     margin-bottom: 1.5em;
   }
-  input[type="text"] {
-    font-size: 1em;
-    padding: 0.3em;
-  }
+input[type="text"],
+input[type="password"] {
+  font-size: 1em;
+  padding: 0.3em;
+  box-sizing: border-box;
+}
   input[type="submit"] {
     font-size: 1em;
     padding: 0.5em 1em;
@@ -29,11 +31,11 @@
   <p>Current SSID:<!--#ssid--></p>
   <p>Current password:<!--#password--></p>
 
-  <form action="/credentials.cgi" method="get">
+  <form action="/credentials.cgi" method="post">
     <label for="ssid">SSID:</label><br>
     <input type="text" id="ssid" name="ssid" value=""><br>
     <label for="password">Password:</label><br>
-    <input type="text" id="password" name="password" value=""><br>
+    <input type="password" id="password" name="password" value=""><br>
     <input type="submit" value="Submit">
   </form>
 

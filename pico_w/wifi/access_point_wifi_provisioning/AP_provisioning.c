@@ -10,6 +10,8 @@
 #include "lwip/ip4_addr.h"
 #include "lwip/init.h"
 #include "lwip/apps/httpd.h"
+#include "lwip/pbuf.h"
+#include "lwip/apps/lwiperf.h"
 
 #include "dhcpserver.h"
 #include "dnsserver.h"
@@ -54,7 +56,6 @@ static void read_credentials(void);
 
 static void attempt_wifi_connection(void);
 
-static const char *credential_cgi_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]);
 static const char *connect_cgi_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]);
 static const char *connect_from_saved_cgi_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]);
 static const char *clear_cgi_handler(int iIndex, int iNumParams, char *pcParam[], char *pcValue[]);
@@ -66,7 +67,6 @@ static u16_t ssi_handler(int iIndex, char *pcInsert, int iInsertLen
 );
 
 static tCGI cgi_handlers[] = {
-    { "/credentials.cgi", credential_cgi_handler },
     { "/connect.cgi", connect_cgi_handler },
     { "/connect_from_saved.cgi", connect_from_saved_cgi_handler},
     {"/clear.cgi", clear_cgi_handler}
@@ -87,6 +87,29 @@ static const char *ssi_tags[] = {
 #define AP_SSID "picow_test"
 #define AP_PASSWORD "password"
 
+// Report IP results and exit
+static void iperf_report(void *arg, enum lwiperf_report_type report_type,
+                         const ip_addr_t *local_addr, u16_t local_port, const ip_addr_t *remote_addr, u16_t remote_port,
+                         u32_t bytes_transferred, u32_t ms_duration, u32_t bandwidth_kbitpsec) {
+    static uint32_t total_iperf_megabytes = 0;
+    uint32_t mbytes = bytes_transferred / 1024 / 1024;
+    float mbits = bandwidth_kbitpsec / 1000.0;
+
+    total_iperf_megabytes += mbytes;
+
+    printf("Completed iperf transfer of %d MBytes @ %.1f Mbits/sec\n", mbytes, mbits);
+    printf("Total iperf megabytes since start %d Mbytes\n", total_iperf_megabytes);
+}
+
+// Note: This is called from an interrupt handler
+void key_pressed_func(void *param) {
+    int key = getchar_timeout_us(0); // get any pending key press but don't wait
+    if (key == 'd' || key == 'D') {
+        bool *exit = (bool*)param;
+        *exit = true;
+    }
+}
+
 int main() {
     stdio_init_all();
     if (cyw43_arch_init()) {
@@ -95,7 +118,10 @@ int main() {
     }
     printf("intitialised\n");
 
-    printf("Press 'w' in the next 3s to wipe stored ssid and passwords\n");
+    // To make testing easier - add an option to clear the ssid storage
+    // or skip the initial automatic wifi connect
+    printf("Press 'w' in the next 3s to WIPE stored ssid and passwords\n");
+    printf("Press 's' to SKIP automatic WiFi connect on startup\n");
     int c = getchar_timeout_us(3000000);
     if (c == 'w' || c == 'W') {
         // for testing, erase memory first
@@ -103,26 +129,33 @@ int main() {
         int rc = flash_safe_execute(call_flash_range_erase, (void*)FLASH_TARGET_OFFSET, UINT32_MAX);
         hard_assert(rc == PICO_OK);
     }
+    bool try_connect = true;
+    if (c == 's' || c == 'S') {
+        try_connect = false;
+    }
 
-    // First, try to connect to network using saved credentials
     read_credentials();
-
-    for (int i = 0; i < num_credentials; i++) {
-        if (i == 0) cyw43_arch_enable_sta_mode();
-        printf("Trying to connect with STA \"%s\" at index %d\n", ssid_list[i], i);
-        int rc = cyw43_arch_wifi_connect_timeout_ms(ssid_list[i], password_list[i], CYW43_AUTH_WPA2_AES_PSK, WIFI_CONNECT_TIME_S * 1000);
-        if (rc) { 
-            printf("failed to connect with saved credentials %d\n", rc);
-            cyw43_arch_disable_sta_mode();
-        } else {
-            printf("Connected.\n");
-            break;
+    if (try_connect) {
+        // First, try to connect to network using one of the saved credentials
+        // the idea is that once you have saved credentials wifi should "just work"
+        for (int i = 0; i < num_credentials; i++) {
+            if (i == 0) cyw43_arch_enable_sta_mode();
+            printf("Trying to connect with STA \"%s\" at index %d\n", ssid_list[i], i);
+            int rc = cyw43_arch_wifi_connect_timeout_ms(ssid_list[i], password_list[i], CYW43_AUTH_WPA2_AES_PSK, WIFI_CONNECT_TIME_S * 1000);
+            if (rc) { 
+                printf("failed to connect with saved credentials %d\n", rc);
+                cyw43_arch_disable_sta_mode();
+            } else {
+                printf("Connected.\n");
+                break;
+            }
         }
     }
 
+    // Enter a loop until wifi is connected
     while(cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != CYW43_LINK_JOIN) {
-        // If STA is not active, enable access point
         if (!CYW43_STA_IS_ACTIVE(&cyw43_state) && !CYW43_AP_IS_ACTIVE(&cyw43_state)) {
+            // If STA is not active, enable access point
             cyw43_arch_enable_ap_mode(AP_SSID, AP_PASSWORD, CYW43_AUTH_WPA2_AES_PSK);
             printf("\nReady, running web server at %s\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
             printf("Connect to ssid \"%s\" with password \"%s\"\n", AP_SSID, AP_PASSWORD);
@@ -160,6 +193,7 @@ int main() {
             http_set_ssi_handler(ssi_handler, ssi_tags, LWIP_ARRAYSIZE(ssi_tags));
             cyw43_arch_lwip_end();
         } else if (CYW43_STA_IS_ACTIVE(&cyw43_state) && cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) == CYW43_LINK_DOWN) {
+            // If STA is active, assume we need to try and connect
             cyw43_arch_disable_ap_mode();
             printf("Trying to connect with STA \"%s\"\n", ssid);
             int rc = cyw43_arch_wifi_connect_timeout_ms(ssid, password, CYW43_AUTH_WPA2_AES_PSK, WIFI_CONNECT_TIME_S * 1000);
@@ -175,6 +209,22 @@ int main() {
         cyw43_arch_wait_for_work_until(make_timeout_time_ms(1000));
     }
     printf("Finished provisioning credentials.\n");
+
+    // We should be connected now - run iperf to do something useful
+    cyw43_arch_lwip_begin();
+    printf("\nReady, running iperf server at %s (press 'd' to disconnect)\n", ip4addr_ntoa(netif_ip4_addr(netif_list)));
+    lwiperf_start_tcp_server_default(&iperf_report, NULL);
+    cyw43_arch_lwip_end();
+
+    // Enter a loop
+    bool exit = false;
+    stdio_set_chars_available_callback(key_pressed_func, &exit);
+    while(!exit && cyw43_wifi_link_status(&cyw43_state, CYW43_ITF_STA) != CYW43_LINK_DOWN) {
+        cyw43_arch_poll();
+        cyw43_arch_wait_for_work_until(at_the_end_of_time);
+    }
+    cyw43_arch_disable_sta_mode();
+
     cyw43_arch_deinit();
     return 0;
 }
@@ -335,20 +385,75 @@ static const char *cgi_param(const char *name, int iNumParams, char *pcParam[], 
     return NULL;
 }
 
-static const char *credential_cgi_handler(__unused int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
-    printf("credential_cgi_handler called\n");
-
-    const char *s = cgi_param("ssid", iNumParams, pcParam, pcValue);
-    const char *p = cgi_param("password", iNumParams, pcParam, pcValue);
-    if (s == NULL || p == NULL) {
-        printf("missing ssid/password\n");
-        return "/index.shtml";
+// Extracts the raw (still url-encoded) value of a form parameter from the POST
+// body pbuf. Returns a pointer into value_buf (null-terminated) or NULL if the
+// parameter is not found / does not fit. Follows the pico-examples httpd pattern.
+static char *post_param_value(struct pbuf *p, const char *param_name, char *value_buf, size_t value_buf_len) {
+    size_t param_len = strlen(param_name);
+    u16_t param_pos = pbuf_memfind(p, param_name, param_len, 0);
+    if (param_pos == 0xFFFF) {
+        return NULL;
     }
+    u16_t value_pos = param_pos + param_len;
+    // value runs until the next '&' or the end of the body
+    u16_t amp_pos = pbuf_memfind(p, "&", 1, value_pos);
+    u16_t value_len = (amp_pos != 0xFFFF) ? (amp_pos - value_pos)
+                                          : (p->tot_len - value_pos);
+    if (value_len == 0 || value_len >= value_buf_len) {
+        return NULL;
+    }
+    char *result = (char *)pbuf_get_contiguous(p, value_buf, value_buf_len, value_len, value_pos);
+    if (result) {
+        result[value_len] = '\0';
+    }
+    return result;
+}
 
-    url_decode(ssid, s, sizeof(ssid));
-    url_decode(password, p, sizeof(password));
-    printf("SSID AND PASSWORD: >%s< >%s<\n", ssid, password);
-    return "/index.shtml";
+// Only one POST is handled at a time; track which connection owns it.
+static void *current_post_connection;
+
+err_t httpd_post_begin(void *connection, const char *uri, __unused const char *http_request,
+                       __unused u16_t http_request_len, __unused int content_len, char *response_uri,
+                       u16_t response_uri_len, u8_t *post_auto_wnd) {
+    if (strcmp(uri, "/credentials.cgi") == 0) {
+        current_post_connection = connection;
+        // default redirect; overwritten on success in httpd_post_finished
+        snprintf(response_uri, response_uri_len, "/index.shtml");
+        *post_auto_wnd = 1;
+        return ERR_OK;
+    }
+    return ERR_VAL;
+}
+
+err_t httpd_post_receive_data(void *connection, struct pbuf *p) {
+    err_t ret = ERR_VAL;
+    if (connection == current_post_connection) {
+        // For a small two-field form the body arrives in a single pbuf, so we
+        // parse it directly here. post_param_value searches this pbuf only.
+        char ssid_enc[sizeof(ssid)];
+        char password_enc[sizeof(password)];
+
+        char *s = post_param_value(p, "ssid=", ssid_enc, sizeof(ssid_enc));
+        char *pw = post_param_value(p, "password=", password_enc, sizeof(password_enc));
+
+        if (s != NULL && pw != NULL) {
+            url_decode(ssid, s, sizeof(ssid));
+            url_decode(password, pw, sizeof(password));
+            printf("SSID AND PASSWORD: >%s< >%s<\n", ssid, password);
+            ret = ERR_OK;
+        } else {
+            printf("missing ssid/password in POST body\n");
+        }
+    }
+    pbuf_free(p);
+    return ret;
+}
+
+void httpd_post_finished(void *connection, char *response_uri, u16_t response_uri_len) {
+    if (connection == current_post_connection) {
+        snprintf(response_uri, response_uri_len, "/index.shtml");
+    }
+    current_post_connection = NULL;
 }
 
 static const char *connect_from_saved_cgi_handler(__unused int iIndex, int iNumParams, char *pcParam[], char *pcValue[]) {
