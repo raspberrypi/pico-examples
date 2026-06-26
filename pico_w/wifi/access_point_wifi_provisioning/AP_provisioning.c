@@ -162,7 +162,7 @@ int main() {
             printf("Trying to connect with STA \"%s\" at index %d\n", ssid_list[i], i);
             int rc = cyw43_arch_wifi_connect_timeout_ms(ssid_list[i], password_list[i], CYW43_AUTH_WPA2_AES_PSK, WIFI_CONNECT_TIME_S * 1000);
             if (rc) { 
-                printf("failed to connect with saved credentials %d\n", rc);
+                printf("failed to connect with saved credentials rc=%d\n", rc);
                 cyw43_arch_disable_sta_mode();
             } else {
                 printf("Connected.\n");
@@ -207,8 +207,8 @@ int main() {
 
             #undef IP
 
-            dhcp_server_init(&dhcp_server, &gw, &mask);
-            dns_server_init(&dns_server, &gw);
+            dhcp_server_init(&dhcp_server, &cyw43_state.netif[CYW43_ITF_AP], &gw, &mask);
+            dns_server_init(&dns_server, &cyw43_state.netif[CYW43_ITF_AP], &gw);
 
             char hostname[sizeof(CYW43_HOST_NAME) + 4];
             memcpy(&hostname[0], CYW43_HOST_NAME, sizeof(CYW43_HOST_NAME) - 1);
@@ -241,7 +241,7 @@ int main() {
             printf("Trying to connect with STA \"%s\"\n", ssid);
             int rc = cyw43_arch_wifi_connect_timeout_ms(ssid, password, CYW43_AUTH_WPA2_AES_PSK, WIFI_CONNECT_TIME_S * 1000);
             if (rc) {
-                printf("failed to connect with credentials %d\n", rc);
+                printf("failed to connect with credentials rc=%d\n", rc);
                 // Leave the AP up; just drop the failed STA attempt and restore
                 // the AP as the default netif so the portal keeps working.
                 cyw43_arch_disable_sta_mode();
@@ -263,7 +263,6 @@ int main() {
                 services_up = false;
 
                 cyw43_arch_disable_ap_mode();
-                printf("AP active after disable: %d\n", CYW43_AP_IS_ACTIVE(&cyw43_state));
                 connected = true;
             }
         }
@@ -390,7 +389,7 @@ static void read_credentials(void) {
         credential_count = MAX_CREDENTIALS;
     }
     num_credentials = credential_count;
-    printf("read_credentials %d\n", num_credentials);
+    printf("read_credentials count=%d\n", num_credentials);
 
     // initialise temporary ssid and password lists (zeroed to ensure null termination)
     char t_ssid_list[MAX_CREDENTIALS][MAX_SSID_LEN + 1] = {0};
