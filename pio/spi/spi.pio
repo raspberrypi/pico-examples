@@ -65,7 +65,7 @@ static inline void pio_spi_init(PIO pio, uint sm, uint prog_offs, uint n_bits,
     // and this is a cheesy way to get CPOL=1
     gpio_set_outover(pin_sck, cpol ? GPIO_OVERRIDE_INVERT : GPIO_OVERRIDE_NORMAL);
     // SPI is synchronous, so bypass input synchroniser to reduce input delay.
-    hw_set_bits(&pio->input_sync_bypass, (pin_miso >= 32) ? (1u << (pin_miso - 16)) : (1u << pin_miso));
+    pio_set_input_sync_bypass_with_mask64(pio, 1ull << pin_miso, 1ull << pin_miso);
 
     pio_sm_init(pio, sm, prog_offs, &c);
     pio_sm_set_enabled(pio, sm, true);
@@ -157,7 +157,7 @@ static inline void pio_spi_cs_init(PIO pio, uint sm, uint prog_offs, uint n_bits
     pio_gpio_init(pio, pin_sck);
     pio_gpio_init(pio, pin_sck + 1);
     gpio_set_outover(pin_sck, cpol ? GPIO_OVERRIDE_INVERT : GPIO_OVERRIDE_NORMAL);
-    hw_set_bits(&pio->input_sync_bypass, (pin_miso >= 32) ? (1u << (pin_miso - 16)) : (1u << pin_miso));
+    pio_set_input_sync_bypass_with_mask64(pio, 1ull << pin_miso, 1ull << pin_miso);
 
     uint entry_point = prog_offs + (cpha ? spi_cpha1_cs_offset_entry_point : spi_cpha0_cs_offset_entry_point);
     pio_sm_init(pio, sm, entry_point, &c);
