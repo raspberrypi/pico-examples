@@ -275,27 +275,20 @@ static void hci_packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *p
             DEBUG_LOG("Connecting to device with addr %s.\n", bd_addr_to_str(server_addr));
             gap_connect(server_addr, server_addr_type);
             break;
-        case HCI_EVENT_LE_META:
-            // wait for connection complete
-            switch (hci_event_le_meta_get_subevent_code(packet)) {
-                case HCI_SUBEVENT_LE_CONNECTION_COMPLETE:
-                    if (state != TC_W4_CONNECT) return;
-                    con_handle = hci_subevent_le_connection_complete_get_connection_handle(packet);
-                    // Note: GATT service discovery is NOT started here. The server requires
-                    // ENCRYPTION_KEY_SIZE_16 so all ATT requests are rejected until the link
-                    // is encrypted. Discovery is deferred to SM_EVENT_PAIRING_COMPLETE so
-                    // that the link is always encrypted before any GATT traffic is sent.
-                    DEBUG_LOG("Connection complete, waiting for pairing.\n");
-                    break;
-                default:
-                    break;
-            }
-            break;
         case HCI_EVENT_META_GAP:
-            // wait for connection complete
+            // BTstack normalises both the legacy LE Connection Complete and the
+            // LE Enhanced Connection Complete HCI events into this single GAP
+            // subevent, so this works regardless of which the controller emits
+            // (i.e. regardless of ENABLE_LE_ENHANCED_CONNECTION_COMPLETE_EVENT).
             if (hci_event_gap_meta_get_subevent_code(packet) != GAP_SUBEVENT_LE_CONNECTION_COMPLETE) break;
+            if (state != TC_W4_CONNECT) break;
             con_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
             DEBUG_LOG("Connection complete\n");
+            // Note: GATT service discovery is NOT started here. The server requires
+            // ENCRYPTION_KEY_SIZE_16 so all ATT requests are rejected until the link
+            // is encrypted. We request pairing now and defer discovery to
+            // SM_EVENT_PAIRING_COMPLETE so the link is always encrypted before any
+            // GATT traffic is sent.
             sm_request_pairing(con_handle);
             break;
         case GATT_EVENT_QUERY_COMPLETE:
