@@ -1,0 +1,5 @@
+add_subdirectory(low_power_sleep)
+add_subdirectory(low_power_dormant)
+if (NOT PICO_RP2040)
+    add_subdirectory(low_power_pstate)
+endif()

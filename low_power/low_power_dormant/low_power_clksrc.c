@@ -1,0 +1,35 @@
+/**
+ * Copyright (c) 2026 Raspberry Pi (Trading) Ltd.
+ *
+ * SPDX-License-Identifier: BSD-3-Clause
+ */
+
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "pico/status_led.h"
+#include "pico/sync.h"
+#include "hardware/clocks.h"
+
+#ifndef RTC_CLOCK_SRC_GPIO_OUT
+#define RTC_CLOCK_SRC_GPIO_OUT 21
+#endif
+
+bool repeater(repeating_timer_t *timer) {
+    printf("  Repeating timer at %dms\n", to_ms_since_boot(get_absolute_time()));
+    status_led_set_state(!status_led_get_state());
+    return true;
+}
+
+int main() {
+    stdio_init_all();
+    status_led_init();
+
+    clock_gpio_init(RTC_CLOCK_SRC_GPIO_OUT, CLOCKS_CLK_GPOUT3_CTRL_AUXSRC_VALUE_CLK_USB, 1024); // 48kHz
+
+    repeating_timer_t repeat;
+    add_repeating_timer_ms(500, repeater, NULL, &repeat);
+
+    while (true) __wfi();
+
+    return 0;
+}
