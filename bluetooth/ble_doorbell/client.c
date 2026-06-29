@@ -210,12 +210,15 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
             DEBUG_LOG("Connecting to device with addr %s.\n", bd_addr_to_str(server_addr));
             gap_connect(server_addr, server_addr_type);
             break;
-        case HCI_EVENT_LE_META:
-            // wait for connection complete
-            switch (hci_event_le_meta_get_subevent_code(packet)) {
-                case HCI_SUBEVENT_LE_CONNECTION_COMPLETE:
+        case HCI_EVENT_META_GAP:
+            // BTstack normalises both the legacy LE Connection Complete and the
+            // LE Enhanced Connection Complete HCI events into this single GAP
+            // subevent, so this works regardless of which the controller emits
+            // (i.e. regardless of ENABLE_LE_ENHANCED_CONNECTION_COMPLETE_EVENT).
+            switch (hci_event_gap_meta_get_subevent_code(packet)) {
+                case GAP_SUBEVENT_LE_CONNECTION_COMPLETE:
                     if (state != TC_W4_CONNECT) return;
-                    connection_handle = hci_subevent_le_connection_complete_get_connection_handle(packet);
+                    connection_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
                     // initialize gatt client context with handle, and add it to the list of active clients
                     // query primary services
                     DEBUG_LOG("Search for binary sensing service.\n");
