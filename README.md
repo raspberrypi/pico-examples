@@ -154,7 +154,7 @@ App|Description
 [bmp280_i2c](i2c/bmp280_i2c) | Read and convert temperature and pressure data from a BMP280 sensor, attached to an I2C bus.
 [ina219_i2c](i2c/ina219_i2c) | Monitor power usage of another Pico device using an ina219 sensor, via I2C.
 [ina237_i2c](i2c/ina237_i2c) | Monitor power usage of another Pico device using an ina237 sensor, via I2C.
-[ina260_i2c](i2c/ina260_i2c) | Monitor power usage of another Pico device ina260 sensor, via I2C.
+[ina260_i2c](i2c/ina260_i2c) | Monitor power usage of another Pico device using an ina260 sensor, via I2C.
 [lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C.
 [lis3dh_i2c](i2c/lis3dh_i2c) | Read acceleration and temperature value from a LIS3DH sensor via I2C
 [mcp9808_i2c](i2c/mcp9808_i2c) | Read temperature from a MCP9808 sensor, set limits and raise alerts when limits are surpassed.
