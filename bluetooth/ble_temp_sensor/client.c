@@ -35,7 +35,7 @@ static btstack_packet_callback_registration_t hci_event_callback_registration;
 static gc_state_t state = TC_OFF;
 static bd_addr_t server_addr;
 static bd_addr_type_t server_addr_type;
-static hci_con_handle_t connection_handle;
+static hci_con_handle_t con_handle;
 static gatt_client_service_t server_service;
 static gatt_client_characteristic_t server_characteristic;
 static bool listener_registered;
@@ -91,13 +91,13 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                     att_status = gatt_event_query_complete_get_att_status(packet);
                     if (att_status != ATT_ERROR_SUCCESS){
                         ERROR_LOG("SERVICE_QUERY_RESULT, ATT Error 0x%02x.\n", att_status);
-                        gap_disconnect(connection_handle);
+                        gap_disconnect(con_handle);
                         break;  
                     } 
                     // service query complete, look for characteristic
                     state = TC_W4_CHARACTERISTIC_RESULT;
                     DEBUG_LOG("Search for env sensing characteristic.\n");
-                    gatt_client_discover_characteristics_for_service_by_uuid16(handle_gatt_client_event, connection_handle, &server_service, ORG_BLUETOOTH_CHARACTERISTIC_TEMPERATURE);
+                    gatt_client_discover_characteristics_for_service_by_uuid16(handle_gatt_client_event, con_handle, &server_service, ORG_BLUETOOTH_CHARACTERISTIC_TEMPERATURE);
                     break;
                 default:
                     break;
@@ -113,16 +113,16 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
                     att_status = gatt_event_query_complete_get_att_status(packet);
                     if (att_status != ATT_ERROR_SUCCESS){
                         ERROR_LOG("CHARACTERISTIC_QUERY_RESULT, ATT Error 0x%02x.\n", att_status);
-                        gap_disconnect(connection_handle);
+                        gap_disconnect(con_handle);
                         break;  
                     } 
                     // register handler for notifications
                     listener_registered = true;
-                    gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, &server_characteristic);
+                    gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, con_handle, &server_characteristic);
                     // enable notifications
                     DEBUG_LOG("Enable notify on characteristic.\n");
                     state = TC_W4_ENABLE_NOTIFICATIONS_COMPLETE;
-                    gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,
+                    gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, con_handle,
                         &server_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
                     break;
                 default:
@@ -204,12 +204,12 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
             switch (hci_event_gap_meta_get_subevent_code(packet)) {
                 case GAP_SUBEVENT_LE_CONNECTION_COMPLETE:
                     if (state != TC_W4_CONNECT) return;
-                    connection_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
+                    con_handle = gap_subevent_le_connection_complete_get_connection_handle(packet);
                     // initialize gatt client context with handle, and add it to the list of active clients
                     // query primary services
                     DEBUG_LOG("Search for env sensing service.\n");
                     state = TC_W4_SERVICE_RESULT;
-                    gatt_client_discover_primary_services_by_uuid16(handle_gatt_client_event, connection_handle, ORG_BLUETOOTH_SERVICE_ENVIRONMENTAL_SENSING);
+                    gatt_client_discover_primary_services_by_uuid16(handle_gatt_client_event, con_handle, ORG_BLUETOOTH_SERVICE_ENVIRONMENTAL_SENSING);
                     break;
                 default:
                     break;
@@ -217,7 +217,7 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
             break;
         case HCI_EVENT_DISCONNECTION_COMPLETE:
             // unregister listener
-            connection_handle = HCI_CON_HANDLE_INVALID;
+            con_handle = HCI_CON_HANDLE_INVALID;
             if (listener_registered){
                 listener_registered = false;
                 gatt_client_stop_listening_for_characteristic_value_updates(&notification_listener);
