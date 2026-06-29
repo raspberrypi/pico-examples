@@ -42,9 +42,23 @@
 // --- Averaging --------------------------------------------------------------
 // The INA228 can average multiple conversions in hardware before updating the
 // registers (ADC_CONFIG AVG field, bits 2:0). More averaging = quieter readings
-// but slower updates. Strongly recommended for low sleep currents.
+// but slower updates.
+//
+// Default tracks the shunt/use case:
+//   Sleep build  -> heavy averaging: steady low currents benefit from a quiet
+//                   reading, and updates can afford to be slow.
+//   Stock build  -> light averaging: a long averaging window smears abrupt
+//                   load changes (e.g. a powman sleep/wake step) across the
+//                   window and produces garbage on the transition, so keep it
+//                   short to track changes and stay responsive.
 // Allowed values: 1, 4, 16, 64, 128, 256, 512, 1024 (samples averaged).
-#define AVG_SAMPLES 128
+#ifndef AVG_SAMPLES
+#if SHUNT_SELECT == SHUNT_SLEEP_1R
+  #define AVG_SAMPLES 128
+#else // SHUNT_BOARD_15M
+  #define AVG_SAMPLES 16
+#endif
+#endif
 
 #if   AVG_SAMPLES == 1
   #define AVG_FIELD 0
@@ -236,6 +250,23 @@ static void ina228_read(float *vshunt, float *vbus, float *dietemp,
     *charge = sign_extend_40(bytes_to_u40(buf)) * CHARGE_FACTOR; // signed
 }
 
+// Cross-check the reading for self-consistency. The INA228 derives POWER
+// internally from its own current and bus-voltage measurement, so for a valid
+// sample the separately-read CURRENT and VBUS should reconstruct POWER:
+//     P ~= Vbus * I
+// When the current register rails (e.g. the shunt voltage briefly leaves range
+// during an abrupt powman sleep/wake step), CURRENT and POWER stop agreeing.
+// That contradiction is a reliable "this sample is bogus" flag.
+// Returns true if the sample looks trustworthy.
+static bool ina228_reading_valid(float vbus, float current, float power) {
+    float expected_power = vbus * current;        // Watts
+    float diff = fabsf(expected_power - power);
+    // Allow a fixed floor (covers near-zero noise) plus a generous 25% of the
+    // larger magnitude (covers timing skew between the register reads).
+    float tol = 1e-3f + 0.25f * fmaxf(fabsf(expected_power), fabsf(power));
+    return diff <= tol;
+}
+
 int main() {
     stdio_init_all();
 
@@ -258,6 +289,12 @@ int main() {
                "CURRENT: %f A\nPOWER: %f W\nENERGY: %f J\nCHARGE: %f C\n-----------------\n",
                vshunt, vbus, dietemp, current, power, energy, charge);
 #else
+        if (!ina228_reading_valid(vbus, current, power)) {
+            // Current and power disagree -- the sample railed (often on an
+            // abrupt powman transition, or because the current is below what
+            // this shunt can resolve). Don't print a misleading number.
+            printf("current: invalid  voltage: %.3f V  power: invalid\n", vbus);
+        } else
 #if SHUNT_SELECT == SHUNT_SLEEP_1R
         // Sleep build: currents are small, print in microamps.
         printf("current: %.1f uA  voltage: %.3f V  power: %.3f mW\n",
