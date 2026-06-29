@@ -1,8 +1,13 @@
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
+#include "hardware/uart.h"
 #include "pico/status_led.h"
 #include "pico/binary_info.h"
+
+#define UART_PASSTHROUGH      uart1
+#define UART_PASSTHROUGH_BAUD 115200
+#define UART_PASSTHROUGH_RX   5
 
 #define I2C_ADDRESS  0x40
 
@@ -58,6 +63,14 @@ static uint32_t read_reg3(uint8_t reg) {
     return ((uint32_t)buf[0] << 16) | ((uint32_t)buf[1] << 8) | buf[2];
 }
 
+static void print_uart_passthrough(void) {
+    // Interrupts will go off until the uart is read, so disable them
+    uart_set_irqs_enabled(UART_PASSTHROUGH, false, false);
+    while (uart_is_readable(UART_PASSTHROUGH))
+        putchar(uart_getc(UART_PASSTHROUGH));
+    uart_set_irqs_enabled(UART_PASSTHROUGH, true, false);
+}
+
 int main() {
     stdio_init_all();
 #if !defined(i2c_default) || !defined(PICO_DEFAULT_I2C_SDA_PIN) || !defined(PICO_DEFAULT_I2C_SCL_PIN)
@@ -65,9 +78,18 @@ int main() {
     panic("Default I2C pins were not defined");
 #endif
     bi_decl(bi_2pins_with_func(PICO_DEFAULT_I2C_SDA_PIN, PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C));
+    bi_decl(bi_1pin_with_func(UART_PASSTHROUGH_RX, GPIO_FUNC_UART));
     bi_decl(bi_program_description("INA237 I2C example for the Raspberry Pi Pico"));
 
     printf("INA237 example\n");
+
+    uart_init(UART_PASSTHROUGH, UART_PASSTHROUGH_BAUD);
+    gpio_set_function(UART_PASSTHROUGH_RX, GPIO_FUNC_UART);
+
+    uint irq_num = UART_IRQ_NUM(UART_PASSTHROUGH);
+    irq_set_exclusive_handler(irq_num, print_uart_passthrough);
+    irq_set_enabled(irq_num, true);
+    uart_set_irqs_enabled(UART_PASSTHROUGH, true, false);
 
     i2c_init(i2c_default, 100 * 1000);
     gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
@@ -112,6 +134,8 @@ int main() {
                v, vshunt_mv, ma, mw, mw_calc, temp_c);
 
         status_led_set_state(false);
+
+        // Wait 1s before taking next measurement
         sleep_ms(1000);
     }
     return 0;

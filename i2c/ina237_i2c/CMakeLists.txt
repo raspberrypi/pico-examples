@@ -5,6 +5,7 @@ target_link_libraries(ina237_i2c
     pico_stdlib
     pico_status_led
     hardware_i2c
+    hardware_uart
 )
 # Wait at most 3s for stdio_usb to be ready
 target_compile_definitions(ina237_i2c PRIVATE
