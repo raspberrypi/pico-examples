@@ -50,11 +50,13 @@ int main(void) {
   printf("TinyUSB Host CDC MSC HID Example\r\n");
 
   // init host stack on configured roothub port
-  tuh_init(BOARD_TUH_RHPORT);
+  const tusb_rhport_init_t rh_init = {
+    .role = TUSB_ROLE_HOST,
+    .speed = TUH_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL,
+  };
+  TU_ASSERT(tuh_rhport_init(BOARD_TUH_RHPORT, &rh_init));
 
-  if (board_init_after_tusb) {
-    board_init_after_tusb();
-  }
+  board_init_after_tusb();
 
 #if CFG_TUH_ENABLED && CFG_TUH_MAX3421
   // FeatherWing MAX3421E use MAX3421E's GPIO0 for VBUS enable
@@ -86,6 +88,10 @@ void tuh_umount_cb(uint8_t dev_addr) {
   printf("A device with address %d is unmounted \r\n", dev_addr);
 }
 
+#if TUSB_VERSION_NUMBER > 1800
+// board_millis has been removed from tinyusb. Use tusb_time_millis_api instead
+#define board_millis tusb_time_millis_api
+#endif
 
 //--------------------------------------------------------------------+
 // Blinking Task

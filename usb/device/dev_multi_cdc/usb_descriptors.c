@@ -6,6 +6,7 @@
 
 #include <tusb.h>
 #include <bsp/board_api.h>
+#include <assert.h>
 
 #include "pico/usb_reset.h"
 
