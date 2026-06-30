@@ -119,17 +119,24 @@ static void heartbeat_handler(struct btstack_timer_source *ts) {
     static uint32_t counter = 0;
     counter++;
 
-    // Update the temp every 10s
-    if (counter % 10 == 0) {
-        poll_temp();
-        if (le_notification_enabled) {
-            att_server_request_can_send_now_event(con_handle);
+    static int led_on = true;
+
+    if (hci_get_state() == HCI_STATE_OFF) {
+        // Blink the led every 10s
+        led_on = (counter % 10 == 0);
+    } else {
+        // Update the temp every 10s
+        if (counter % 10 == 0) {
+            poll_temp();
+            if (le_notification_enabled) {
+                att_server_request_can_send_now_event(con_handle);
+            }
         }
+
+        // Invert the led every 1s
+        led_on = !led_on;
     }
 
-    // Invert the led
-    static int led_on = true;
-    led_on = !led_on;
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
 
     // Restart timer
@@ -137,18 +144,35 @@ static void heartbeat_handler(struct btstack_timer_source *ts) {
     btstack_run_loop_add_timer(ts);
 }
 
-static volatile bool key_pressed;
+static void bt_start_stop_fn(__unused void * arg) {
+    if (hci_get_state() == HCI_STATE_OFF) {
+        hci_power_control(HCI_POWER_ON);
+        printf("Press the \"S\" key to Stop bluetooth\n");
+    } else {
+        hci_power_control(HCI_POWER_OFF);
+        printf("Press the \"S\" key to Start bluetooth\n");
+    }
+}
+static btstack_context_callback_registration_t bt_start_stop = { .callback = bt_start_stop_fn };
+
+static void bt_exit_fn(__unused void * arg) {
+    hci_power_control(HCI_POWER_OFF);
+    btstack_run_loop_trigger_exit();
+}
+static btstack_context_callback_registration_t bt_exit = { .callback = bt_exit_fn };
+
 void key_pressed_func(void *param) {
     int key = getchar_timeout_us(0); // get any pending key press but don't wait
     if (key == 's' || key == 'S') {
-        key_pressed = true;
+        btstack_run_loop_execute_on_main_thread(&bt_start_stop);
+    } else if (key == 'e' || key == 'E') {
+        btstack_run_loop_execute_on_main_thread(&bt_exit);
     }
 }
 
 int main() {
     stdio_init_all();
 
-restart:
     // initialize CYW43 driver architecture (will enable BT if/because CYW43_ENABLE_BLUETOOTH == 1)
     if (cyw43_arch_init()) {
         printf("failed to initialise cyw43_arch\n");
@@ -157,6 +181,7 @@ restart:
 
     // Get notified if the user presses a key
     printf("Press the \"S\" key to Stop bluetooth\n");
+    printf("Press the \"E\" key to Exit the program\n");
     stdio_set_chars_available_callback(key_pressed_func, NULL);
 
     // Initialise adc for the temp sensor
@@ -184,24 +209,11 @@ restart:
     // turn on bluetooth!
     hci_power_control(HCI_POWER_ON);
 
-    key_pressed = false;
-    while(!key_pressed) {
-        async_context_poll(cyw43_arch_async_context());
-        async_context_wait_for_work_until(cyw43_arch_async_context(), at_the_end_of_time);
-    }
-
-    att_server_deinit();
-
-    sm_deinit();
-    l2cap_deinit();
+    btstack_run_loop_execute();
 
     cyw43_arch_deinit();
 
-    printf("Press the \"S\" key to Start bluetooth\n");
-    key_pressed = false;
-    while(!key_pressed) {
-        sleep_ms(1000);
-    }
-    goto restart;
+    printf("Exiting\n");
+
     return 0;
 }
