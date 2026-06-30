@@ -455,17 +455,13 @@ int main(void) {
     // turn on!
     hci_power_control(HCI_POWER_ON);
 
-    // btstack_run_loop_execute is only required when using the 'polling' method (e.g. using pico_cyw43_arch_poll library).
-    // This example uses the 'threadsafe background` method, where BT work is handled in a low priority IRQ, so it
-    // is fine to call bt_stack_run_loop_execute() but equally you can continue executing user code.
-
-#if 1 // this is only necessary when using polling (which we aren't, but we're showing it is still safe to call in this case)
+#if 1
     btstack_run_loop_execute();
 #else
-    // this core is free to do it's own stuff except when using 'polling' method (in which case you should use
-    // btstacK_run_loop_ methods to add work to the run loop.
-
-    // this is a forever loop in place of where user code would go.
+    // This example uses the 'threadsafe background` method, where BT work is handled in a low priority IRQ, so it
+    // is fine to call bt_stack_run_loop_execute() but equally you can continue executing user code. You must not
+    // perform any BT work in user code (e.g calling `hci_power_control(HCI_POWER_OFF)`) - those operations must be
+    // performed inside the run loop (e.g. using `btstack_run_loop_execute_on_main_thread`).
     while(true) {
         sleep_ms(1000);
     }
