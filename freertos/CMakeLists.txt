@@ -5,4 +5,4 @@ endif()
 
 include(FreeRTOS_Kernel_import.cmake)
 
-add_subdirectory(hello_freertos)
+add_subdirectory_exclude_platforms(hello_freertos host)
