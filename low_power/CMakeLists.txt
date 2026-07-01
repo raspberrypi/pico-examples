@@ -1,5 +1,3 @@
 add_subdirectory_exclude_platforms(low_power_sleep host)
 add_subdirectory_exclude_platforms(low_power_dormant host)
-if (NOT PICO_RP2040)
-    add_subdirectory_exclude_platforms(low_power_pstate host)
-endif()
+add_subdirectory_exclude_platforms(low_power_pstate host rp2040)
