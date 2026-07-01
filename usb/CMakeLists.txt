@@ -8,6 +8,9 @@
 # For freertos examples TINYUSB_OPT_OS is actually defined in FreeRTOSConfig.h
 set(TINYUSB_OPT_OS OPT_OS_PICO)
 
+# Same issue as above - this variable goes out of scope
+set(LINKERMAP_PY ${PICO_TINYUSB_PATH}/tools/linkermap/linkermap.py)
+
 # List of freertos examples
 set(tinyusb_freertos_examples
     audio_4_channel_mic_freertos
