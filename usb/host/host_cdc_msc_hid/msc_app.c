@@ -26,6 +26,7 @@
 #include "tusb.h"
 
 #include <inttypes.h>
+#include <stdio.h>
 
 //--------------------------------------------------------------------+
 // MACRO TYPEDEF CONSTANT ENUM DECLARATION
