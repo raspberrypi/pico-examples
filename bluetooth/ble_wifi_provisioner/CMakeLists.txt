@@ -29,4 +29,7 @@ target_include_directories(ble_wifi_provisioner PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/../config # for common btstack config
     ${CMAKE_CURRENT_LIST_DIR}/../../pico_w/wifi # for common lwip config
 )
+target_compile_definitions(ble_wifi_provisioner PRIVATE
+    #WANT_HCI_DUMP=1
+)
 pico_add_extra_outputs(ble_wifi_provisioner)

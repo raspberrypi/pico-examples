@@ -1,12 +1,36 @@
-### BLE wifi provisioning
+# BLE Wi-Fi provisioning
 
-This example demonstrates provisioning wifi credentials using bluetooth low energy.
-The pico saves the most recent set of succesful credentials in flash for future use.
-Upon powering, the pico attemps to connect using the saved credentials.
-If this fails, the pico sets up a GATT server which you can connect to using a mobile BLE scanner app or the attached python script.
-The GATT server has 2 custom characteritics, one for ssid and one for password.
-To write to these characteristics you can run 'python3 set_credentials.py ssid password address'.
-To run set_credentials.py you have to install the "bleak" python library, e.g...
+This example demonstrates provisioning Wi-Fi credentials over Bluetooth Low Energy.
+
+When the Pico W powers on it attempts to connect using credentials saved in flash.
+If that fails (or none are saved), it starts a BLE GATT server that you can connect
+to with a mobile BLE scanner app or with the included `set_credentials.py` script,
+and write the SSID and password to it. The most recent set of credentials that
+results in a successful connection is saved to flash for next time.
+
+Once connected to the network the example runs an iperf server. Press `D` on the
+Pico's console to disconnect and reboot; on the next boot it reconnects using the
+saved credentials.
+
+## Security
+
+The credential characteristics require an encrypted link (they are marked with
+`ENCRYPTION_KEY_SIZE_16`), so the SSID and password are never sent in the clear.
+The client must pair with the Pico before it can write them. Pairing uses LE Secure
+Connections with Just Works (no passkey), since the Pico has no input or output for
+a passkey exchange. The Pico bonds with the client, so a previously-provisioned
+client can reconnect without pairing again.
+
+## The GATT server
+
+The server exposes a custom service with two write-only characteristics: one for the
+SSID and one for the password.
+
+## Using set_credentials.py
+
+`set_credentials.py` connects to the Pico, pairs, and writes the credentials. It
+requires the `bleak` BLE library. Installing it into a virtual environment keeps it
+isolated from the system Python:
 
 ```
 python3 -m venv venv
@@ -14,27 +38,37 @@ python3 -m venv venv
 pip install bleak
 ```
 
-From the on you just need to activate the python virtual environment
+After the first time, you only need to activate the virtual environment:
 
 ```
 . venv/bin/activate
 ```
 
-It takes 3 parameters, the ssid name, the password and the Bluetooth address of the device running this example, e.g.
+The script takes three arguments: the SSID, the password, and the Bluetooth address
+of the Pico running this example:
 
 ```
 python set_credentials.py "my ssid" "my password" 2C:CF:67:BE:08:05
 submitted ssid:  my ssid
 submitted password:  my password
 submitted address:  2C:CF:67:BE:08:05
-Connected: True
+Connected and paired: True
 Writing SSID...
 Writing password...
+Credentials written successfully.
 ```
 
-The example waits 3s for you to press `W` when it starts to make it wipe any stored ssid and password to help testing.
+The script runs anywhere `bleak` runs, including Linux/Raspberry Pi, native Windows,
+and macOS.
 
-On the pico you should something like this...
+## Testing
+
+When the example starts it waits 3 seconds for you to press `W`, which wipes any
+stored SSID, password.
+Press `W` again in another 3 seconds to wipe bonding information.
+This is handy for repeated testing.
+
+While provisioning, the Pico's console shows something like:
 
 ```
 Waiting to receive ssid and password via BLE
@@ -58,9 +92,8 @@ finished provisioning result=0
 Ready, running iperf server at 10.3.194.230
 ```
 
-When connected to the internet the example runs iperf.
-Press "D" to disconnect and the pico will reboot.
-The next time it connects it should retrieve the ssid and password details from flash.
+On a later boot, when valid credentials are already stored in flash, it reconnects
+without needing BLE:
 
 ```
 Read credentials
@@ -76,3 +109,24 @@ finished provisioning result=0
 
 Ready, running iperf server at 10.3.194.230
 ```
+
+## Troubleshooting
+
+**Pairing or connection fails, often after re-flashing the Pico.** The two devices
+may be holding mismatched bonding keys. Bonds must be cleared on *both* sides: press
+`W` on the Pico twice at startup to wipe its bonds, and remove the device on the host
+running `set_credentials.py`:
+
+```
+bluetoothctl remove 2C:CF:67:BE:08:05
+```
+
+(On Windows, remove the device from Bluetooth settings)
+
+**Running under WSL.** LE Secure Connections pairing does **not** work reliably when
+`set_credentials.py` is run inside WSL2 using a USB Bluetooth dongle forwarded via
+`usbipd`: the pairing handshake fails during the SMP key exchange over the proxied
+adapter. This has been seen with more than one dongle and is a limitation of the
+WSL2/usbip USB transport.
+Run the script under native Windows Python, or on Linux / Raspberry Pi with a
+directly-attached Bluetooth controller.
