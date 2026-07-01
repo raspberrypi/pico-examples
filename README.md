@@ -152,6 +152,8 @@ App|Description
 ---|---
 [bus_scan](i2c/bus_scan) | Scan the I2C bus for devices and display results.
 [bmp280_i2c](i2c/bmp280_i2c) | Read and convert temperature and pressure data from a BMP280 sensor, attached to an I2C bus.
+[ina260_i2c](i2c/ina260_i2c) | Monitor power usage of another Pico device ina260 sensor, via I2C.
+[ina228_i2c](i2c/ina228_i2c) | Monitor power usage of another Pico device ina228 sensor, via I2C.
 [ina219_i2c](i2c/ina219_i2c) | Monitor power usage of another Pico device using an ina219 sensor, via I2C.
 [ina237_i2c](i2c/ina237_i2c) | Monitor power usage of another Pico device using an ina237 sensor, via I2C.
 [ina260_i2c](i2c/ina260_i2c) | Monitor power usage of another Pico device using an ina260 sensor, via I2C.
