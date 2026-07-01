@@ -131,11 +131,11 @@ int main() {
 
     // Start the dhcp server
     dhcp_server_t dhcp_server;
-    dhcp_server_init(&dhcp_server, &gw, &mask);
+    dhcp_server_init(&dhcp_server, &cyw43_state.netif[CYW43_ITF_AP], &gw, &mask);
 
     // Start the dns server
     dns_server_t dns_server;
-    dns_server_init(&dns_server, &gw);
+    dns_server_init(&dns_server, &cyw43_state.netif[CYW43_ITF_AP], &gw);
 
     // setup http server
     wifi_connected_time = get_absolute_time();

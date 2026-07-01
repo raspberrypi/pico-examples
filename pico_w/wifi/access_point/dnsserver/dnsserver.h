@@ -14,7 +14,7 @@ typedef struct dns_server_t_ {
      ip_addr_t ip;
 } dns_server_t;
 
-void dns_server_init(dns_server_t *d, ip_addr_t *ip);
+void dns_server_init(dns_server_t *d, struct netif *nif, ip_addr_t *ip);
 void dns_server_deinit(dns_server_t *d);
 
 #endif
