@@ -1,0 +1,3 @@
+add_subdirectory_exclude_platforms(low_power_sleep host)
+add_subdirectory_exclude_platforms(low_power_dormant host)
+add_subdirectory_exclude_platforms(low_power_pstate host rp2040)

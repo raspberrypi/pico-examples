@@ -154,6 +154,9 @@ App|Description
 [bmp280_i2c](i2c/bmp280_i2c) | Read and convert temperature and pressure data from a BMP280 sensor, attached to an I2C bus.
 [ina260_i2c](i2c/ina260_i2c) | Monitor power usage of another Pico device ina260 sensor, via I2C.
 [ina228_i2c](i2c/ina228_i2c) | Monitor power usage of another Pico device ina228 sensor, via I2C.
+[ina219_i2c](i2c/ina219_i2c) | Monitor power usage of another Pico device using an ina219 sensor, via I2C.
+[ina237_i2c](i2c/ina237_i2c) | Monitor power usage of another Pico device using an ina237 sensor, via I2C.
+[ina260_i2c](i2c/ina260_i2c) | Monitor power usage of another Pico device using an ina260 sensor, via I2C.
 [lcd_1602_i2c](i2c/lcd_1602_i2c) | Display some text on a generic 16x2 character LCD display, via I2C.
 [lis3dh_i2c](i2c/lis3dh_i2c) | Read acceleration and temperature value from a LIS3DH sensor via I2C
 [mcp9808_i2c](i2c/mcp9808_i2c) | Read temperature from a MCP9808 sensor, set limits and raise alerts when limits are surpassed.
@@ -172,6 +175,19 @@ App|Description
 App|Description
 ---|---
 [hello_interp](interp/hello_interp) | A bundle of small examples, showing how to access the core-local interpolator hardware, and use most of its features.
+
+### Low Power
+
+These examples demonstrate how to use the pico_low_power library.
+
+App|Description
+---|---
+[low_power_domant_timer](low_power/low_power_dormant) | Go dormant (disable clocks) and wakeup on a timer. Requires an external clock for when testing with RP2040. See [low_power_clksrc](low_power/low_power_dormant).
+[low_power_dormant_gpio](low_power/low_power_dormant) | Go dormant (disable clocks) and wakeup on a GPIO.
+[low_power_pstate_timer](low_power/low_power_pstate) | Go to a lower power state (RP2350 only) and restart on an AON timer.
+[low_power_pstate_gpio](low_power/low_power_pstate) | Go to a lower power state (RP2350 only) and restart on a GPIO.
+[low_power_sleep_timer](low_power/low_power_sleep) | Go to sleep and wakeup on a timer.
+[low_power_sleep_gpio](low_power/low_power_sleep) | Go to sleep and wakeup on a GPIO.
 
 ### Multicore
 
@@ -202,6 +218,7 @@ These networking examples are only available if Wi-Fi is supported by the board.
 App|Description
 ---|---
 [picow_access_point](pico_w/wifi/access_point) | Starts a WiFi access point, and fields DHCP requests.
+[picow_access_point_wifi_provisioning](pico_w/wifi/access_point_wifi_provisioning) | Starts a WiFi access point, and allows WiFi credentials to be provisioned through a web page.
 [picow_blink](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip).
 [picow_blink_slow_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a slower system clock to show how to reconfigure communication with the WiFi chip at run time under those circumstances.
 [picow_blink_fast_clock](pico_w/wifi/blink) | Blinks the on-board LED (which is connected via the WiFi chip) with a faster system clock to show how to reconfigure communication with the WiFi chip at build time under those circumstances.
