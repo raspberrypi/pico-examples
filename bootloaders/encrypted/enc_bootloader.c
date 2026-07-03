@@ -39,8 +39,8 @@ void runtime_init_clocks(void) {
     rosc_hw->div = rosc_div | ROSC_DIV_VALUE_PASS; // set divider
     // Increment the freqency range one step at a time - this is safe provided the current config is not TOOHIGH
     // because ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM | ROSC_CTRL_FREQ_RANGE_VALUE_HIGH == ROSC_CTRL_FREQ_RANGE_VALUE_HIGH
-    static_assert((ROSC_CTRL_FREQ_RANGE_VALUE_LOW | ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM) == ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM);
-    static_assert((ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM | ROSC_CTRL_FREQ_RANGE_VALUE_HIGH) == ROSC_CTRL_FREQ_RANGE_VALUE_HIGH);
+    static_assert((ROSC_CTRL_FREQ_RANGE_VALUE_LOW | ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM) == ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM, "");
+    static_assert((ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM | ROSC_CTRL_FREQ_RANGE_VALUE_HIGH) == ROSC_CTRL_FREQ_RANGE_VALUE_HIGH, "");
     hw_set_bits(&rosc_hw->ctrl, ROSC_CTRL_FREQ_RANGE_VALUE_MEDIUM);
     hw_set_bits(&rosc_hw->ctrl, ROSC_CTRL_FREQ_RANGE_VALUE_HIGH);
 
