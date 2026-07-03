@@ -53,7 +53,7 @@ const uint QSPI_GPIO_PAD_TO_IO_OFFSET[] = {
 };
 
 // Set function for QSPI GPIO pin
-void qspi_gpio_set_function(enum qspi_gpio gpio, gpio_function_t fn) {
+void qspi_gpio_set_function(enum qspi_gpio gpio, gpio_function1_t fn) {
     // Set input enable on, output disable off
     hw_write_masked(&pads_qspi_hw->io[gpio],
                    PADS_QSPI_GPIO_QSPI_SD2_IE_BITS,
