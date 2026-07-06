@@ -17,6 +17,19 @@
 #define ADC_CHANNEL_TEMPSENSOR 4
 #define APP_AD_FLAGS 0x06
 
+#if SERVER_LOW_POWER
+#include "pico/low_power.h"
+#if !HAS_POWMAN_TIMER
+// Uses the watchdog to reboot, as there is no powman
+#include "hardware/watchdog.h"
+#endif
+#define POWER_UP_TIME_S 15
+#define POWER_DOWN_TIME_S 60
+#define POWER_DOWN_TIME_MS (POWER_DOWN_TIME_S * 1000)
+
+static bool exit_run_loop = false;
+#endif
+
 static uint8_t adv_data[] = {
     // Flags general discoverable
     0x02, BLUETOOTH_DATA_TYPE_FLAGS, APP_AD_FLAGS,
@@ -113,7 +126,18 @@ static void poll_temp(void) {
     float deg_c = 27 - (reading - 0.706) / 0.001721;
     current_temp = deg_c * 100;
     printf("Write temp %.2f degc\n", deg_c);
- }
+}
+
+static void bt_exit_fn(__unused void * arg) {
+    hci_power_control(HCI_POWER_OFF);
+#if SERVER_LOW_POWER
+    // Custom run loop exit variable
+    exit_run_loop = true;
+#else
+    btstack_run_loop_trigger_exit();
+#endif
+}
+static btstack_context_callback_registration_t bt_exit = { .callback = bt_exit_fn };
 
 static void heartbeat_handler(struct btstack_timer_source *ts) {
     static uint32_t counter = 0;
@@ -139,11 +163,20 @@ static void heartbeat_handler(struct btstack_timer_source *ts) {
 
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
 
+#if SERVER_LOW_POWER
+    if (counter >= POWER_UP_TIME_S) {
+        // Exit to go to low power state
+        btstack_run_loop_execute_on_main_thread(&bt_exit);
+        return;
+    }
+#endif
+
     // Restart timer
     btstack_run_loop_set_timer(ts, HEARTBEAT_PERIOD_MS);
     btstack_run_loop_add_timer(ts);
 }
 
+#if !SERVER_LOW_POWER
 static void bt_start_stop_fn(__unused void * arg) {
     if (hci_get_state() == HCI_STATE_OFF) {
         hci_power_control(HCI_POWER_ON);
@@ -155,12 +188,6 @@ static void bt_start_stop_fn(__unused void * arg) {
 }
 static btstack_context_callback_registration_t bt_start_stop = { .callback = bt_start_stop_fn };
 
-static void bt_exit_fn(__unused void * arg) {
-    hci_power_control(HCI_POWER_OFF);
-    btstack_run_loop_trigger_exit();
-}
-static btstack_context_callback_registration_t bt_exit = { .callback = bt_exit_fn };
-
 void key_pressed_func(void *param) {
     int key = getchar_timeout_us(0); // get any pending key press but don't wait
     if (key == 's' || key == 'S') {
@@ -169,6 +196,7 @@ void key_pressed_func(void *param) {
         btstack_run_loop_execute_on_main_thread(&bt_exit);
     }
 }
+#endif
 
 int main() {
     stdio_init_all();
@@ -179,10 +207,12 @@ int main() {
         return -1;
     }
 
+#if !SERVER_LOW_POWER
     // Get notified if the user presses a key
     printf("Press the \"S\" key to Stop bluetooth\n");
     printf("Press the \"E\" key to Exit the program\n");
     stdio_set_chars_available_callback(key_pressed_func, NULL);
+#endif
 
     // Initialise adc for the temp sensor
     adc_init();
@@ -209,11 +239,32 @@ int main() {
     // turn on bluetooth!
     hci_power_control(HCI_POWER_ON);
 
-    btstack_run_loop_execute();
+#if SERVER_LOW_POWER
+    // Custom low power run loop, using low power sleep
+    while (!exit_run_loop) {
+        // This will us the same timer as the bluetooth processing, so that will continue to work
+        low_power_sleep_for_ms(1000, NULL, false);
+    }
+#else
+    btstack_run_loop_execute(); // run until btstack_run_loop_trigger_exit is called
+#endif
 
     cyw43_arch_deinit();
 
+#if SERVER_LOW_POWER
+    printf("Going to low power state for %ds\n", POWER_DOWN_TIME_S);
+    low_power_set_pins_low_leakage_exclude_mask(0);
+#if HAS_POWMAN_TIMER
+    low_power_pstate_for_ms(POWER_DOWN_TIME_MS, NULL, NULL);
+    while(true); // wait for reboot
+#else
+    low_power_dormant_for_ms(POWER_DOWN_TIME_MS, DORMANT_CLOCK_SOURCE_DEFAULT, NULL);
+    watchdog_reboot(0, 0, 10);
+    while (true); // wait for reboot
+#endif
+#else
     printf("Exiting\n");
+#endif
 
     return 0;
 }
