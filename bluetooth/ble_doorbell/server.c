@@ -176,8 +176,8 @@ int main() {
 #if 1
     btstack_run_loop_execute();
 #else
-    // This example uses the 'threadsafe background` method, where BT work is handled in a low priority IRQ, so it
-    // is fine to call bt_stack_run_loop_execute() but equally you can continue executing user code. You must not
+    // This example uses the `threadsafe background` method, where BT work is handled in a low priority IRQ, so it
+    // is possible to continue executing user code instead of calling bt_stack_run_loop_execute(). You must not
     // perform any BT work in user code (e.g calling `hci_power_control(HCI_POWER_OFF)`) - those operations must be
     // performed inside the run loop (e.g. using `btstack_run_loop_execute_on_main_thread`).
     while(true) {
