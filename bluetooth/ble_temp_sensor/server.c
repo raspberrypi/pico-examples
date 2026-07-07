@@ -23,7 +23,7 @@
 // Uses the watchdog to reboot, as there is no powman
 #include "hardware/watchdog.h"
 #endif
-#define POWER_UP_TIME_S 15
+#define POWER_UP_HEARTBEATS 15
 #define POWER_DOWN_TIME_S 60
 #define POWER_DOWN_TIME_MS (POWER_DOWN_TIME_S * 1000)
 
@@ -164,7 +164,7 @@ static void heartbeat_handler(struct btstack_timer_source *ts) {
     cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
 
 #if SERVER_LOW_POWER
-    if (counter >= POWER_UP_TIME_S) {
+    if (counter >= POWER_UP_HEARTBEATS) {
         // Exit to go to low power state
         btstack_run_loop_execute_on_main_thread(&bt_exit);
         return;
