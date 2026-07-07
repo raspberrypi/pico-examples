@@ -242,7 +242,7 @@ int main() {
 #if SERVER_LOW_POWER
     // Custom low power run loop, using low power sleep
     while (!exit_run_loop) {
-        // This will us the same timer as the bluetooth processing, so that will continue to work
+        // This will use the same timer as the bluetooth processing, so that will continue to work
         low_power_sleep_for_ms(1000, NULL, false);
     }
 #else
@@ -255,8 +255,8 @@ int main() {
     printf("Going to low power state for %ds\n", POWER_DOWN_TIME_S);
     low_power_set_pins_low_leakage_exclude_mask(0);
 #if HAS_POWMAN_TIMER
-    low_power_pstate_for_ms(POWER_DOWN_TIME_MS, NULL, NULL);
-    while(true); // wait for reboot
+    int rc = low_power_pstate_for_ms(POWER_DOWN_TIME_MS, NULL, NULL);
+    printf("low_power_pstate_for_ms returned error %d\n", rc);
 #else
     low_power_dormant_for_ms(POWER_DOWN_TIME_MS, DORMANT_CLOCK_SOURCE_DEFAULT, NULL);
     watchdog_reboot(0, 0, 10);
