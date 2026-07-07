@@ -178,7 +178,9 @@ static void heartbeat_handler(struct btstack_timer_source *ts) {
 
 #if !SERVER_LOW_POWER
 static void bt_start_stop_fn(__unused void * arg) {
-    if (hci_get_state() == HCI_STATE_OFF) {
+    static bool bt_start_stop_state = true;
+    bt_start_stop_state = !bt_start_stop_state;
+    if (bt_start_stop_state) {
         hci_power_control(HCI_POWER_ON);
         printf("Press the \"S\" key to Stop bluetooth\n");
     } else {
@@ -206,13 +208,6 @@ int main() {
         printf("failed to initialise cyw43_arch\n");
         return -1;
     }
-
-#if !SERVER_LOW_POWER
-    // Get notified if the user presses a key
-    printf("Press the \"S\" key to Stop bluetooth\n");
-    printf("Press the \"E\" key to Exit the program\n");
-    stdio_set_chars_available_callback(key_pressed_func, NULL);
-#endif
 
     // Initialise adc for the temp sensor
     adc_init();
@@ -246,6 +241,11 @@ int main() {
         low_power_sleep_for_ms(1000, NULL, false);
     }
 #else
+    // Get notified if the user presses a key
+    printf("Press the \"S\" key to Stop bluetooth\n");
+    printf("Press the \"E\" key to Exit the program\n");
+    stdio_set_chars_available_callback(key_pressed_func, NULL);
+
     btstack_run_loop_execute(); // run until btstack_run_loop_trigger_exit is called
 #endif
 
