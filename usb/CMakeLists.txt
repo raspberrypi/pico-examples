@@ -11,6 +11,14 @@ set(TINYUSB_OPT_OS OPT_OS_PICO)
 # Same issue as above - this variable goes out of scope
 set(LINKERMAP_PY ${PICO_TINYUSB_PATH}/tools/linkermap/linkermap.py)
 
+if (NOT EXISTS ${LINKERMAP_PY})
+    # family_add_linkermap tries to run tinyusb/tools/linkermap/linkermap.py
+    # But this file only exists if you run python tools/get_deps.py
+    # So override the function to do nothing if the file does not exist
+    function(family_add_linkermap TARGET)
+    endfunction()
+endif()
+
 # List of freertos examples
 set(tinyusb_freertos_examples
     audio_4_channel_mic_freertos
