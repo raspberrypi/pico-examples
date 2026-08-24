@@ -35,6 +35,11 @@
 #define CFG_TUD_ENDPOINT0_SIZE  (64)
 #endif
 
+// Make sure CFG_TUSB_OS is defined properly
+#ifndef CFG_TUSB_OS
+#define CFG_TUSB_OS             OPT_OS_PICO
+#endif
+
 #ifdef __cplusplus
  }
 #endif

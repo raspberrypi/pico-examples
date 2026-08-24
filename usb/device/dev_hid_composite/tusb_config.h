@@ -53,8 +53,9 @@
 #error CFG_TUSB_MCU must be defined
 #endif
 
+// Make sure CFG_TUSB_OS is defined properly
 #ifndef CFG_TUSB_OS
-#define CFG_TUSB_OS           OPT_OS_NONE
+#define CFG_TUSB_OS           OPT_OS_PICO
 #endif
 
 #ifndef CFG_TUSB_DEBUG
