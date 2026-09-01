@@ -1,15 +1,5 @@
-# family.cmake defines TINYUSB_OPT_OS and is included twice...
-# 1/ the first time by pico-sdk in src/rp2_common/tinyusb/CMakeLists.txt
-# 2/ before each tinyusb example via family_support.cmake
-# family.cmake has include_guard(GLOBAL) so the second include doesn't happen
-# But each example calls the cmake function family_configure_device_example
-# as the second include didn't happen TINYUSB_OPT_OS has gone out of scope
-# So make sure it's defined to avoid a redefinition with an invalid value
-# For freertos examples TINYUSB_OPT_OS is actually defined in FreeRTOSConfig.h
+# This is not set by default in latest TinyUSB
 set(TINYUSB_OPT_OS OPT_OS_PICO)
-
-# Same issue as above - this variable goes out of scope
-set(LINKERMAP_PY ${PICO_TINYUSB_PATH}/tools/linkermap/linkermap.py)
 
 # List of freertos examples
 set(tinyusb_freertos_examples
@@ -32,17 +22,14 @@ if (SHOULD_ADD)
             msc_file_explorer msc_file_explorer_freertos # need fatfs repo
         )
     endif()
-    if (NOT DEFINED FREERTOS_KERNEL_PATH)
+    if (NOT TARGET FreeRTOS-Kernel)
         # skip freertos examples
         list(APPEND tinyusb_example_ignore_list
             ${tinyusb_freertos_examples}
         )
     endif()
     list(FIND tinyusb_example_ignore_list ${DIR} skip_pos)
-    if (skip_pos GREATER_EQUAL 0)
-        set(SHOULD_ADD 0)
-    endif()
-    if (SHOULD_ADD)
+    if (skip_pos LESS 0)
         add_subdirectory(${DIR})
     endif()
 endif()

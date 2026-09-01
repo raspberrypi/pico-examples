@@ -18,6 +18,8 @@ target_include_directories(host_cdc_msc_hid PUBLIC
 # for TinyUSB device support and tinyusb_board for the additional board support library used by the example
 target_link_libraries(host_cdc_msc_hid PUBLIC pico_stdlib tinyusb_host tinyusb_board)
 
+target_compile_definitions(host_cdc_msc_hid PUBLIC CFG_TUSB_OS=OPT_OS_PICO)
+
 pico_add_extra_outputs(host_cdc_msc_hid)
 
 # add url via pico_set_program_url
