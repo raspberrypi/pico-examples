@@ -11,10 +11,9 @@ set(tinyusb_freertos_examples
     msc_file_explorer_freertos
 )
 
-# this function is added in later TinyUSB but requires
-# tools/get_deps.py to have been runing withint TinyUSB
-#
-# it just prints out code sizes which isn't really needed
+# This function is added in later TinyUSB, but requires
+# tools/get_deps.py to have been run within TinyUSB.
+# It just prints out code sizes which isn't really needed
 # here, so just make it a no-op
 function(family_add_linkermap TARGET)
 endfunction()
