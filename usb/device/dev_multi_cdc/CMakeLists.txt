@@ -24,6 +24,8 @@ target_compile_definitions(dev_multi_cdc PUBLIC
 # for TinyUSB device support and tinyusb_board for the additional board support library used by the example
 target_link_libraries(dev_multi_cdc PUBLIC pico_stdlib pico_unique_id tinyusb_device tinyusb_board)
 
+target_compile_definitions(dev_multi_cdc PUBLIC CFG_TUSB_OS=OPT_OS_PICO)
+
 pico_enable_stdio_usb(dev_multi_cdc 1)
 pico_add_extra_outputs(dev_multi_cdc)
 
