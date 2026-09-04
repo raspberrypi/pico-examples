@@ -44,3 +44,30 @@ target_compile_definitions(ble_temp_reader PRIVATE
 )
 pico_add_extra_outputs(ble_temp_reader)
 example_auto_set_url(ble_temp_reader)
+
+# Low Power Example that reads from the on board temperature sensor and sends notifications via BLE
+# Flashes slowly each second to show it's running
+# Goes to low power state after 2 readings
+add_executable(ble_temp_server_low_power
+    server.c
+    )
+target_link_libraries(ble_temp_server_low_power
+    pico_stdlib
+    pico_btstack_ble
+    pico_btstack_cyw43
+    pico_cyw43_arch_none
+    hardware_adc
+    pico_low_power
+    )
+target_include_directories(ble_temp_server_low_power PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR} # For our btstack config
+    ${CMAKE_CURRENT_LIST_DIR}/../config # for common btstack config
+    )
+target_compile_definitions(ble_temp_server_low_power PRIVATE
+    #WANT_HCI_DUMP=1
+    SERVER_LOW_POWER=1
+)
+pico_btstack_make_gatt_header(ble_temp_server_low_power PRIVATE "${CMAKE_CURRENT_LIST_DIR}/temp_sensor.gatt")
+
+pico_add_extra_outputs(ble_temp_server_low_power)
+example_auto_set_url(ble_temp_server_low_power)
