@@ -44,7 +44,7 @@ int main() {
      *   is a global operation). */
     adc_init();
     adc_set_temp_sensor_enabled(true);
-    adc_select_input(4);
+    adc_select_input(ADC_TEMPERATURE_CHANNEL_NUM);
 
     while (true) {
         float temperature = read_onboard_temperature(TEMPERATURE_UNITS);
