@@ -37,6 +37,7 @@ The example assumes:
     * `launch-probe-swd.json` if the target is connected via an SWD probe (e.g. picoprobe)
     * `launch-raspberrypi-swd.json` if the target is directly connected to a Raspberry Pi GPIO 
     * `launch-remote-openocd.json` if VSCode should connect to an already running instance of `OpenOCD`.
+    * `launch-debug-probe.json` if the target is connected to a [Raspberry Pi Debug Probe](https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html)
 
 > Be sure to review the selected file and make any changes needed for your environment.
 
