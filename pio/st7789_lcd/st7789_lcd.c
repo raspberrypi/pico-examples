@@ -28,6 +28,8 @@
 #define PIN_RESET 4
 #define PIN_BL 5
 
+#define SPI_CLOCK_POLARITY 0 // default to 0, some displays require polarity 1
+
 #define SERIAL_CLK_DIV 1.f
 
 #ifndef M_PI
@@ -90,7 +92,7 @@ int main() {
     PIO pio = pio0;
     uint sm = 0;
     uint offset = pio_add_program(pio, &st7789_lcd_program);
-    st7789_lcd_program_init(pio, sm, offset, PIN_DIN, PIN_CLK, SERIAL_CLK_DIV);
+    st7789_lcd_program_init(pio, sm, offset, SPI_CLOCK_POLARITY, PIN_DIN, PIN_CLK, SERIAL_CLK_DIV);
 
     gpio_init(PIN_CS);
     gpio_init(PIN_DC);
