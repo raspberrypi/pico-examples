@@ -226,6 +226,7 @@ App|Description
 [picow_ntp_system_time](pico_w/wifi/ntp_system_time) | Creates a background time-of-day clock that periodically updates itself from a pool of NTP servers, and uses it to display local time.
 [picow_tcp_client](pico_w/wifi/tcp_client) | A simple TCP client. You can run [python_test_tcp_server.py](pico_w/wifi/python_test_tcp/python_test_tcp_server.py) for it to connect to.
 [picow_tcp_server](pico_w/wifi/tcp_server) | A simple TCP server. You can use [python_test_tcp_client.py](pico_w//wifi/python_test_tcp/python_test_tcp_client.py) to connect to it.
+[picow_udp_server](pico_w/wifi/udp_server) | A simple UDP server. You can use [python_test_udp_client.py](pico_w//wifi/python_test_udp/python_test_udp_client.py) to connect to it.
 [picow_tls_client](pico_w/wifi/tls_client) | Demonstrates how to make a HTTPS request using TLS.
 [picow_tls_verify](pico_w/wifi/tls_client) | Demonstrates how to make a HTTPS request using TLS with certificate verification.
 [picow_wifi_scan](pico_w/wifi/wifi_scan) | Scans for WiFi networks and prints the results.
