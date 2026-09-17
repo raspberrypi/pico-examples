@@ -36,9 +36,17 @@ pico_set_security_options(hello_trustzone_s hello_trustzone_ns
 # Set security ram split
 pico_set_security_ram_split(hello_trustzone_s hello_trustzone_ns SIMPLE 64k 2k)
 
-# Create combined UF2, for loading into the partition table (non-secure first)
-pico_concatenate_uf2_outputs(hello_trustzone hello_trustzone_ns hello_trustzone_s)
+# Create concatenated UF2, for loading into the partition table using drag & drop (non-secure first)
+pico_concatenate_uf2_outputs(hello_trustzone_drag_drop hello_trustzone_ns hello_trustzone_s)
 
+# Create combined UF2 containing partition table, for loading using picotool or drag & drop
+pico_combine_uf2_outputs(hello_trustzone_combined trustzone_pt
+        trustzone_none hello_trustzone_s trustzone_none hello_trustzone_ns
+        PARTITIONS 0 1 2 3)
+
+# Create combined CMake target, for easy building
+add_custom_target(hello_trustzone ALL
+        DEPENDS hello_trustzone_combined hello_trustzone_drag_drop)
 
 
 # no_flash example

@@ -42,5 +42,14 @@ pico_set_security_options(tls_verify_secure tls_verify_nonsecure
 # Set security ram split
 pico_set_security_ram_split(tls_verify_secure tls_verify_nonsecure SIMPLE 64k 2k)
 
-# Create combined UF2
-pico_concatenate_uf2_outputs(tls_verify_trustzone tls_verify_nonsecure tls_verify_secure)
+# Create concatenated UF2, for loading into the partition table using drag & drop (non-secure first)
+pico_concatenate_uf2_outputs(tls_verify_trustzone_drag_drop tls_verify_nonsecure tls_verify_secure)
+
+# Create combined UF2 containing partition table, for loading using picotool or drag & drop
+pico_combine_uf2_outputs(tls_verify_trustzone_combined trustzone_pt
+        trustzone_none tls_verify_secure trustzone_none tls_verify_nonsecure
+        PARTITIONS 0 1 2 3)
+
+# Create combined CMake target, for easy building
+add_custom_target(tls_verify_trustzone ALL
+        DEPENDS tls_verify_trustzone_combined tls_verify_trustzone_drag_drop)
