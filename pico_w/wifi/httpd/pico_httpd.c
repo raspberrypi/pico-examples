@@ -240,5 +240,6 @@ int main() {
 #if LWIP_MDNS_RESPONDER
     mdns_resp_remove_netif(&cyw43_state.netif[CYW43_ITF_STA]);
 #endif
+    cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
 }

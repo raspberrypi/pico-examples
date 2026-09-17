@@ -141,7 +141,7 @@ void main_task(__unused void *params) {
 #endif // configSUPPORT_STATIC_ALLOCATION
 #endif // USE_LED
     int count = 0;
-    while(true) {
+    while(count < 10) {
 #if configNUMBER_OF_CORES > 1
         static int last_core_id = -1;
         if (portGET_CORE_ID() != last_core_id) {
@@ -152,6 +152,7 @@ void main_task(__unused void *params) {
         printf("Hello from main task count=%u\n", count++);
         vTaskDelay(3000);
     }
+    printf("main_task is exiting now\n");
     async_context_deinit(context);
 }
 

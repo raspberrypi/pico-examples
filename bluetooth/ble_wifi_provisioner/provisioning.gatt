@@ -1,0 +1,21 @@
+PRIMARY_SERVICE, GAP_SERVICE
+CHARACTERISTIC, GAP_DEVICE_NAME, READ, "pico_wifi_provisioning"
+
+PRIMARY_SERVICE, GATT_SERVICE
+CHARACTERISTIC, GATT_DATABASE_HASH, READ,
+
+PRIMARY_SERVICE, 6bfacb8f-6b40-49f8-906e-53bd113c5cfb
+
+// SSID characteristic (write-only)
+CHARACTERISTIC, b1829813-e8ec-4621-b9b5-6c1be43fe223, WRITE | DYNAMIC | ENCRYPTION_KEY_SIZE_16,
+CHARACTERISTIC_USER_DESCRIPTION, READ,
+
+// Password characteristic (write-only)
+CHARACTERISTIC, 410f5077-9e81-4f3b-b888-bf435174fa58, WRITE | DYNAMIC | ENCRYPTION_KEY_SIZE_16,
+CHARACTERISTIC_USER_DESCRIPTION, READ,
+
+// Provisioning status characteristic (read/notify). Reports a single status
+// byte (see prov_status_t in wifi_prov_lib) so the client can observe progress
+// without the credentials ever being echoed back.
+CHARACTERISTIC, 6072c5a6-e1a2-4068-b30b-8f3f0e5c8634, READ | NOTIFY | DYNAMIC | ENCRYPTION_KEY_SIZE_16,
+CHARACTERISTIC_USER_DESCRIPTION, READ,

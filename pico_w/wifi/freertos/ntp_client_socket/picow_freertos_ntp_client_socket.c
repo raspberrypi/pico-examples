@@ -144,6 +144,7 @@ void main_task(__unused void *params) {
         vTaskDelay(ntpEST_TIME);
     }
 
+    cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
 }
 

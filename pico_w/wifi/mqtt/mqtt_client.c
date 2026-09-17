@@ -215,7 +215,8 @@ static void mqtt_incoming_data_cb(void *arg, const u8_t *data, u16_t len, u8_t f
 
 static void mqtt_incoming_publish_cb(void *arg, const char *topic, u32_t tot_len) {
     MQTT_CLIENT_DATA_T* state = (MQTT_CLIENT_DATA_T*)arg;
-    strncpy(state->topic, topic, sizeof(state->topic));
+    // using strlcpy() ensures the string is properly terminated if truncated
+    strlcpy(state->topic, topic, sizeof(state->topic));
 }
 
 static void temperature_worker_fn(async_context_t *context, async_at_time_worker_t *worker) {
@@ -243,6 +244,8 @@ static void mqtt_connection_cb(mqtt_client_t *client, void *arg, mqtt_connection
         if (!state->connect_done) {
             panic("Failed to connect to mqtt server");
         }
+        // note that the main() loop will soon terminate because mqtt_client_is_connected()
+        // will return false.  
     }
     else {
         panic("Unexpected status");
@@ -257,8 +260,10 @@ static void start_client(MQTT_CLIENT_DATA_T *state) {
     const int port = MQTT_PORT;
     INFO_printf("Warning: Not using TLS\n");
 #endif
-
+    // mqtt_client_new() has LWIP_ASSERT_CORE_LOCKED(), so we should protect this call
+    cyw43_arch_lwip_begin();
     state->mqtt_client_inst = mqtt_client_new();
+    cyw43_arch_lwip_end();
     if (!state->mqtt_client_inst) {
         panic("MQTT client instance creation error");
     }
@@ -326,7 +331,8 @@ int main(void) {
     state.mqtt_client_info.client_pass = NULL;
 #endif
     static char will_topic[MQTT_TOPIC_LEN];
-    strncpy(will_topic, full_topic(&state, MQTT_WILL_TOPIC), sizeof(will_topic));
+    // using strlcpy() ensures the string is properly terminated if truncated
+    strlcpy(will_topic, full_topic(&state, MQTT_WILL_TOPIC), sizeof(will_topic));
     state.mqtt_client_info.will_topic = will_topic;
     state.mqtt_client_info.will_msg = MQTT_WILL_MSG;
     state.mqtt_client_info.will_qos = MQTT_WILL_QOS;
@@ -368,11 +374,25 @@ int main(void) {
         panic("dns request failed");
     }
 
+    // We are not in a callback but we can get away with calling mqtt_client_is_connected()
+    // because it's a read-only operation
     while (!state.connect_done || mqtt_client_is_connected(state.mqtt_client_inst)) {
+
+    #ifdef PICO_CYW43_ARCH_POLL 
+        // if you use cyw43_arch in lwip_poll mode then you must periodically call
+        // cyw43_arch_poll() from your main loop (see SDK network API documentaion)
         cyw43_arch_poll();
         cyw43_arch_wait_for_work_until(make_timeout_time_ms(10000));
+    #else
+        // as supplied the example configures cyw43_arch for thread_safe_background
+        // operation (see CMakeLists.txt) so there's no need to poll
+        sleep_ms(10000);
+    #endif
+
     }
 
     INFO_printf("mqtt client exiting\n");
+    cyw43_arch_disable_sta_mode();
+    cyw43_arch_deinit();
     return 0;
 }

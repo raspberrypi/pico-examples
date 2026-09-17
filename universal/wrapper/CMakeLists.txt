@@ -29,6 +29,13 @@ elseif(PICO_BOARD_RP2350 AND (PICO_PLATFORM MATCHES rp2350))
     set(PICO_BOARD ${PICO_BOARD_RP2350})
 endif()
 
+# Add universal board header dir
+if (DEFINED ENV{PICO_BOARD_HEADER_DIRS})
+    set(PICO_BOARD_HEADER_DIRS $ENV{PICO_BOARD_HEADER_DIRS})
+    message("Using PICO_BOARD_HEADER_DIRS from environment ('${PICO_BOARD_HEADER_DIRS}')")
+endif()
+set(PICO_BOARD_HEADER_DIRS ${PICO_BOARD_HEADER_DIRS} ${CMAKE_CURRENT_LIST_DIR}/boards_universal)
+
 # Pull in SDK (must be before project)
 include(${PICO_EXAMPLES_PATH}/pico_sdk_import.cmake)
 

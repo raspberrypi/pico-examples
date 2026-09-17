@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+  body {
+    background-color: whitesmoke;
+    font-family: sans-serif;
+    margin: 1em;
+  }
+  h1 {color: crimson;}
+  p  {color: black;}
+  form {
+    margin-bottom: 1.5em;
+  }
+input[type="text"],
+input[type="password"] {
+  font-size: 1em;
+  padding: 0.3em;
+  box-sizing: border-box;
+}
+  input[type="submit"] {
+    font-size: 1em;
+    padding: 0.5em 1em;
+  }
+  </style>
+</head>
+<body>
+  <h1>AP provisioning</h1>
+  <p>Enter new credentials and connect, or select from previously saved.</p>
+  <p>Current SSID:<!--#ssid--></p>
+  <p>Current password:<!--#password--></p>
+
+  <form action="/credentials.cgi" method="post">
+    <label for="ssid">SSID:</label><br>
+    <input type="text" id="ssid" name="ssid" value=""><br>
+    <label for="password">Password:</label><br>
+    <input type="password" id="password" name="password" value=""><br>
+    <input type="submit" value="Connect">
+  </form>
+
+  <form action="/clear.cgi" method="get">
+    <input type="submit" value="Clear saved credentials">
+  </form>
+
+  <p>Select a saved network:</p>
+  <form action="/connect_from_saved.cgi" method="get">
+    <!--#wifilist-->
+    <input type="submit" value="Connect">
+  </form>
+</body>
+</html>

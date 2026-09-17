@@ -89,6 +89,7 @@ void main_task(__unused void *params) {
         vTaskDelay(10000);
     }
 
+    cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
 }
 

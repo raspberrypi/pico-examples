@@ -38,6 +38,7 @@ int main() {
     /* sleep a bit to let usb stdio write out any buffer to host */
     sleep_ms(100);
 
+    cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
     printf("All done\n");
     return pass ? 0 : 1;

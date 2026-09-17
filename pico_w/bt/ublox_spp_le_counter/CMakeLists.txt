@@ -1,1 +1,0 @@
-picow_bt_example(ublox_spp_le_counter)

@@ -1,1 +1,0 @@
-picow_bt_example(pbap_client_demo)

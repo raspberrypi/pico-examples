@@ -1,0 +1,59 @@
+= Simple graphics and stdout text on an OLED display via SPI
+
+This example displays text and graphics on one of the widely-available small OLED panels based on the *SSD1309* controller. It should also work with compatible devices such as the *SSD1306* (not tested).
+
+These modules typically support either I2C or SPI. For this example you will need one configured for SPI.
+
+The code renders content onto a frame buffer that is transferred to the SPI port in the background, by a DMA channel under the control of a frame timer. A simple driver is used to copy _stdout_ to the frame buffer and some basic graphics functions are provided.
+
+The interface uses one of the Pico's onboard SPI peripherals and two extra GPIO pins as shown below. Note that in SPI mode the SSD1309 is a receive-only device.
+
+For details of the commands supported by the SSD1309 controller and its addressing modes see the manufacturer's datasheet: https://www.hpinfotech.ro/SSD1309.pdf.
+
+
+== Wiring information
+
+Wiring up the device requires seven jumpers as follows:
+
+    * Display CS (chip select) -> Pico GP17 (SPI0 CSn), pin 22
+    * Display DC (data/command) -> Pico GP20, pin 26
+    * Display RES (reset) -> Pico GP21, pin 27
+    * Display SDA (MOSI) -> Pico GP19 (SPI0 TX), pin 25
+    * Display SCLK (SPI clock) -> Pico GP18 (SPI0 SCK), pin 24
+    * Display VDD (3.3v) -> Pico 3V3_OUT, pin 36
+    * Display VSS (0v, gnd) -> Pico GND, pin 23
+
+The example uses SPI device 0 and powers the display from the Pico 3.3v output. If you power the display from an external supply then ensure that the Pico's logic pins are not exposed to any voltage higher than 3.3v.
+
+[NOTE]
+======
+The pins on your board may be labelled slightly differently to the list above. Check the documentation for your display.
+
+You can change the code to use different pins if you like, but the ones for CSn, TX and SCK must match your SPI device: see the GPIO Function Select Table in the datasheet. 
+======
+
+
+[[wiring_diagram.png]]
+[pdfwidth=75%]
+.Wiring Diagram for SSD1309 with SPI interface
+image::wiring_diagram.png[]
+
+== List of Files
+
+CMakeLists.txt:: A file to configure the CMake build system for the example.
+ssd1309_stdout_spi.c:: The example code.
+font.h:: A basic 8x8 bit font table used by the example.
+
+
+== Bill of Materials
+
+.A list of materials required for the example
+[[SSD1309-bom-table]]
+[cols=3]
+|===
+| *Item* | *Quantity* | Details
+| Breadboard | 1 | generic part
+| Raspberry Pi Pico or Pico 2 | 1 | https://www.raspberrypi.com/products/raspberry-pi-pico/
+| SSD1309-based OLED display panel with SPI interface| 1 | generic part
+| M/F Jumper wires (assorted colours) | 7 | generic part
+|===

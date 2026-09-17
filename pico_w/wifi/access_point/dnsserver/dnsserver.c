@@ -217,7 +217,7 @@ ignore_request:
     pbuf_free(p);
 }
 
-void dns_server_init(dns_server_t *d, ip_addr_t *ip) {
+void dns_server_init(dns_server_t *d, struct netif *nif, ip_addr_t *ip) {
     if (dns_socket_new_dgram(&d->udp, d, dns_server_process) != ERR_OK) {
         DEBUG_printf("dns server failed to start\n");
         return;
@@ -225,6 +225,13 @@ void dns_server_init(dns_server_t *d, ip_addr_t *ip) {
     if (dns_socket_bind(&d->udp, 0, PORT_DNS_SERVER) != ERR_OK) {
         DEBUG_printf("dns server failed to bind\n");
         return;
+    }
+    // Restrict the server to a single interface (the AP). The bind above uses
+    // IP_ADDR_ANY, so without this the PCB listens on every netif and would
+    // answer DNS queries arriving via an active STA connection too. This also
+    // pins replies to the same netif (udp_sendto here is not interface-bound).
+    if (nif != NULL) {
+        udp_bind_netif(d->udp, nif);
     }
     ip_addr_copy(d->ip, *ip);
     DEBUG_printf("dns server listening on port %d\n", PORT_DNS_SERVER);

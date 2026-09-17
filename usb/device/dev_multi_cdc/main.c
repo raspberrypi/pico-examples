@@ -9,6 +9,7 @@
 #include <tusb.h>
 
 #include <pico/stdio.h>
+#include <pico/stdlib.h>
 
 void custom_cdc_task(void);
 
@@ -30,7 +31,7 @@ int main(void)
     while (1) {
         // TinyUSB device task | must be called regurlarly
         tud_task();
-        
+
         // custom tasks
         custom_cdc_task();
     }
@@ -45,10 +46,14 @@ void custom_cdc_task(void)
 
     // Check if CDC interface 0 (for pico sdk stdio) is connected and ready
 
-    if (tud_cdc_n_connected(0)) {
+    static absolute_time_t next_check = 0;
+    absolute_time_t now = get_absolute_time();
+
+    // check every 5 seconds after first connected
+    if (tud_cdc_n_connected(0) && (absolute_time_diff_us(next_check, now) >= 0)) {
         // print on CDC 0 some debug message
         printf("Connected to CDC 0\n");
-        sleep_ms(5000); // wait for 5 seconds
+        next_check = delayed_by_ms(now, 5000);
     }
 }
 

@@ -1,1 +1,0 @@
-picow_bt_example(ancs_client_demo)

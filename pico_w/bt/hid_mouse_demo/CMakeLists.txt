@@ -1,1 +1,0 @@
-picow_bt_example(hid_mouse_demo)

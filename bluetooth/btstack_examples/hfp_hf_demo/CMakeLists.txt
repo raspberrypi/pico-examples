@@ -1,0 +1,28 @@
+add_executable(hfp_hf_demo
+    ../main.c
+    ../btstack_audio_pico.c
+    ${PICO_BTSTACK_PATH}/example/hfp_hf_demo.c # note: this source is in pico-sdk/lib/btstack
+    ${PICO_BTSTACK_PATH}/src/btstack_audio_generator.c
+    ${PICO_BTSTACK_PATH}/example/sco_demo_util.c
+)
+target_link_libraries(hfp_hf_demo PRIVATE
+    pico_stdlib
+    pico_cyw43_arch_none # we don't need lwip support
+    pico_btstack_cyw43 # enable bt
+    pico_btstack_ble # ble support
+    pico_btstack_classic # classic support
+    pico_btstack_sbc_decoder
+    pico_audio_i2s
+)
+target_include_directories(hfp_hf_demo PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR} # for btstack config
+    ${CMAKE_CURRENT_LIST_DIR}/../../config # for common config
+)
+target_compile_definitions(hfp_hf_demo PRIVATE
+    USING_I2C=1
+    PICO_AUDIO_I2S_DATA_PIN=9
+    PICO_AUDIO_I2S_CLOCK_PIN_BASE=10
+    #WANT_HCI_DUMP=1
+)
+pico_add_extra_outputs(hfp_hf_demo)
+example_auto_set_url(hfp_hf_demo)

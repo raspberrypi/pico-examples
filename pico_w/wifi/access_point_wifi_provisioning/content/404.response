@@ -1,0 +1,3 @@
+HTTP/1.1 302 Redirect
+Location: index.shtml
+

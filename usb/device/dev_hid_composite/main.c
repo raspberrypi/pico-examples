@@ -58,11 +58,12 @@ int main(void)
   board_init();
 
   // init device stack on configured roothub port
-  tud_init(BOARD_TUD_RHPORT);
-
-  if (board_init_after_tusb) {
-    board_init_after_tusb();
-  }
+  const tusb_rhport_init_t rh_init = {
+    .role = TUSB_ROLE_DEVICE,
+    .speed = TUD_OPT_HIGH_SPEED ? TUSB_SPEED_HIGH : TUSB_SPEED_FULL
+  };
+  TU_ASSERT(tud_rhport_init(BOARD_TUD_RHPORT, &rh_init));
+  board_init_after_tusb();
 
   while (1)
   {
@@ -197,6 +198,11 @@ static void send_hid_report(uint8_t report_id, uint32_t btn)
     default: break;
   }
 }
+
+#if TUSB_VERSION_NUMBER > 1800
+// board_millis has been removed from tinyusb. Use tusb_time_millis_api instead
+#define board_millis tusb_time_millis_api
+#endif
 
 // Every 10ms, we will sent 1 report for each HID profile (keyboard, mouse etc ..)
 // tud_hid_report_complete_cb() is used to send the next report after previous one is complete
