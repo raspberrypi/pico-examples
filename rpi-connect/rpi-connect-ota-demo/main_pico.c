@@ -24,16 +24,6 @@
 #define RPI_CONNECT_FFS_WIFI_SSID       0x10
 #define RPI_CONNECT_FFS_WIFI_PASSWORD   0x11
 
-// Returns a malloc'd copy of a NUL-terminated string stored in FFS, or NULL.
-static char *ffs_get_string(uint8_t file_id) {
-    const char *data;
-    int rc = ffs_read(file_id, &data);
-    if (rc >= 0 && data) {
-        return strdup(data);
-    }
-    return NULL;
-}
-
 static char *rpi_connect_ota_demo_wifi_password;
 static char *rpi_connect_ota_demo_wifi_ssid;
 
