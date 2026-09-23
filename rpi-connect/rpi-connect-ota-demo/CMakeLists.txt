@@ -26,28 +26,28 @@ if (NOT RPI_CONNECT_BUILD_NUMBER)
     set(RPI_CONNECT_BUILD_NUMBER 0)
 endif()
 
+add_library(rpi_connect_ota_demo_libs INTERFACE)
+target_sources(rpi_connect_ota_demo_libs INTERFACE
+    ${CMAKE_CURRENT_LIST_DIR}/rpi_connect_ota_demo.c
+    )
+
 if (PICO_ON_DEVICE)
     add_executable(rpi_connect_ota_demo
-        rpi_connect_ota_demo.c
         main_pico.c
         )
+    target_link_libraries(rpi_connect_ota_demo rpi_connect_ota_demo_libs)
 else()
     # Host build: the registration/debug CLI (main.c) driving the same OTA
     # app loop over the SDK host builds of the Pi Connect libraries.
     add_executable(rpi_connect_ota_demo
-        rpi_connect_ota_demo.c
         main.c
         )
+    target_link_libraries(rpi_connect_ota_demo rpi_connect_ota_demo_libs)
 endif()
-
-# Program version reported at boot and by picotool info. The picobin image
-# VERSION used for bootrom A/B selection is set separately below from
-# RPI_CONNECT_VERSION_MAJOR / RPI_CONNECT_BUILD_NUMBER.
-pico_set_program_version(rpi_connect_ota_demo "1.0.0")
 
 # By default verification is optional (MBEDTLS_SSL_VERIFY_OPTIONAL)
 # Specify UART DEBUG verbosity flags here
-target_compile_definitions(rpi_connect_ota_demo PRIVATE
+target_compile_definitions(rpi_connect_ota_demo_libs INTERFACE
     RPI_CONNECT_VERSION_MAJOR=${RPI_CONNECT_VERSION_MAJOR}
     RPI_CONNECT_BUILD_NUMBER=${RPI_CONNECT_BUILD_NUMBER}
 
@@ -76,7 +76,7 @@ target_compile_definitions(rpi_connect_ota_demo PRIVATE
     )
 
 if (PICO_ON_DEVICE)
-    target_compile_definitions(rpi_connect_ota_demo PRIVATE
+    target_compile_definitions(rpi_connect_ota_demo_libs INTERFACE
         # User-Agent for all requests from the lwIP HTTP client
         HTTPC_CLIENT_AGENT=\"rpi-connect-pico/${PICO_SDK_VERSION_MAJOR}.${PICO_SDK_VERSION_MINOR}\"
         ALTCP_MBEDTLS_AUTHMODE=MBEDTLS_SSL_VERIFY_OPTIONAL
@@ -91,26 +91,31 @@ endif()
 # The bash test suite builds the host tool with these.
 if (NOT PICO_ON_DEVICE)
     if (RPI_CONNECT_OTA_DEMO_POLL_ONLY)
-        target_compile_definitions(rpi_connect_ota_demo PRIVATE
+        target_compile_definitions(rpi_connect_ota_demo_libs INTERFACE
             RPI_CONNECT_OTA_DEMO_POLL_ONLY=1
             )
     endif()
     option(RPI_CONNECT_OTA_DEMO_ASAN "Build the host demo with AddressSanitizer" OFF)
     if (RPI_CONNECT_OTA_DEMO_ASAN)
-        target_compile_options(rpi_connect_ota_demo PRIVATE -fsanitize=address)
-        target_link_options(rpi_connect_ota_demo PRIVATE -fsanitize=address -static-libasan)
+        target_compile_options(rpi_connect_ota_demo_libs INTERFACE -fsanitize=address)
+        target_link_options(rpi_connect_ota_demo_libs INTERFACE -fsanitize=address -static-libasan)
     endif()
 endif()
 
-target_include_directories(rpi_connect_ota_demo PRIVATE
+target_include_directories(rpi_connect_ota_demo_libs INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_BINARY_DIR}
     )
 
+target_link_libraries(rpi_connect_ota_demo_libs INTERFACE
+    pico_rpi_connect
+    pico_rpi_connect_ota
+    pico_stdlib
+    )
 if (PICO_ON_DEVICE)
     # Polled network stack: TLS and lwIP run in thread context from
     # async_context_poll(), not in the low-priority IRQ.
-    target_link_libraries(rpi_connect_ota_demo
+    target_link_libraries(rpi_connect_ota_demo_libs INTERFACE
         pico_cyw43_arch_lwip_poll
 
         pico_cjson
@@ -118,10 +123,15 @@ if (PICO_ON_DEVICE)
         pico_flash_image
         pico_lwip_mbedtls
         pico_mbedtls
-        pico_rpi_connect
-        pico_rpi_connect_ota
-        pico_stdlib
         )
+endif()
+
+if (PICO_ON_DEVICE)
+    # Program version reported at boot and by picotool info. The picobin image
+    # VERSION used for bootrom A/B selection is set separately below from
+    # RPI_CONNECT_VERSION_MAJOR / RPI_CONNECT_BUILD_NUMBER.
+    pico_set_program_version(rpi_connect_ota_demo "1.0.0")
+
     # Embed the VERSION item (via crt0, so it lives in the first block alongside
     # the IMAGE_DEF) and seal the output with a HASH_DEF: the bootrom then
     # verifies the whole image during A/B selection, rejecting partially written
@@ -136,12 +146,6 @@ if (PICO_ON_DEVICE)
     pico_hash_binary(rpi_connect_ota_demo)
 
     pico_add_extra_outputs(rpi_connect_ota_demo)
-else()
-    target_link_libraries(rpi_connect_ota_demo
-        pico_rpi_connect
-        pico_rpi_connect_ota
-        pico_stdlib
-        )
 endif()
 
 example_auto_set_url(rpi_connect_ota_demo)
