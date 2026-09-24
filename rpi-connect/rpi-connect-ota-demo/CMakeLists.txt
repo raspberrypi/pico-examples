@@ -226,7 +226,7 @@ if (PICO_ON_DEVICE)
         pico_set_binary_type(rpi_connect_ota_packaged_demo no_flash)
         pico_package_uf2_output(rpi_connect_ota_packaged_demo)
         # Optionally sign the no_flash binary with your private key, if using secure boot
-        # pico_sign_binary(rpi_connect_ota_packaged_demo /path/to/private.pem)
+        pico_sign_binary(rpi_connect_ota_packaged_demo ${CMAKE_CURRENT_LIST_DIR}/private.pem)
         # Use wifi firmware from partition, so it doesn't have to fit in SRAM
         pico_use_wifi_firmware_partition(rpi_connect_ota_packaged_demo NO_EMBEDDED_PT)
         # Common finalising for the demo
@@ -264,12 +264,44 @@ if (PICO_ON_DEVICE)
         COMPILE_OPTIONS "-Wno-unused-result"
         )
 
-    # Add convenience target to build all demos
+    # Default to ${CMAKE_CURRENT_LIST_DIR}/updates, override by setting RPI_CONNECT_OTA_UPDATE_DIR
+    if (DEFINED ENV{RPI_CONNECT_OTA_UPDATE_DIR} AND (NOT RPI_CONNECT_OTA_UPDATE_DIR))
+        set(RPI_CONNECT_OTA_UPDATE_DIR "$ENV{RPI_CONNECT_OTA_UPDATE_DIR}")
+        message("Using RPI_CONNECT_OTA_UPDATE_DIR from environment")
+    endif()
+    if (NOT RPI_CONNECT_OTA_UPDATE_DIR)
+        set(RPI_CONNECT_OTA_UPDATE_DIR "${CMAKE_CURRENT_LIST_DIR}/updates")
+    endif()
+    set(RPI_CONNECT_OTA_UPDATE_DIR "${RPI_CONNECT_OTA_UPDATE_DIR}" CACHE INTERNAL "Directory to put rpi-connect-ota-demo update UF2s in")
+
+    # Add convenience target to build all demos, and copy update UF2s into RPI_CONNECT_OTA_UPDATE_DIR, plus generate sha256sums
     add_custom_target(rpi_connect_ota_demos)
     get_directory_property(targets BUILDSYSTEM_TARGETS DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
     foreach(target IN LISTS targets)
         if (${target} MATCHES "rpi_connect_ota_.*demo")
             add_dependencies(rpi_connect_ota_demos ${target})
+            if (${target} MATCHES "_update$")
+                get_target_property(uf2_filepath ${target} PICO_UF2_FILE)
+                # Make new filename, with _update removed, and version, board, and date added
+                get_filename_component(uf2_filename "${uf2_filepath}" NAME_WE)
+                string(LENGTH "${uf2_filename}" filename_length)
+                string(LENGTH "_update" suffix_length)
+                math(EXPR new_length "${filename_length} - ${suffix_length}")
+                string(SUBSTRING "${uf2_filename}" 0 ${new_length} uf2_filename)
+                string(TIMESTAMP current_date "%Y-%m-%d")
+                set(new_filename "${uf2_filename}-v${RPI_CONNECT_VERSION_MAJOR}.${RPI_CONNECT_BUILD_NUMBER}-${PICO_BOARD}-${current_date}.uf2")
+                # Copy the UF2 out of the build directory, and make rpi_connect_ota_demos depend on that
+                add_custom_command(OUTPUT "${RPI_CONNECT_OTA_UPDATE_DIR}/${new_filename}"
+                    COMMAND ${CMAKE_COMMAND} -E copy "${uf2_filepath}" "${RPI_CONNECT_OTA_UPDATE_DIR}/${new_filename}"
+                    COMMAND ${CMAKE_COMMAND} -Duf2_file="${RPI_CONNECT_OTA_UPDATE_DIR}/${new_filename}" -P "${CMAKE_CURRENT_LIST_DIR}/write_sha256sum.cmake"
+                    DEPENDS ${target}
+                    BYPRODUCTS "${RPI_CONNECT_OTA_UPDATE_DIR}/${new_filename}.sha256sum"
+                    )
+                add_custom_target(${target}_copied
+                    DEPENDS "${RPI_CONNECT_OTA_UPDATE_DIR}/${new_filename}"
+                    )
+                add_dependencies(rpi_connect_ota_demos ${target}_copied)
+            endif()
         endif()
     endforeach()
 endif()

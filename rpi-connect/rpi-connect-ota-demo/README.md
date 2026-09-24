@@ -235,20 +235,19 @@ offline, and is waiting for deployments.
 
 ### Step 7 — Deploy an update
 
-This project builds separate `update` UF2s for each demo, which have the
+This project has separate `xxx_update` UF2s for each demo, which have the
 try-before-you-buy bit set. This means a bad update will only be tried once, and
 if it fails to reach `rpi_connect_ota_boot_sync` the device will reboot and use
 the old version again.
 
+These update UF2s are copied into the `updates` directory in the source tree for
+ease of use, with filenames like `<target_name>-<version>-<board>-<date>.uf2`,
+and accompanying `.sha256sum` files containing the SHA-256 of the UF2.
+
 From the Raspberry Pi Connect dashboard (or API) for your organisation, create a
-deployment targeting this device with a new `rpi_connect_ota_demo_update.uf2`.
-The image should ideally carry a strictly higher picobin version than the one
-running, otherwise the bootrom will delete the old image when the new image is
-bought: the minor version defaults to the git commit count of the examples
-checkout (see `RPI_CONNECT_BUILD_NUMBER` in `CMakeLists.txt`), so commit or pass
-`-DRPI_CONNECT_BUILD_NUMBER=<n>` to bump it. The device
-will log the deployment, stream the image into the inactive slot with a live
-progress percentage, verify the SHA-256, and reboot into the new firmware:
+deployment targeting this device with a new UF2 from the `updates` folder. The
+device will log the deployment, stream the image into the inactive slot with a
+live progress percentage, verify the SHA-256, and reboot into the new firmware:
 
 ```
 Starting deployment ID=...
