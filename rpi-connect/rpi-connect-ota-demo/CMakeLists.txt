@@ -13,8 +13,8 @@ if (PICO_ON_DEVICE)
     pico_create_ffs_blob_uf2(rpi_connect_ota_demo_ffs_blob ${CMAKE_CURRENT_BINARY_DIR}/wifi_ssid ${CMAKE_CURRENT_BINARY_DIR}/wifi_password FILE_IDS 16 17)
 
     # Create other UF2s for use in pico_combine_uf2_outputs later
-    pico_create_partition_table_uf2(rpi_connect_ota_demo_pt ${CMAKE_CURRENT_LIST_DIR}/tools/ffs_pt.json)
-    pico_create_partition_table_uf2(rpi_connect_ota_no_flash_pt ${CMAKE_CURRENT_LIST_DIR}/tools/no_flash_pt.json)
+    pico_create_partition_table_uf2(rpi_connect_ota_default_pt ${CMAKE_CURRENT_LIST_DIR}/partition_tables/default_pt.json)
+    pico_create_partition_table_uf2(rpi_connect_ota_no_flash_pt ${CMAKE_CURRENT_LIST_DIR}/partition_tables/no_flash_pt.json)
     pico_create_erase_partition_uf2(rpi_connect_ota_demo_erase)
 endif()
 
@@ -152,6 +152,47 @@ function(finalise_rpi_connect_ota_demo TARGET)
 endfunction()
 
 if (PICO_ON_DEVICE)
+    # One-shot provisioning image: registers this board's OTP identity key with
+    # the organisation, the on-device equivalent of the host tool's
+    # --create-device-identity. The organisation token is typed in at the console
+    # so it never reaches flash.
+    add_executable(rpi_connect_create_identity_prog
+        main_create_identity_pico.c
+        )
+    target_link_libraries(rpi_connect_create_identity_prog
+        rpi_connect_ota_demo_libs
+        )
+    # Reboots to bootsel after exiting, so you can flash the demo
+    target_compile_definitions(rpi_connect_create_identity_prog PRIVATE
+        PICO_ENTER_USB_BOOT_ON_EXIT=1
+        )
+    # Both UART and USB, so the organisation token can be typed in over either
+    pico_enable_stdio_usb(rpi_connect_create_identity_prog 1)
+    pico_enable_stdio_uart(rpi_connect_create_identity_prog 1)
+    # Embed FFS partition table in binary
+    pico_embed_pt_in_binary(rpi_connect_create_identity_prog
+        ${CMAKE_CURRENT_LIST_DIR}/partition_tables/provisioning_pt.json
+        )
+    # Absolute family ID
+    pico_set_uf2_family(rpi_connect_create_identity_prog absolute)
+    pico_add_extra_outputs(rpi_connect_create_identity_prog)
+    # Create combined output for easy flashing
+    pico_combine_uf2_outputs(rpi_connect_create_identity
+        rpi_connect_create_identity_prog
+        rpi_connect_ota_demo_ffs_blob
+        PARTITIONS 0)
+else()
+    # Host build: the registration/debug CLI (main.c) driving the same OTA
+    # app loop over the SDK host builds of the Pi Connect libraries.
+    add_executable(rpi_connect_ota_demo
+        main.c
+        )
+    target_link_libraries(rpi_connect_ota_demo rpi_connect_ota_demo_libs)
+
+    example_auto_set_url(rpi_connect_ota_demo)
+endif()
+
+if (PICO_ON_DEVICE)
     # Add base version
     add_executable(rpi_connect_ota_demo
         main_pico.c
@@ -159,7 +200,7 @@ if (PICO_ON_DEVICE)
     # Common finalising for the demo
     finalise_rpi_connect_ota_demo(rpi_connect_ota_demo)
     # Add combined output for easy flashing
-    pico_combine_uf2_outputs(rpi_connect_ota_demo_combined rpi_connect_ota_demo_pt
+    pico_combine_uf2_outputs(rpi_connect_ota_demo_combined rpi_connect_ota_default_pt
         rpi_connect_ota_demo rpi_connect_ota_demo_erase rpi_connect_ota_demo_ffs_blob
         PARTITIONS 0 1 2)
 
@@ -184,11 +225,13 @@ if (PICO_ON_DEVICE)
         # Packaged no_flash binary
         pico_set_binary_type(rpi_connect_ota_packaged_demo no_flash)
         pico_package_uf2_output(rpi_connect_ota_packaged_demo)
+        # Optionally sign the no_flash binary with your private key, if using secure boot
+        # pico_sign_binary(rpi_connect_ota_packaged_demo /path/to/private.pem)
         # Use wifi firmware from partition, so it doesn't have to fit in SRAM
         pico_use_wifi_firmware_partition(rpi_connect_ota_packaged_demo NO_EMBEDDED_PT)
         # Common finalising for the demo
         finalise_rpi_connect_ota_demo(rpi_connect_ota_packaged_demo)
-        # Add combined output for easy flashing
+        # Create combined output for easy flashing
         pico_combine_uf2_outputs(rpi_connect_ota_packaged_demo_combined rpi_connect_ota_no_flash_pt
             rpi_connect_ota_packaged_demo rpi_connect_ota_demo_erase
             rpi_connect_ota_packaged_demo_wifi_firmware rpi_connect_ota_demo_erase
@@ -211,15 +254,6 @@ if (PICO_ON_DEVICE)
         # Common finalising for the demo
         finalise_rpi_connect_ota_demo(rpi_connect_ota_packaged_demo_update)
     endif()
-else()
-    # Host build: the registration/debug CLI (main.c) driving the same OTA
-    # app loop over the SDK host builds of the Pi Connect libraries.
-    add_executable(rpi_connect_ota_demo
-        main.c
-        )
-    target_link_libraries(rpi_connect_ota_demo rpi_connect_ota_demo_libs)
-
-    example_auto_set_url(rpi_connect_ota_demo)
 endif()
 
 if (PICO_ON_DEVICE)
@@ -229,4 +263,13 @@ if (PICO_ON_DEVICE)
         PROPERTIES
         COMPILE_OPTIONS "-Wno-unused-result"
         )
+
+    # Add convenience target to build all demos
+    add_custom_target(rpi_connect_ota_demos)
+    get_directory_property(targets BUILDSYSTEM_TARGETS DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+    foreach(target IN LISTS targets)
+        if (${target} MATCHES "rpi_connect_ota_.*demo")
+            add_dependencies(rpi_connect_ota_demos ${target})
+        endif()
+    endforeach()
 endif()

@@ -81,10 +81,6 @@ with `partition_pico2_for_ffs.sh --connect-token`.
 
 ## Step-by-step walkthrough
 
-All commands are run from this directory (`rpi-connect/rpi-connect-ota-demo/`)
-unless noted. Set `PICO_SDK_PATH` to the root of your Pico SDK tree if it is
-not already exported.
-
 ### Step 1 — Generate a device identity key pair
 
 Each device needs its own P-256 (`prime256v1`) ECDSA key pair. The private key
@@ -103,7 +99,24 @@ openssl ec -in device-priv-key.pem -pubout -out device-pub-key.pem
 > public key is what you register with your org, so losing the private key means
 > you can no longer prove ownership of that identity.
 
-### Step 2 — Register the device identity with your organisation
+### Step 2 — Write the private key to OTP
+
+Burn the 32-byte raw private-key scalar into the device's OTP. **OTP is
+one-time-programmable - once written it can never be changed or erased**.
+The key takes up 16 OTP rows (by default rows `0xc0 - 0xcf`).
+
+To write the private key as ECC, use `picotool`:
+```sh
+picotool otp load -s 0xc0 device-priv-key.pem
+```
+
+This writes the key starting at OTP row `0xc0` (page 3), matching
+`RPI_CONNECT_IDENTITY_OTP_ROW` in the library. Change the `-s 0xc0`
+argument to use a different row.
+
+### Step 3 — Register the device identity with your organisation
+
+#### Option A - Host built binary
 
 Registration runs on the **host** (Linux/macOS) using the host build of this
 example (`main.c` in this directory), which links the `pico_rpi_connect`
@@ -143,73 +156,64 @@ auth chain before touching OTP by running
 --device-privkey device-priv-key.pem --device-pubkey device-pub-key.pem`, which
 prints the `RPI_CONNECT_TOKEN` the device would obtain.)
 
-### Step 3 — Write the private key to OTP
+#### Option B - On-Device binary
 
-Burn the 32-byte raw private-key scalar into the device's OTP. The helper script
-extracts the scalar from the PEM, packs it into OTP rows and writes it with
-`picotool`. **OTP is one-time-programmable — once written it can never be
-changed or erased**, so dry-run first (the default):
+If you don't have a host toolchain or the necessary dependencies, you can compile
+a provisioning binary to run on device:
 
 ```sh
-# Dry run — shows what would be written, touches nothing
-tools/pico_rpi_connect_program_identity_key_otp.sh device-priv-key.pem
-
-# Commit it (irreversible)
-tools/pico_rpi_connect_program_identity_key_otp.sh --write device-priv-key.pem
+cd <pico-examples-root>
+cmake -S . -B build -DPICO_BOARD=pico2_w
+cmake --build build --target rpi_connect_create_identity
 ```
 
-The key is written starting at OTP row `0xc0` (page 3), matching
-`RPI_CONNECT_IDENTITY_OTP_ROW` in the library. Pass `--row` to override.
+This requires the `WIFI_SSID`/`WIFI_PASSWORD` CMake variables to be defined, and
+requires the private-key to already be in OTP.
+
+You can drag & drop the `rpi_connect_create_identity.uf2` file, or load it using
+`picotool`:
+
+```sh
+picotool load -x build/rpi-connect/rpi-connect-ota-demo/rpi_connect_create_identity.uf2
+```
+
+Once it has connected to WiFi it will prompt for UART or USB input to
+provide the organisation token:
+
+```sh
+Connecting to WiFi XXXXXXXX
+Organisation token: <enter-your-organisation-token-then-press-enter>
+```
 
 ### Step 4 — Build the application firmware
 
 The example is built as part of pico-examples. Select the board and platform
-via the usual environment variables and build the `rpi_connect_ota_demo`
-target:
+as usual and build the `rpi_connect_ota_demos` target (which builds all the
+targets in this directory):
 
 ```sh
 cd <pico-examples-root>
-export PICO_BOARD=pico2_w
-export PICO_PLATFORM=rp2350-arm-s
-cmake -B build -S .
-cmake --build build --target rpi_connect_ota_demo
+cmake -S . -B build -DPICO_BOARD=pico2_w
+cmake --build build --target rpi_connect_ota_demos
 ```
 
-This produces `rpi_connect_ota_demo.uf2`. The default build (see
-`CMakeLists.txt`) enables INFO-level logging for the app and OTA library so you
-can watch the flow over UART/USB serial. Logging verbosity and the debug
-overrides in `debug_options.cmake` are all set there.
+This produces UF2s for each demo. The default build (see `CMakeLists.txt`)
+enables INFO-level logging for the app and OTA library so you can watch the flow
+over UART/USB serial. Logging verbosity and the debug overrides in
+`debug_options.cmake` are all set there.
 
-> **No secrets in the UF2.** WiFi credentials and auth tokens have no
-> build-time option — they are provisioned separately in Step 5, so they
-> never appear in the firmware image.
+> **No secrets in the firmware UF2s.** WiFi credentials and auth tokens are only
+> written to FFS UF2s, so they never appear in the firmware images.
 
 ### Step 5 — Partition for FFS, provision credentials, and flash
 
 The RP2350 must be partitioned with an A/B layout (two main slots for OTA) plus
-a small **FFS** data partition for credentials and the cached token. The helper
-script applies the partition table in `tools/ffs_pt.json`, optionally writes
-WiFi credentials into the FFS partition (as a separate UF2, *not* baked into the
-firmware), and then loads your firmware:
-
-```sh
-tools/partition_pico2_for_ffs.sh \
-    --wifi-ssid "MyNetwork" \
-    --wifi-password "MyPassword" \
-    ../../build/rpi-connect/rpi-connect-ota-demo/rpi_connect_ota_demo.uf2
-```
-
-WiFi credentials may also be supplied via the `WIFI_SSID`/`WIFI_PASSWORD`
-environment variables (preferred — they then don't appear in the process
-arguments). The application reads them from FFS at runtime and prefers them over
-anything built in. A Connect auth token can be provisioned the same way with
-`--connect-token` (or `RPI_CONNECT_TOKEN` in the environment), which seeds the
-FFS token cache (file id `0x1`) so the device signs in without an OTP identity
-key — useful for bring-up on boards that have not been through Step 3.
-
-> The script erases the device, creates the partition table, loads it, writes
-> the credentials blob and finally programs the firmware, rebooting between each
-> stage. Re-running it re-provisions cleanly.
+a small **FFS** data partition for credentials and the cached token. The build
+produces a `rpi_connect_ota_demo_combined.uf2` file which flashes this partition
+table, and flashes `rpi_connect_ota_demo.uf2` in the A partition, and an FFS
+blob in the FFS data partition. If the `WIFI_SSID`/`WIFI_PASSWORD` CMake
+variables are defined, that blob will contain them, otherwise it will just have
+empty files for the SSID and password.
 
 ### Step 6 — Run it and watch the log
 
@@ -231,12 +235,17 @@ offline, and is waiting for deployments.
 
 ### Step 7 — Deploy an update
 
+This project builds separate `update` UF2s for each demo, which have the
+try-before-you-buy bit set. This means a bad update will only be tried once, and
+if it fails to reach `rpi_connect_ota_boot_sync` the device will reboot and use
+the old version again.
+
 From the Raspberry Pi Connect dashboard (or API) for your organisation, create a
-deployment targeting this device with a new `rpi_connect_ota_demo.uf2`. The
-image must carry a strictly higher picobin version than the one running or the
-bootrom reverts to the old image at the next power cycle: the minor version
-defaults to the git commit count of the examples checkout (see
-`RPI_CONNECT_BUILD_NUMBER` in `CMakeLists.txt`), so commit or pass
+deployment targeting this device with a new `rpi_connect_ota_demo_update.uf2`.
+The image should ideally carry a strictly higher picobin version than the one
+running, otherwise the bootrom will delete the old image when the new image is
+bought: the minor version defaults to the git commit count of the examples
+checkout (see `RPI_CONNECT_BUILD_NUMBER` in `CMakeLists.txt`), so commit or pass
 `-DRPI_CONNECT_BUILD_NUMBER=<n>` to bump it. The device
 will log the deployment, stream the image into the inactive slot with a live
 progress percentage, verify the SHA-256, and reboot into the new firmware:
@@ -281,8 +290,9 @@ automatically.
 | `main_pico.c`                | Device entry point: network/FFS setup, WiFi from FFS, sign-in, main loop. |
 | `rpi_connect_ota_demo.c`     | **The OTA integration itself** — the part to copy into your app.     |
 | `debug_options.cmake`        | Build-time overrides for OTP/FFS/token — development only.           |
-| `tools/`                     | OTP key writer, FFS partitioning/provisioning, partition table.      |
-| `main.c`                     | Host entry point and registration/debug CLI (Step 2).                |
+| `partition_tables/`          | Partition tables used to produce the combined UF2s      |
+| `main.c`                     | Host entry point and registration/debug CLI (Step 3, option A).                |
+| `main_create_identity_pico.c`| Device entry point for registration only (Step 3, option B). |
 
 ## API sequence (see `pico/rpi_connect_ota.h`)
 
@@ -430,10 +440,10 @@ on the CMake command line **or** as an environment variable of the same name.
 | `RPI_CONNECT_IDENTITY_PRIVKEY_PEM` + `..._PUBKEY_PEM`      | Use a build-time PEM key pair instead of the OTP key for the exchange. |
 
 For example, to drive the identity exchange from the Step 1 key pair without
-writing it to OTP (board/platform from the environment as in Step 4):
+writing it to OTP:
 
 ```sh
-cmake -B build -S . \
+cmake -S . -B build -DPICO_BOARD=pico2_w \
     -DRPI_CONNECT_IDENTITY_PRIVKEY_PEM=$PWD/rpi-connect/rpi-connect-ota-demo/device-priv-key.pem \
     -DRPI_CONNECT_IDENTITY_PUBKEY_PEM=$PWD/rpi-connect/rpi-connect-ota-demo/device-pub-key.pem
 ```
