@@ -8,8 +8,12 @@ if (PICO_ON_DEVICE)
     # CONNECT_TOKEN is only necessary if no device identitiy is in OTP - otherwise it is fine to leave it blank
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/wifi_ssid "${WIFI_SSID}")
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/wifi_password "${WIFI_PASSWORD}")
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/connect_token "${CONNECT_TOKEN}")
-    pico_create_ffs_blob_uf2(rpi_connect_ota_demo_ffs_blob ${CMAKE_CURRENT_BINARY_DIR}/connect_token ${CMAKE_CURRENT_BINARY_DIR}/wifi_ssid ${CMAKE_CURRENT_BINARY_DIR}/wifi_password FILE_IDS 1 16 17)
+    if (CONNECT_TOKEN)
+        file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/connect_token "${CONNECT_TOKEN}")
+        pico_create_ffs_blob_uf2(rpi_connect_ota_demo_ffs_blob ${CMAKE_CURRENT_BINARY_DIR}/connect_token ${CMAKE_CURRENT_BINARY_DIR}/wifi_ssid ${CMAKE_CURRENT_BINARY_DIR}/wifi_password FILE_IDS 1 16 17)
+    else()
+        pico_create_ffs_blob_uf2(rpi_connect_ota_demo_ffs_blob ${CMAKE_CURRENT_BINARY_DIR}/wifi_ssid ${CMAKE_CURRENT_BINARY_DIR}/wifi_password FILE_IDS 16 17)
+    endif()
 
     # Create other UF2s for use in pico_combine_uf2_outputs later
     pico_create_partition_table_uf2(rpi_connect_ota_default_pt ${CMAKE_CURRENT_LIST_DIR}/partition_tables/default_pt.json)

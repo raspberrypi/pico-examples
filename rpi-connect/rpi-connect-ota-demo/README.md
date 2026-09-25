@@ -68,7 +68,7 @@ alternative — pre-provisioning a Connect token (or the key) directly into flas
 itself), taking the credential with it. OTP survives a full flash erase, so the
 device can always re-derive a fresh token. Tokens are never carried in the
 firmware image; for development a literal token can be provisioned into FFS
-by setting the `CONENCT_TOKEN` CMake variable.
+by setting the `CONNECT_TOKEN` CMake variable.
 
 > **Debug shortcuts.** For bring-up you can bypass OTP with a build-time PEM
 > identity key via `debug_options.cmake`. This exists only for development —
