@@ -49,8 +49,8 @@ Under normal operation **no secret is ever compiled into the firmware**:
 
 | Secret                | Where it lives        | Provisioned by                                   |
 |-----------------------|-----------------------|--------------------------------------------------|
-| Device identity key   | OTP (row `0xc0`)      | `pico_rpi_connect_program_identity_key_otp.sh`   |
-| WiFi credentials      | FFS partition         | `partition_pico2_for_ffs.sh`                     |
+| Device identity key   | OTP (row `0xc0`)      | `picotool otp load -s 0xc0 device-priv-key.pem`  |
+| WiFi credentials      | FFS partition         | `xxx_combined.uf2`                               |
 | Connect access token  | FFS (id `0x1`)        | derived at runtime, then cached                  |
 
 At boot the application reads the P-256 private key from OTP, regenerates the
@@ -68,7 +68,7 @@ alternative — pre-provisioning a Connect token (or the key) directly into flas
 itself), taking the credential with it. OTP survives a full flash erase, so the
 device can always re-derive a fresh token. Tokens are never carried in the
 firmware image; for development a literal token can be provisioned into FFS
-with `partition_pico2_for_ffs.sh --connect-token`.
+by setting the `CONENCT_TOKEN` CMake variable.
 
 > **Debug shortcuts.** For bring-up you can bypass OTP with a build-time PEM
 > identity key via `debug_options.cmake`. This exists only for development —
@@ -245,8 +245,13 @@ ease of use, with filenames like `<target_name>-<version>-<board>-<date>.uf2`,
 and accompanying `.sha256sum` files containing the SHA-256 of the UF2.
 
 From the Raspberry Pi Connect dashboard (or API) for your organisation, create a
-deployment targeting this device with a new UF2 from the `updates` folder. The
-device will log the deployment, stream the image into the inactive slot with a
+deployment targeting this device with a new UF2 from the `updates` folder.
+
+> **Never upload the combined UF2s** as these contain wifi credentials, and will
+> also overwrite the running partition and crash the device - only upload UF2s
+> from the `updates` folder to the Pi Connect dashboard
+
+The device will log the deployment, stream the image into the inactive slot with a
 live progress percentage, verify the SHA-256, and reboot into the new firmware:
 
 ```

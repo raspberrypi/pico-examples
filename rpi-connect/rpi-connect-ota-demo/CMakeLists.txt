@@ -1,16 +1,15 @@
 # Under normal operation PiConnect should always use the device-identity exchange
 # API to obtain an auth token from the OTP private key. These build-time options
-# allow the private keys (and WiFi creds / serial) to be overridden for debug -
-# see debug_options.cmake. Auth tokens are never compiled into the image; for
-# development, provision one into FFS with partition_pico2_for_ffs.sh
-# --connect-token.
+# allow the private keys to be overridden for debug - see debug_options.cmake.
 include(${CMAKE_CURRENT_LIST_DIR}/debug_options.cmake)
 
 if (PICO_ON_DEVICE)
-    # Create ffs blob UF2 using WIFI_SSID and WIFI_PASSWORD (will be empty if those aren't defined)
+    # Create ffs blob UF2 using WIFI_SSID, WIFI_PASSWORD, and CONNECT_TOKEN (will be empty if those aren't defined)
+    # CONNECT_TOKEN is only necessary if no device identitiy is in OTP - otherwise it is fine to leave it blank
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/wifi_ssid "${WIFI_SSID}")
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/wifi_password "${WIFI_PASSWORD}")
-    pico_create_ffs_blob_uf2(rpi_connect_ota_demo_ffs_blob ${CMAKE_CURRENT_BINARY_DIR}/wifi_ssid ${CMAKE_CURRENT_BINARY_DIR}/wifi_password FILE_IDS 16 17)
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/connect_token "${CONNECT_TOKEN}")
+    pico_create_ffs_blob_uf2(rpi_connect_ota_demo_ffs_blob ${CMAKE_CURRENT_BINARY_DIR}/connect_token ${CMAKE_CURRENT_BINARY_DIR}/wifi_ssid ${CMAKE_CURRENT_BINARY_DIR}/wifi_password FILE_IDS 1 16 17)
 
     # Create other UF2s for use in pico_combine_uf2_outputs later
     pico_create_partition_table_uf2(rpi_connect_ota_default_pt ${CMAKE_CURRENT_LIST_DIR}/partition_tables/default_pt.json)
