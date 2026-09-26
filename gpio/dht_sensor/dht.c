@@ -15,6 +15,8 @@
 
 const uint DHT_PIN = 15;
 const uint MAX_TIMINGS = 85;
+// according to datasheet, 1 bit is 70us and 0 bit is about 26-28us
+const uint BIT_THRESHOLD = 35;
 
 typedef struct {
     float humidity;
@@ -50,23 +52,25 @@ void read_from_dht(dht_reading *result) {
     gpio_put(DHT_PIN, 0);
     sleep_ms(20);
     gpio_set_dir(DHT_PIN, GPIO_IN);
+    // stabilize, wait till the line actually rises
+    sleep_us(2);
 
 #ifdef LED_PIN
     gpio_put(LED_PIN, 1);
 #endif
-    for (uint i = 0; i < MAX_TIMINGS; i++) {
+    for (uint i = 0; i < MAX_TIMINGS && j < 40; i++) {
         uint count = 0;
         while (gpio_get(DHT_PIN) == last) {
             count++;
             sleep_us(1);
             if (count == 255) break;
         }
-        last = gpio_get(DHT_PIN);
         if (count == 255) break;
+        last = !last;
 
         if ((i >= 4) && (i % 2 == 0)) {
             data[j / 8] <<= 1;
-            if (count > 16) data[j / 8] |= 1;
+            if (count > BIT_THRESHOLD) data[j / 8] |= 1;
             j++;
         }
     }
