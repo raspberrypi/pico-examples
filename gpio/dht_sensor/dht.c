@@ -54,19 +54,21 @@ void read_from_dht(dht_reading *result) {
 #ifdef LED_PIN
     gpio_put(LED_PIN, 1);
 #endif
-    for (uint i = 0; i < MAX_TIMINGS; i++) {
+    // stabilize, wait till the line actually rises
+    sleep_us(2);
+    for (uint i = 0; i < MAX_TIMINGS && j < 40; i++) {
         uint count = 0;
         while (gpio_get(DHT_PIN) == last) {
             count++;
             sleep_us(1);
             if (count == 255) break;
         }
-        last = gpio_get(DHT_PIN);
+        last = !last;
         if (count == 255) break;
 
         if ((i >= 4) && (i % 2 == 0)) {
             data[j / 8] <<= 1;
-            if (count > 16) data[j / 8] |= 1;
+            if (count > 35) data[j / 8] |= 1;
             j++;
         }
     }
