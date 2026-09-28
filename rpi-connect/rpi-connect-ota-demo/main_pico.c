@@ -18,21 +18,10 @@
 #include "pico/stdio.h"
 #include "pico/unique_id.h"
 
-// FFS file IDs for the WiFi credentials, provisioned with
-// partition_pico2_for_ffs.sh. These must not collide with the
+// FFS file IDs for the WiFi credentials. These must not collide with the
 // RPI_CONNECT_FFS_* IDs (0x1-0x5) used by the OTA library.
 #define RPI_CONNECT_FFS_WIFI_SSID       0x10
 #define RPI_CONNECT_FFS_WIFI_PASSWORD   0x11
-
-// Returns a malloc'd copy of a NUL-terminated string stored in FFS, or NULL.
-static char *ffs_get_string(uint8_t file_id) {
-    const char *data;
-    int rc = ffs_read(file_id, &data);
-    if (rc >= 0 && data) {
-        return strdup(data);
-    }
-    return NULL;
-}
 
 static char *rpi_connect_ota_demo_wifi_password;
 static char *rpi_connect_ota_demo_wifi_ssid;
@@ -42,7 +31,7 @@ static int wifi_load_credentials(void) {
     char *wifi_password = ffs_get_string(RPI_CONNECT_FFS_WIFI_PASSWORD);
 
     if (!wifi_ssid || !*wifi_ssid || !wifi_password) {
-        RPI_CONNECT_OTA_DEMO_ERROR("No WiFi credentials in FFS - provision with partition_pico2_for_ffs.sh\n");
+        RPI_CONNECT_OTA_DEMO_ERROR("No WiFi credentials in FFS - provision with the combined UF2\n");
         free(wifi_ssid);
         free(wifi_password);
         return PICO_ERROR_BADAUTH;

@@ -1,0 +1,25 @@
+{
+  "version": [1, 0],
+  "unpartitioned": {
+    "families": ["absolute", "rp2350-arm-s", "rp2350-riscv"],
+    "permissions": {
+      "secure": "rw",
+      "nonsecure": "rw",
+      "bootloader": "rw"
+    }
+  },
+  "partitions": [
+    {
+      "name": "FFS storage area",
+      "id": "0x746d656673665f6f",
+      "start": "1024K",
+      "size": "8K",
+      "families": ["data"],
+      "permissions": {
+        "secure": "rw",
+        "nonsecure": "rw",
+        "bootloader": "rw"
+      }
+    }
+  ]
+}

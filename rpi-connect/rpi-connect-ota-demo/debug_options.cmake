@@ -5,7 +5,7 @@
 # included from CMakeLists.txt; it can be supplied via -D or an environment
 # variable of the same name. The serial number always comes from the Pico's
 # OTP unique board ID. WiFi credentials and auth tokens are never compiled
-# in - provision them into FFS with tools/partition_pico2_for_ffs.sh instead.
+# in - provision them using the xxx_combined.uf2 files instead.
 
 # For debug, use build-time PEM files for the device-identity ECDSA key.
 # Under normal operation the ECDSA private key is stored in OTP with the public key PEM
