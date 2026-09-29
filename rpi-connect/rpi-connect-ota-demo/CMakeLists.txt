@@ -205,7 +205,7 @@ if (PICO_ON_DEVICE)
     # Common finalising for the demo
     finalise_rpi_connect_ota_demo(rpi_connect_ota_demo)
     # Add combined output for easy flashing
-    pico_add_rpi_connect_ota_outputs(rpi_connect_ota_demo "default"
+    pico_add_rpi_connect_ota_outputs(rpi_connect_ota_demo default
         WIFI_SSID ${WIFI_SSID} WIFI_PASSWORD ${WIFI_PASSWORD}
         )
 
@@ -221,13 +221,10 @@ if (PICO_ON_DEVICE)
         pico_package_uf2_output(rpi_connect_ota_packaged_demo)
         # Optionally sign the no_flash binary with your private key, if using secure boot
         pico_sign_binary(rpi_connect_ota_packaged_demo ${CMAKE_CURRENT_LIST_DIR}/private.pem)
-        # Use wifi firmware from partition, so it doesn't have to fit in SRAM
-        # (no embedded PT as using FFS one, and no TBYB variant as that's created with the updates)
-        pico_use_wifi_firmware_partition(rpi_connect_ota_packaged_demo NO_EMBEDDED_PT NO_TBYB)
         # Common finalising for the demo
         finalise_rpi_connect_ota_demo(rpi_connect_ota_packaged_demo)
         # Add combined output for easy flashing
-        pico_add_rpi_connect_ota_outputs(rpi_connect_ota_packaged_demo "wifi_firmware"
+        pico_add_rpi_connect_ota_outputs(rpi_connect_ota_packaged_demo default
             WIFI_SSID ${WIFI_SSID} WIFI_PASSWORD ${WIFI_PASSWORD}
             )
     endif()
