@@ -118,6 +118,7 @@ if (PICO_ON_DEVICE)
         pico_flash_image
         pico_lwip_mbedtls
         pico_mbedtls
+        pico_rpi_connect_ota_default_config_headers
         )
 endif()
 
@@ -148,45 +149,7 @@ function(finalise_rpi_connect_ota_demo TARGET)
     pico_add_extra_outputs(${TARGET})
 endfunction()
 
-if (PICO_ON_DEVICE)
-    # One-shot provisioning image: registers this board's OTP identity key with
-    # the organisation, the on-device equivalent of the host tool's
-    # --create-device-identity. The organisation token is typed in at the console
-    # so it never reaches flash.
-    add_executable(rpi_connect_create_identity_prog
-        main_create_identity_pico.c
-        )
-    target_link_libraries(rpi_connect_create_identity_prog
-        rpi_connect_ota_demo_libs
-        )
-    # Reboots to bootsel after exiting, so you can flash the demo
-    target_compile_definitions(rpi_connect_create_identity_prog PRIVATE
-        PICO_ENTER_USB_BOOT_ON_EXIT=1
-        )
-    # Both UART and USB, so the organisation token can be typed in over either
-    pico_enable_stdio_usb(rpi_connect_create_identity_prog 1)
-    pico_enable_stdio_uart(rpi_connect_create_identity_prog 1)
-    # Embed FFS partition table in binary
-    pico_embed_pt_in_binary(rpi_connect_create_identity_prog
-        ${CMAKE_CURRENT_LIST_DIR}/provisioning_pt.json
-        )
-    # Absolute family ID
-    pico_set_uf2_family(rpi_connect_create_identity_prog absolute)
-    pico_add_extra_outputs(rpi_connect_create_identity_prog)
-    # Add ffs blob
-    file(CONFIGURE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rpi_connect_create_identity.wifi_ssid CONTENT "${WIFI_SSID}")
-    file(CONFIGURE OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rpi_connect_create_identity.wifi_password CONTENT "${WIFI_PASSWORD}")
-    pico_create_ffs_blob_uf2(rpi_connect_create_identity_ffs_blob
-        ${CMAKE_CURRENT_BINARY_DIR}/rpi_connect_create_identity.wifi_ssid ${CMAKE_CURRENT_BINARY_DIR}/rpi_connect_create_identity.wifi_password
-        FILE_IDS 16 17
-        )
-    # Create combined output for flashing
-    pico_combine_uf2_outputs(rpi_connect_create_identity
-        rpi_connect_create_identity_prog
-        rpi_connect_create_identity_ffs_blob
-        PARTITIONS 0
-        )
-else()
+if (NOT PICO_ON_DEVICE)
     # Host build: the registration/debug CLI (main.c) driving the same OTA
     # app loop over the SDK host builds of the Pi Connect libraries.
     add_executable(rpi_connect_ota_demo
@@ -206,6 +169,22 @@ if (PICO_ON_DEVICE)
     finalise_rpi_connect_ota_demo(rpi_connect_ota_demo)
     # Add combined output for easy flashing
     pico_add_rpi_connect_ota_outputs(rpi_connect_ota_demo default
+        WIFI_SSID ${WIFI_SSID} WIFI_PASSWORD ${WIFI_PASSWORD}
+        )
+
+    # Add bootsel reset version
+    add_executable(rpi_connect_ota_bootsel_demo
+        main_pico.c
+        )
+    target_compile_definitions(rpi_connect_ota_bootsel_demo PRIVATE
+        # Exit immediately
+        EXIT_IMMEDIATELY=1
+        # Reset to BOOTSEL on exit
+        PICO_ENTER_USB_BOOT_ON_EXIT=1
+        )
+    # Common finalising for the demo
+    finalise_rpi_connect_ota_demo(rpi_connect_ota_bootsel_demo)
+    pico_add_rpi_connect_ota_outputs(rpi_connect_ota_bootsel_demo default
         WIFI_SSID ${WIFI_SSID} WIFI_PASSWORD ${WIFI_PASSWORD}
         )
 
