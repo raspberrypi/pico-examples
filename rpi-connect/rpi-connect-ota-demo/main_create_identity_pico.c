@@ -27,11 +27,6 @@
 #include "pico/stdlib.h"
 #include "pico/unique_id.h"
 
-// ffs file IDs, provisioned into the ffs blob by CMakeLists.txt. These must not
-// collide with the RPI_CONNECT_FFS_* IDs (0x1-0x5) used by the OTA library.
-#define FFS_WIFI_SSID       0x10
-#define FFS_WIFI_PASSWORD   0x11
-
 // Longest organisation token that survives being formatted into the API's
 // "Authorization: Bearer %s" header (a 256-byte buffer in rpi_connect.c).
 #define ORG_TOKEN_SIZE      234
@@ -77,8 +72,8 @@ int main() {
         return 1;
     }
 
-    char *ssid = ffs_get_string(FFS_WIFI_SSID);
-    char *password = ffs_get_string(FFS_WIFI_PASSWORD);
+    char *ssid = ffs_get_string(FFS_WIFI_SSID_FILE_ID);
+    char *password = ffs_get_string(FFS_WIFI_PASSWORD_FILE_ID);
     if (!ssid || !*ssid || !password) {
         printf("No WiFi credentials in ffs\n");
         return 1;
