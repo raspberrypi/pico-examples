@@ -265,6 +265,11 @@ int rpi_connect_ota_demo_main(const char *token) {
 #endif
         rpi_connect_ota_demo_report_progress();
 
+#if EXIT_IMMEDIATELY
+        RPI_CONNECT_OTA_DEMO_INFO("Exiting immediately as requested\n");
+        break;
+#endif
+
         if (rpi_connect_ota_demo_check_ota(token) != 0) {
             rc = -1;
             break;
