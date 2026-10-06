@@ -17,6 +17,7 @@
 #include "pico/rpi_connect_ota.h"
 #include "pico/stdio.h"
 #include "pico/unique_id.h"
+#include "hardware/watchdog.h"
 
 static char *rpi_connect_ota_demo_wifi_password;
 static char *rpi_connect_ota_demo_wifi_ssid;
@@ -48,6 +49,34 @@ static void wifi_free_credentials(void) {
 
 async_context_t *rpi_connect_default_async_context(void) {
     return cyw43_arch_async_context();
+}
+
+int64_t watchdog_alarm_callback(alarm_id_t id, void *alarm_id) {
+    RPI_CONNECT_OTA_DEMO_DEBUG("Watchdog reached %dms in timer %d\n", watchdog_get_time_remaining_ms(), id);
+    bool watchdog_running = watchdog_get_time_remaining_ms() > 0;
+    if (watchdog_running) {
+        watchdog_hw->load = WATCHDOG_LOAD_BITS;
+    }
+    *(int*)alarm_id = 0;
+    return 0;
+}
+
+void reload_watchdog_timeout(bool with_alarm) { // with_alarm is ~32s, otherwise ~16s, skipped if watchdog isn't running
+    static int alarm_id = 0;
+    bool watchdog_running = watchdog_get_time_remaining_ms() > 0;
+    if (watchdog_running) {
+        RPI_CONNECT_OTA_DEMO_DEBUG("Watchdog reached %dms\n", watchdog_get_time_remaining_ms());
+        watchdog_hw->load = WATCHDOG_LOAD_BITS;
+        if (alarm_id > 0) {
+            // Cancel any existing alarms to reload it
+            RPI_CONNECT_OTA_DEMO_DEBUG("Cancelling existing alarm\n");
+            cancel_alarm(alarm_id);
+        }
+        if (with_alarm) {
+            // Give watchdog 2x the time using an alarm
+            alarm_id = add_alarm_in_ms((WATCHDOG_LOAD_BITS / 1000) - 500, watchdog_alarm_callback, &alarm_id, false);
+        }
+    }
 }
 
 int main() {
@@ -83,6 +112,8 @@ int main() {
 
     cyw43_arch_enable_sta_mode();
     int retries = 5;
+    // Reload watchdog giving ~32s to attempt connection
+    reload_watchdog_timeout(true);
     while (cyw43_arch_wifi_connect_timeout_ms(rpi_connect_ota_demo_wifi_ssid,
                                               rpi_connect_ota_demo_wifi_password,
                                               CYW43_AUTH_WPA2_AES_PSK, 30000)) {
@@ -92,9 +123,20 @@ int main() {
             goto end;
         }
         RPI_CONNECT_OTA_DEMO_INFO("WiFi connection failed, retrying (%d remaining)\n", retries);
+        if (retries > 0) {
+            // Briefly reload watchdog before 2s sleep
+            reload_watchdog_timeout(false);
+        }
         sleep_ms(2000);
+        if (retries > 0) {
+            // Reload watchdog giving ~32s for next attempt
+            reload_watchdog_timeout(true);
+        }
     }
     RPI_CONNECT_OTA_DEMO_INFO("Connected\n");
+
+    // Reload watchdog with ~16s now connected to WiFi
+    reload_watchdog_timeout(false);
 
     retries = 5;
     while ((rc = rpi_connect_ota_demo_init(rpi_connect_client_id(), serial_number, "rpi_connect_ota_demo")) != PICO_OK && --retries) {
