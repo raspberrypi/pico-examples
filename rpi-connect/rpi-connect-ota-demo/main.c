@@ -7,8 +7,6 @@
 #include "rpi_connect_ota_demo.h"
 #include "pico/rpi_connect_ota.h"
 #include "pico/rpi_connect.h"
-#include "connect_crypto.h"
-#include "request.h"
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
@@ -18,6 +16,11 @@
 #include <openssl/pem.h>
 #include <openssl/ec.h>
 #include <openssl/bn.h>
+
+#define P256_PRIVKEY_SIZE 32
+
+// Host-build (libcurl) run-time verbosity; not part of the public API.
+extern void rpi_connect_request_set_verbose(int v);
 
 enum {
     OPT_CREATE_DEVICE_IDENTITY = 256,
@@ -29,16 +32,8 @@ enum {
     OPT_DEVICE_IDENTITY_EXCHANGE,
 };
 
-static void print_hex(const char *label, const unsigned char *data, size_t len) {
-    RPI_CONNECT_OTA_DEMO_INFO("%s (%zu bytes): ", label, len);
-    for (size_t i = 0; i < len; i++) {
-        RPI_CONNECT_OTA_DEMO_INFO("%02x", data[i]);
-    }
-    RPI_CONNECT_OTA_DEMO_INFO("\n");
-}
-
 static int load_ec_p256_pem(const char *filename,
-                            unsigned char privkey[RPI_CONNECT_CRYPTO_P256_PRIVKEY_SIZE],
+                            unsigned char privkey[P256_PRIVKEY_SIZE],
                             unsigned char pubkey[65]) {
     FILE *fp = fopen(filename, "r");
     if (!fp) {
@@ -68,7 +63,7 @@ static int load_ec_p256_pem(const char *filename,
     }
 
     const BIGNUM *priv_bn = EC_KEY_get0_private_key(ec);
-    if (!priv_bn || BN_bn2binpad(priv_bn, privkey, RPI_CONNECT_CRYPTO_P256_PRIVKEY_SIZE) != RPI_CONNECT_CRYPTO_P256_PRIVKEY_SIZE) {
+    if (!priv_bn || BN_bn2binpad(priv_bn, privkey, P256_PRIVKEY_SIZE) != P256_PRIVKEY_SIZE) {
         RPI_CONNECT_OTA_DEMO_ERROR("Error: failed to extract private key\n");
         EVP_PKEY_free(pkey);
         return -1;
@@ -83,38 +78,6 @@ static int load_ec_p256_pem(const char *filename,
     }
 
     EVP_PKEY_free(pkey);
-    return 0;
-}
-
-static int test_ec_sign(const char *filename) {
-    unsigned char privkey[RPI_CONNECT_CRYPTO_P256_PRIVKEY_SIZE];
-    unsigned char pubkey[65];
-
-    if (load_ec_p256_pem(filename, privkey, pubkey) != 0) {
-        return -1;
-    }
-
-    print_hex("Private key", privkey, sizeof(privkey));
-    print_hex("Public key", pubkey, sizeof(pubkey));
-
-    /* Sign a test hash */
-    unsigned char test_hash[RPI_CONNECT_SHA256_SIZE];
-    size_t hash_len;
-    if (rpi_connect_crypto_sha256("test message", 12, test_hash, &hash_len) != 0) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: SHA-256 failed\n");
-        return -1;
-    }
-    print_hex("SHA-256(\"test message\")", test_hash, hash_len);
-
-    unsigned char sig[RPI_CONNECT_CRYPTO_ECDSA_P256_SIG_MAX_SIZE];
-    size_t sig_len = sizeof(sig);
-    if (rpi_connect_crypto_ecdsa_p256_sign(test_hash, privkey, sig, &sig_len) != 0) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: ECDSA sign failed\n");
-        return -1;
-    }
-    print_hex("ECDSA-P256 signature", sig, sig_len);
-
-    RPI_CONNECT_OTA_DEMO_INFO("EC key loaded and test sign OK\n");
     return 0;
 }
 
@@ -152,8 +115,6 @@ static void usage(const char *progname) {
     fprintf(stderr, "  --serial <serial>           Device serial (or RPI_CONNECT_SERIAL env)\n");
     fprintf(stderr, "  --client-id <id>            Client ID (or RPI_CONNECT_CLIENT_ID env)\n");
     fprintf(stderr, "  --token <token>             Access token (or RPI_CONNECT_TOKEN env)\n");
-    fprintf(stderr, "\nCrypto:\n");
-    fprintf(stderr, "  --ec-key <file>             Load ECDSA P-256 PEM key and test sign\n");
     fprintf(stderr, "\nDevice identity:\n");
     fprintf(stderr, "  --create-device-identity    Register a device identity with an organisation\n");
     fprintf(stderr, "  --device-identity-exchange  Exchange a registered device identity for an access token\n");
@@ -185,7 +146,6 @@ int main(int argc, char *argv[]) {
     char *auth_key = getenv("RPI_CONNECT_AUTH_KEY");
     char *token = getenv("RPI_CONNECT_TOKEN");
     char *deployment_id = NULL;
-    char *ec_key_file = NULL;
     int verbose_level = 0;
     int do_signin = 0;
     int do_ota = 0;
@@ -193,7 +153,6 @@ int main(int argc, char *argv[]) {
     int do_start_deployment = 0;
     int do_complete_deployment = 0;
     int do_cancel_deployment = 0;
-    int do_ec_key = 0;
     int do_create_device_identity = 0;
     int do_device_identity_exchange = 0;
     char *org_token = getenv("RPI_CONNECT_ORG_TOKEN");
@@ -214,7 +173,6 @@ int main(int argc, char *argv[]) {
         {"start-deployment", required_argument, 0, 'd'},
         {"complete-deployment", required_argument, 0, 'D'},
         {"cancel-deployment", required_argument, 0, 'c'},
-        {"ec-key",    required_argument, 0, 'e'},
         {"create-device-identity", no_argument, 0, OPT_CREATE_DEVICE_IDENTITY},
         {"device-identity-exchange", no_argument, 0, OPT_DEVICE_IDENTITY_EXCHANGE},
         {"org-token", required_argument, 0, OPT_ORG_TOKEN},
@@ -250,10 +208,6 @@ int main(int argc, char *argv[]) {
         case 'c':
             do_cancel_deployment = 1;
             deployment_id = optarg;
-            break;
-        case 'e':
-            do_ec_key = 1;
-            ec_key_file = optarg;
             break;
         case OPT_CREATE_DEVICE_IDENTITY:
             do_create_device_identity = 1;
@@ -310,12 +264,6 @@ int main(int argc, char *argv[]) {
         token = strdup(token);
     }
 
-    /* --ec-key is self-contained; handle it before the serial/client-id checks */
-    if (do_ec_key) {
-        rc = test_ec_sign(ec_key_file);
-        goto end;
-    }
-
     if (do_device_identity_exchange) {
         if (!client_id || !*client_id) {
             RPI_CONNECT_OTA_DEMO_ERROR("Error: --client-id required (or RPI_CONNECT_CLIENT_ID env)\n");
@@ -338,7 +286,7 @@ int main(int argc, char *argv[]) {
             goto end;
         }
 
-        unsigned char privkey[RPI_CONNECT_CRYPTO_P256_PRIVKEY_SIZE];
+        unsigned char privkey[P256_PRIVKEY_SIZE];
         unsigned char pubkey_raw[65];
         if (load_ec_p256_pem(device_privkey_file, privkey, pubkey_raw) != 0) {
             rc = -1;
@@ -400,7 +348,7 @@ int main(int argc, char *argv[]) {
             goto end;
         }
 
-        unsigned char privkey[RPI_CONNECT_CRYPTO_P256_PRIVKEY_SIZE];
+        unsigned char privkey[P256_PRIVKEY_SIZE];
         unsigned char pubkey_raw[65];
         if (load_ec_p256_pem(device_privkey_file, privkey, pubkey_raw) != 0) {
             rc = -1;
@@ -429,7 +377,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (!do_signin && !do_ota && !do_start_deployment && !do_complete_deployment && !do_cancel_deployment && !do_auth) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: must specify --signin, --ota, --auth, --start-deployment, --complete-deployment, --cancel-deployment, --ec-key, --create-device-identity, or --device-identity-exchange\n");
+        RPI_CONNECT_OTA_DEMO_ERROR("Error: must specify --signin, --ota, --auth, --start-deployment, --complete-deployment, --cancel-deployment, --create-device-identity, or --device-identity-exchange\n");
         usage(argv[0]);
         rc = -1;
         goto end;

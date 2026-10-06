@@ -533,9 +533,6 @@ runs the *same* `pico_rpi_connect` library against host OpenSSL/curl, with
 `-v` for request verbosity:
 
 ```sh
-# Verify a key pair signs correctly
-rpi-connect-test --ec-key device-priv-key.pem
-
 # Confirm the registered identity can obtain a token (prints RPI_CONNECT_TOKEN=...)
 rpi-connect-test -v --device-identity-exchange --serial <serial> \
     --device-privkey device-priv-key.pem --device-pubkey device-pub-key.pem
