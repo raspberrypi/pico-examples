@@ -8,6 +8,13 @@
 #include "rpi_connect_ota_demo.h"
 #include "pico/rpi_connect_ota.h"
 
+#if PICO_ON_DEVICE
+#include "pico/ffs.h"
+#include "pico/bootrom.h"
+#include "boot/picoboot_constants.h"
+#include "hardware/watchdog.h"
+#endif
+
 /* Poll-only mode for data-limited or metered connections: skip the SSE event
  * stream and rely on the boot-time pending-deployment check. New deployments
  * are then only picked up on the next boot (applying one reboots anyway). */
@@ -233,6 +240,19 @@ int rpi_connect_ota_demo_main(const char *token) {
     // and commit it (the bootrom "buy"). On error the buy has not been issued:
     // return, so the bootrom rolls back on the next reset.
     int rc = rpi_connect_ota_boot_sync(token);
+#if PICO_ON_DEVICE
+    if (rc == -401 && watchdog_get_time_remaining_ms() == 0) {
+        // 401 HTTP error means bad token in FFS, so delete it and try again
+        // Watchdog check so this path isn't taken on a TBYB boot
+        RPI_CONNECT_OTA_DEMO_INFO("Deleting bad token and rebooting\n");
+        ffs_delete(FFS_AUTH_TOKEN_FILE_ID);
+        rc = rom_reboot(REBOOT2_FLAG_REBOOT_TYPE_NORMAL, 500, 0, 0);
+        if (rc != PICO_OK)
+            return rc;
+        while (true)
+            sleep_ms(100);
+    } else
+#endif
     if (rc != 0) {
         return rc;
     }
