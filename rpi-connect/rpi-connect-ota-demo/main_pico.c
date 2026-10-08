@@ -148,7 +148,7 @@ int main() {
     size_t default_ca_cert_len = strlen(default_ca_cert);
     const char * const sectigo_e46_ca_cert = SECTIGO_E46_CA_CERT;
     size_t sectigo_e46_ca_cert_len = strlen(sectigo_e46_ca_cert);
-    size_t new_ca_cert_len = default_ca_cert_len + sectigo_e46_ca_cert_len;
+    size_t new_ca_cert_len = default_ca_cert_len + sectigo_e46_ca_cert_len + 1;
     char * new_ca_cert = malloc(new_ca_cert_len);
     strcat(new_ca_cert, default_ca_cert);
     strcat(new_ca_cert, sectigo_e46_ca_cert);
