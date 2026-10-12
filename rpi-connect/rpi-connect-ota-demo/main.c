@@ -7,17 +7,12 @@
 #include "rpi_connect_ota_demo.h"
 #include "pico/rpi_connect_ota.h"
 #include "pico/rpi_connect.h"
+#include "pico/rpi_connect_identity.h"
 #include <unistd.h>
 #include <string.h>
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <openssl/pem.h>
-#include <openssl/ec.h>
-#include <openssl/bn.h>
-
-#define P256_PRIVKEY_SIZE 32
 
 // Host-build (libcurl) run-time verbosity; not part of the public API.
 extern void rpi_connect_request_set_verbose(int v);
@@ -31,75 +26,6 @@ enum {
     OPT_DEVICE_NAME,
     OPT_DEVICE_IDENTITY_EXCHANGE,
 };
-
-static int load_ec_p256_pem(const char *filename,
-                            unsigned char privkey[P256_PRIVKEY_SIZE],
-                            unsigned char pubkey[65]) {
-    FILE *fp = fopen(filename, "r");
-    if (!fp) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: cannot open %s: %s\n", filename, strerror(errno));
-        return -1;
-    }
-
-    EVP_PKEY *pkey = PEM_read_PrivateKey(fp, NULL, NULL, NULL);
-    fclose(fp);
-    if (!pkey) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: failed to parse PEM from %s\n", filename);
-        return -1;
-    }
-
-    const EC_KEY *ec = EVP_PKEY_get0_EC_KEY(pkey);
-    if (!ec) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: key in %s is not an EC key\n", filename);
-        EVP_PKEY_free(pkey);
-        return -1;
-    }
-
-    const EC_GROUP *group = EC_KEY_get0_group(ec);
-    if (EC_GROUP_get_curve_name(group) != NID_X9_62_prime256v1) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: key in %s is not P-256\n", filename);
-        EVP_PKEY_free(pkey);
-        return -1;
-    }
-
-    const BIGNUM *priv_bn = EC_KEY_get0_private_key(ec);
-    if (!priv_bn || BN_bn2binpad(priv_bn, privkey, P256_PRIVKEY_SIZE) != P256_PRIVKEY_SIZE) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: failed to extract private key\n");
-        EVP_PKEY_free(pkey);
-        return -1;
-    }
-
-    const EC_POINT *pub = EC_KEY_get0_public_key(ec);
-    if (!pub || EC_POINT_point2oct(group, pub, POINT_CONVERSION_UNCOMPRESSED,
-                                    pubkey, 65, NULL) != 65) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: failed to extract public key\n");
-        EVP_PKEY_free(pkey);
-        return -1;
-    }
-
-    EVP_PKEY_free(pkey);
-    return 0;
-}
-
-static char *read_file_to_string(const char *filename) {
-    FILE *fp = fopen(filename, "r");
-    if (!fp) {
-        RPI_CONNECT_OTA_DEMO_ERROR("Error: cannot open %s: %s\n", filename, strerror(errno));
-        return NULL;
-    }
-    fseek(fp, 0, SEEK_END);
-    long len = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-    char *buf = malloc(len + 1);
-    if (!buf) {
-        fclose(fp);
-        return NULL;
-    }
-    size_t nread = fread(buf, 1, len, fp);
-    buf[nread] = '\0';
-    fclose(fp);
-    return buf;
-}
 
 static void usage(const char *progname) {
     fprintf(stderr, "Usage: %s [options]\n", progname);
@@ -119,8 +45,7 @@ static void usage(const char *progname) {
     fprintf(stderr, "  --create-device-identity    Register a device identity with an organisation\n");
     fprintf(stderr, "  --device-identity-exchange  Exchange a registered device identity for an access token\n");
     fprintf(stderr, "  --org-token <token>         Organisation token (or RPI_CONNECT_ORG_TOKEN env)\n");
-    fprintf(stderr, "  --device-privkey <file>     EC P-256 private key PEM (for signing)\n");
-    fprintf(stderr, "  --device-pubkey <file>      Device public key PEM (registered as identity)\n");
+    fprintf(stderr, "  --device-privkey <file>     EC P-256 private key PEM (the public key is derived from it)\n");
     fprintf(stderr, "  --description <text>        Description for the device identity\n");
     fprintf(stderr, "  --device-name <name>        Optional device name\n");
     fprintf(stderr, "\nOther:\n");
@@ -157,7 +82,6 @@ int main(int argc, char *argv[]) {
     int do_device_identity_exchange = 0;
     char *org_token = getenv("RPI_CONNECT_ORG_TOKEN");
     char *device_privkey_file = NULL;
-    char *device_pubkey_file = NULL;
     char *description = NULL;
     char *device_name_arg = NULL;
     int opt;
@@ -222,7 +146,8 @@ int main(int argc, char *argv[]) {
             device_privkey_file = optarg;
             break;
         case OPT_DEVICE_PUBKEY:
-            device_pubkey_file = optarg;
+            // The public key is now derived from the private key
+            RPI_CONNECT_OTA_DEMO_INFO("Note: --device-pubkey is ignored, the public key is derived from --device-privkey\n");
             break;
         case OPT_DESCRIPTION:
             description = optarg;
@@ -280,21 +205,7 @@ int main(int argc, char *argv[]) {
             rc = -1;
             goto end;
         }
-        if (!device_pubkey_file) {
-            RPI_CONNECT_OTA_DEMO_ERROR("Error: --device-pubkey required\n");
-            rc = -1;
-            goto end;
-        }
-
-        unsigned char privkey[P256_PRIVKEY_SIZE];
-        unsigned char pubkey_raw[65];
-        if (load_ec_p256_pem(device_privkey_file, privkey, pubkey_raw) != 0) {
-            rc = -1;
-            goto end;
-        }
-
-        char *pubkey_pem = read_file_to_string(device_pubkey_file);
-        if (!pubkey_pem) {
+        if (rpi_connect_identity_load_key_pem_file(device_privkey_file) != 0) {
             rc = -1;
             goto end;
         }
@@ -305,8 +216,7 @@ int main(int argc, char *argv[]) {
 
         char *device_id = NULL;
         char *new_token = rpi_connect_device_identity_exchange(
-            client_id, privkey, pubkey_pem, hostname, serial_number, &device_id);
-        free(pubkey_pem);
+            client_id, hostname, serial_number, &device_id);
 
         if (new_token) {
             rpi_connect_ota_store_auth_token(new_token);
@@ -337,26 +247,12 @@ int main(int argc, char *argv[]) {
             rc = -1;
             goto end;
         }
-        if (!device_pubkey_file) {
-            RPI_CONNECT_OTA_DEMO_ERROR("Error: --device-pubkey required\n");
-            rc = -1;
-            goto end;
-        }
         if (!description) {
             RPI_CONNECT_OTA_DEMO_ERROR("Error: --description required\n");
             rc = -1;
             goto end;
         }
-
-        unsigned char privkey[P256_PRIVKEY_SIZE];
-        unsigned char pubkey_raw[65];
-        if (load_ec_p256_pem(device_privkey_file, privkey, pubkey_raw) != 0) {
-            rc = -1;
-            goto end;
-        }
-
-        char *pubkey_pem = read_file_to_string(device_pubkey_file);
-        if (!pubkey_pem) {
+        if (rpi_connect_identity_load_key_pem_file(device_privkey_file) != 0) {
             rc = -1;
             goto end;
         }
@@ -364,8 +260,7 @@ int main(int argc, char *argv[]) {
         rpi_connect_request_set_verbose(verbose_level);
 
         char *id = rpi_connect_create_device_identity(
-            org_token, privkey, pubkey_pem, description, device_name_arg);
-        free(pubkey_pem);
+            org_token, description, device_name_arg);
 
         if (id) {
             free(id);

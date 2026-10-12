@@ -128,6 +128,10 @@ This writes the key starting at OTP row `0xc0` (page 3), matching
 `RPI_CONNECT_IDENTITY_OTP_ROW` in the library. Change the `-s 0xc0`
 argument to use a different row.
 
+The private key is only ever read by the `pico_rpi_connect_identity_key` library,
+which signs the identity requests and returns the public key, but never the private
+key itself.
+
 ### Step 2 — Build the application firmware
 
 The example is built as part of pico-examples. Select the board and platform
@@ -225,15 +229,15 @@ alias rpi-connect-test=$PICO_EXAMPLES_PATH/build-host/rpi-connect/rpi-connect-ot
 The host build needs the libcurl and OpenSSL development packages installed;
 without them the SDK skips `pico_rpi_connect` and the target does not exist.
 
-Register the public key against your org. The request is itself signed with the
-private key (`--device-privkey`) to prove ownership of the pair:
+Register the public key against your org. The public key is derived from the
+private key (`--device-privkey`), which also signs the request to prove ownership
+of the pair:
 
 ```sh
 export RPI_CONNECT_ORG_TOKEN="<your-organisation-token>"
 
 rpi-connect-test --create-device-identity \
     --device-privkey device-priv-key.pem \
-    --device-pubkey device-pub-key.pem \
     --description   "Pico 2 W OTA demo" \
     --device-name   "pico-ota-01"
 ```
@@ -241,7 +245,7 @@ rpi-connect-test --create-device-identity \
 The device now exists in your organisation. (You can sanity-check the whole
 auth chain by running
 `rpi-connect-test --device-identity-exchange --serial <serial>
---device-privkey device-priv-key.pem --device-pubkey device-pub-key.pem`, which
+--device-privkey device-priv-key.pem`, which
 prints the `RPI_CONNECT_TOKEN` the device would obtain.)
 
 #### Option C - Auth key (no device identity)
@@ -535,7 +539,7 @@ runs the *same* `pico_rpi_connect` library against host OpenSSL/curl, with
 ```sh
 # Confirm the registered identity can obtain a token (prints RPI_CONNECT_TOKEN=...)
 rpi-connect-test -v --device-identity-exchange --serial <serial> \
-    --device-privkey device-priv-key.pem --device-pubkey device-pub-key.pem
+    --device-privkey device-priv-key.pem
 
 # Run the full OTA loop against a token
 RPI_CONNECT_TOKEN=<token> rpi-connect-test --ota --serial <serial>
