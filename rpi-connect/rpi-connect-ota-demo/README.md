@@ -33,9 +33,9 @@ to end.
   on the bootrom flash-update mechanism, A/B partitions and OTP. WiFi is needed
   for connectivity.
 * **Host tools:** [`picotool`](https://github.com/raspberrypi/picotool)
-  (a version with the `provision connect` command, for Step 4),
-  `openssl`, a C compiler, `python3`, the libcurl and OpenSSL development
-  packages (only for the host build in Step 4, option B), and the Pico SDK with its
+  (a version with the `provision connect` command, for Step 3),
+  a C compiler, `python3`, the libcurl and OpenSSL development
+  packages and `openssl` (only for the host build in Step 3, option B), and the Pico SDK with its
   submodules initialised. The SDK's `lib/lwip` submodule points at the
   Raspberry Pi lwIP fork, which carries the HTTP client changes Pi Connect
   relies on; `lwipopts.h` in this directory also configures that client for
@@ -52,7 +52,7 @@ Under normal operation **no secret is ever compiled into the firmware**:
 
 | Secret                | Where it lives        | Provisioned by                                   |
 |-----------------------|-----------------------|--------------------------------------------------|
-| Device identity key   | OTP (row `0xc0`)      | `picotool otp load -s 0xc0 device-priv-key.pem` (optional) |
+| Device identity key   | OTP (row `0xc0`)      | `picotool provision connect --create-identity` (optional) |
 | WiFi credentials      | FFS partition         | `xxx_combined.uf2` or `picotool provision connect` |
 | Connect access token  | FFS (id `0x1`)        | derived at runtime, then cached — or `picotool provision connect --auth-key`/`--signin` |
 
@@ -63,14 +63,14 @@ its identity without ever transmitting the key. The returned access token is
 cached in FFS so subsequent boots skip the exchange until it expires.
 
 The device's **public** key must have been registered against your organisation
-beforehand (Step 4 below) — that is what links this physical device to your org.
+beforehand (Step 3 below) — that is what links this physical device to your org.
 
 Holding the identity key in OTP is what makes this robust. The credible
 alternative — pre-provisioning a Connect token (or the key) directly into flash
 — is fragile: flash can be erased or overwritten (not least by an OTA update
 itself), taking the credential with it. OTP survives a full flash erase, so the
 device can always re-derive a fresh token. That alternative is still
-available if you don't want to use a device identity — Step 4, option C
+available if you don't want to use a device identity — Step 3, option C
 provisions a token from an auth key, and option D by signing in — but the device must then be re-provisioned
 whenever the token is lost. Tokens are never carried in the firmware image; for development a literal token can be provisioned into FFS
 by setting the `CONNECT_TOKEN` CMake variable.
@@ -86,49 +86,7 @@ by setting the `CONNECT_TOKEN` CMake variable.
 
 ## Step-by-step walkthrough
 
-### Step 1 — (Optional) Create a device identity
-
-A device identity is the recommended way to authenticate: a per-device key in
-OTP that the device can always use to obtain a fresh access token (see
-[the security model](#how-authentication-works-the-security-model)). If you
-don't want to use one — for example to avoid programming OTP on a development
-board — skip this step and provision an access token instead in Step 4
-(options C and D).
-
-#### Generate a key pair
-
-Each device needs its own P-256 (`prime256v1`) ECDSA key pair. The private key
-is burned into the device's OTP; the public key is registered with your org.
-
-```sh
-openssl ecparam -name prime256v1 -genkey -noout -out device-priv-key.pem
-openssl ec -in device-priv-key.pem -pubout -out device-pub-key.pem
-```
-
-> **Store the private key safely — and do not lose it.** It is the device's
-> identity: anyone who has it can impersonate the device, and OTP is
-> one-time-programmable so the key written there can never be changed. Treat it
-> as a per-device secret, keep it under restricted access (ideally in a
-> dedicated key store / HSM for production), and back it up. The matching
-> public key is what you register with your org, so losing the private key means
-> you can no longer prove ownership of that identity.
-
-#### Write the private key to OTP
-
-Burn the 32-byte raw private-key scalar into the device's OTP. **OTP is
-one-time-programmable - once written it can never be changed or erased**.
-The key takes up 16 OTP rows (by default rows `0xc0 - 0xcf`).
-
-To write the private key as ECC, use `picotool`:
-```sh
-picotool otp load -s 0xc0 device-priv-key.pem
-```
-
-This writes the key starting at OTP row `0xc0` (page 3), matching
-`RPI_CONNECT_IDENTITY_OTP_ROW` in the library. Change the `-s 0xc0`
-argument to use a different row.
-
-### Step 2 — Build the application firmware
+### Step 1 — Build the application firmware
 
 The example is built as part of pico-examples. Select the board and platform
 as usual and build the `rpi_connect_ota_demos` target (which builds all the
@@ -148,7 +106,7 @@ over UART/USB serial. Logging verbosity and the debug overrides in
 > **No secrets in the firmware UF2s.** WiFi credentials and auth tokens are only
 > written to FFS UF2s, so they never appear in the firmware images.
 
-### Step 3 — Partition for FFS, provision credentials, and flash
+### Step 2 — Partition for FFS, provision credentials, and flash
 
 The RP2350 must be partitioned with an A/B layout (two main slots for OTA),
 A/B partitions for the WiFi firmware, and a small **FFS** data partition for
@@ -157,7 +115,7 @@ credentials and the cached token. The build produces a
 `rpi_connect_ota_demo.uf2` into the A partition, the WiFi firmware, and an FFS
 blob into the FFS data partition. If the `WIFI_SSID`/`WIFI_PASSWORD` CMake
 variables are defined, that blob will contain them, otherwise it will just have
-empty files for the SSID and password (which you can fill in during Step 4).
+empty files for the SSID and password (which you can fill in during Step 3).
 
 Put the device into BOOTSEL mode (hold the BOOTSEL button while resetting or
 plugging it in) and drag & drop `rpi_connect_ota_demo_combined.uf2` onto the
@@ -166,21 +124,28 @@ plugging it in) and drag & drop `rpi_connect_ota_demo_combined.uf2` onto the
 > **Re-flashing the combined UF2 resets FFS** — it overwrites the WiFi
 > credentials and any cached token with the contents of the blob.
 
-### Step 4 — Provision Connect credentials
+### Step 3 — Provision Connect credentials
 
-If you created a device identity in Step 1, register it with your organisation
-using option A or B. Otherwise, provision an access token directly, either from
-an auth key (option C) or by signing in from a browser (option D).
+A **device identity** is the recommended way to authenticate: a per-device key
+in OTP that the device can always use to obtain a fresh access token (see
+[the security model](#how-authentication-works-the-security-model)). Option A
+is the simplest way to set one up — `picotool` creates the key on the device and
+registers it with your organisation in one step. Option B does the same from the
+host, with a key pair you generate yourself.
+
+If you don't want to use a device identity — for example to avoid programming
+OTP on a development board — provision an access token directly instead, either
+from an auth key (option C) or by signing in from a browser (option D).
 
 `picotool provision connect` (options A, C and D) loads a provisioning binary into
 the device's SRAM and runs it. Secrets passed to it are only ever written into
 the binary in RAM, never to flash. This needs a `picotool` that includes the
-`provision` command, and the partitions from Step 3 (the provisioning binary
+`provision` command, and the partitions from Step 2 (the provisioning binary
 uses the FFS partition and loads the WiFi firmware from its partition). Put
 the device back into BOOTSEL mode before running it.
 
 For any of the picotool options: if you didn't build the WiFi credentials into the
-FFS blob in Step 3, add `--wifi-ssid <ssid> --wifi-password <password>` to
+FFS blob in Step 2, add `--wifi-ssid <ssid> --wifi-password <password>` to
 store them in FFS first. `--device-name` defaults to `pico-<board id>` if
 omitted, and the board configuration options (`--uart`, `--led`, `--wl-*`, ...)
 default to a Pico 2 W — see `picotool help provision connect` for the full
@@ -188,11 +153,14 @@ list. Progress is printed on the device's USB and UART consoles. When done the
 device's LED flashes (slowly on success, quickly on failure) and it reboots to
 BOOTSEL; run `picotool reboot` to start the application.
 
-#### Option A - Device identity, using `picotool provision connect`
+#### Option A - Device identity, using `picotool provision connect` (recommended)
 
-The provisioning binary reads the identity key from OTP, connects to WiFi and
-registers the matching public key with your org — the private key never leaves
-the device:
+With `--create-identity`, the provisioning binary first checks the device's OTP
+for an identity key. If there isn't one, it generates a new P-256 key on the
+device and writes it to OTP (16 rows, `0xc0 - 0xcf` by default); if there is,
+it uses the existing key. It then connects to WiFi and registers the matching
+public key with your org. The private key is never exposed outside the device,
+so there is nothing to store or keep secret on the host:
 
 ```sh
 export RPI_CONNECT_ORG_TOKEN="<your-organisation-token>"
@@ -203,12 +171,54 @@ picotool provision connect --create-identity \
     --device-name "pico-ota-01"
 ```
 
+> **Creating the key programs OTP, which is permanent.** Once written, the
+> identity key can never be changed or erased.
+
 #### Option B - Device identity, using the host built binary
 
 Registration can also be run on the **host** (Linux/macOS) using the host
 build of this example (`main.c` in this directory), which links the
-`pico_rpi_connect` library against host OpenSSL and curl. This doesn't need
-the device to be connected, as it uses the key pair from Step 1 directly.
+`pico_rpi_connect` library against host OpenSSL and curl. Use this if you
+want to generate and keep the key pair yourself, rather than having it created
+on the device.
+
+##### Generate a key pair
+
+Each device needs its own P-256 (`prime256v1`) ECDSA key pair. The private key
+is burned into the device's OTP; the public key is registered with your org.
+
+```sh
+openssl ecparam -name prime256v1 -genkey -noout -out device-priv-key.pem
+openssl ec -in device-priv-key.pem -pubout -out device-pub-key.pem
+```
+
+> **Store the private key safely — and do not lose it.** It is the device's
+> identity: anyone who has it can impersonate the device, and OTP is
+> one-time-programmable so the key written there can never be changed. Treat it
+> as a per-device secret, keep it under restricted access (ideally in a
+> dedicated key store / HSM for production), and back it up. The matching
+> public key is what you register with your org, so losing the private key means
+> you can no longer prove ownership of that identity.
+
+##### Write the private key to OTP
+
+Burn the 32-byte raw private-key scalar into the device's OTP. **OTP is
+one-time-programmable - once written it can never be changed or erased**.
+The key takes up 16 OTP rows (by default rows `0xc0 - 0xcf`).
+
+To write the private key as ECC, put the device into BOOTSEL mode and use `picotool`:
+```sh
+picotool otp load -s 0xc0 device-priv-key.pem
+```
+
+This writes the key starting at OTP row `0xc0` (page 3), matching
+`RPI_CONNECT_IDENTITY_OTP_ROW` in the library. Change the `-s 0xc0`
+argument to use a different row.
+
+##### Register the identity
+
+The registration itself doesn't need the device to be connected, as it uses the
+key pair on the host directly.
 
 Build the host tool with the SDK host platform. Use a separate build
 directory and select the `none` board explicitly: a device `PICO_BOARD`
@@ -285,7 +295,7 @@ completes (for up to 15 minutes), then stores the access token in FFS (id
 > valid, the device must be provisioned again. Use a device identity for anything beyond
 > development.
 
-### Step 5 — Run it and watch the log
+### Step 4 — Run it and watch the log
 
 Open the serial console (USB or UART) at the SDK default baud and reset the
 board. With the default INFO logging you will see, in order:
@@ -300,11 +310,11 @@ Starting event listener
 ```
 
 At this point the device has signed in (via the OTP key, caching its token in
-FFS, or with the token provisioned in Step 4, option C or D), registered the OTA capability,
+FFS, or with the token provisioned in Step 3, option C or D), registered the OTA capability,
 checked for a deployment assigned while it was offline, and is waiting for
 deployments.
 
-### Step 6 — Deploy an update
+### Step 5 — Deploy an update
 
 This project has separate `xxx_update` UF2s for each demo, which have the
 try-before-you-buy bit set. This means a bad update will only be tried once, and
@@ -366,7 +376,7 @@ automatically.
 | `rpi_connect_ota_demo.c`     | **The OTA integration itself** — the part to copy into your app.     |
 | `debug_options.cmake`        | Build-time overrides for OTP/FFS/token — development only.           |
 | `partition_tables/`          | Partition tables used to produce the combined UF2s      |
-| `main.c`                     | Host entry point and registration/debug CLI (Step 4, option B).                |
+| `main.c`                     | Host entry point and registration/debug CLI (Step 3, option B).                |
 
 ## API sequence (see `pico/rpi_connect_ota.h`)
 
@@ -507,14 +517,14 @@ is extremely verbose).
 hard-coding a PEM key pair at build time. It can be passed as `-D<NAME>=`
 on the CMake command line **or** as an environment variable of the same name.
 **This is for development only** — a production build provisions via OTP
-(Steps 1 and 4) so nothing secret lands in the UF2.
+(Step 3) so nothing secret lands in the UF2.
 
 | Override                                                   | Effect                                                                 |
 |------------------------------------------------------------|------------------------------------------------------------------------|
 | `RPI_CONNECT_IDENTITY_PRIVKEY_PEM` + `..._PUBKEY_PEM`      | Use a build-time PEM key pair instead of the OTP key for the exchange. |
 
-For example, to drive the identity exchange from the Step 1 key pair without
-writing it to OTP:
+For example, to drive the identity exchange from a key pair generated as in
+Step 3, option B, without writing it to OTP:
 
 ```sh
 cmake -S . -B build -DPICO_BOARD=pico2_w \
@@ -527,7 +537,7 @@ The sign-in order is as documented on `rpi_connect_ota_init()`: token in FFS
 
 ### Debugging the auth chain on the host
 
-The host build of this example (see Step 4, option B) is the quickest way
+The host build of this example (see Step 3, option B) is the quickest way
 to isolate an authentication problem from the embedded networking stack. It
 runs the *same* `pico_rpi_connect` library against host OpenSSL/curl, with
 `-v` for request verbosity:
