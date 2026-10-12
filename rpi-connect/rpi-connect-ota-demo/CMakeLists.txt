@@ -57,10 +57,18 @@ target_compile_definitions(rpi_connect_ota_demo_libs INTERFACE
     # For data-limited or metered connections: check once for a pending deployment
     # after boot sync instead of holding the SSE event stream open.
     # RPI_CONNECT_OTA_DEMO_POLL_ONLY=1
-    # If artefacts are hosted on a server that does not chain to the Pi
-    # Connect root CA, disable TLS verification for the download only;
+    # If artefacts are hosted on a server that does not chain to the
+    # Let's Encrypt X2 root CA, disable TLS verification for the download only;
     # integrity then rests on the deployment's SHA-256 checksum.
     # RPI_CONNECT_OTA_DEMO_UNVERIFIED_DOWNLOAD=1
+    # If artefacts are hosted on a server that uses RSA keys instead of ECC ones,
+    # add RSA support to the default mbedtls_config.h file, and use the
+    # Let's Encrypt X1 root CA, which is RSA.
+    # RPI_CONNECT_OTA_CONFIG_SUPPORT_RSA=1
+    # If artefacts are hosted on GitHub, you can add these certificates for
+    # verified downloads - also requires RPI_CONNECT_OTA_CONFIG_SUPPORT_RSA=1
+    # because githubusercontent.com uses RSA certificates.
+    # RPI_CONNECT_OTA_DEMO_ADD_GITHUB_CERTS=1
     # For debugging, uncomment any of these to enable verbose logging in the
     # libraries (or per-chunk progress etc. in the demo app):
     #   RPI_CONNECT_DEBUG_ENABLE=1              # core rpi_connect debug (incl. HTTP request layer)

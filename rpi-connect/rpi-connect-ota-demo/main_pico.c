@@ -19,6 +19,10 @@
 #include "pico/unique_id.h"
 #include "hardware/watchdog.h"
 
+#if RPI_CONNECT_OTA_DEMO_ADD_GITHUB_CERTS
+#include "sectigo_ca_cert.h"
+#endif
+
 static char *rpi_connect_ota_demo_wifi_password;
 static char *rpi_connect_ota_demo_wifi_ssid;
 
@@ -138,6 +142,19 @@ int main() {
     // Reload watchdog with ~16s now connected to WiFi
     reload_watchdog_timeout(false);
 
+#if RPI_CONNECT_OTA_DEMO_ADD_GITHUB_CERTS
+    // Append GitHub root CA to the default certificates
+    const char * default_ca_cert = rpi_connect_default_ca_cert();
+    size_t default_ca_cert_len = strlen(default_ca_cert);
+    const char * const sectigo_e46_ca_cert = SECTIGO_E46_CA_CERT;
+    size_t sectigo_e46_ca_cert_len = strlen(sectigo_e46_ca_cert);
+    size_t new_ca_cert_len = default_ca_cert_len + sectigo_e46_ca_cert_len + 1;
+    char * new_ca_cert = malloc(new_ca_cert_len);
+    strcat(new_ca_cert, default_ca_cert);
+    strcat(new_ca_cert, sectigo_e46_ca_cert);
+    rpi_connect_set_ca_cert(new_ca_cert);
+#endif
+
     retries = 5;
     while ((rc = rpi_connect_ota_demo_init(rpi_connect_client_id(), serial_number, "rpi_connect_ota_demo")) != PICO_OK && --retries) {
         sleep_ms(2000);
@@ -152,6 +169,10 @@ int main() {
     rc = 0;
 
 end:
+#if RPI_CONNECT_OTA_DEMO_ADD_GITHUB_CERTS
+    // Free the CA certitificates
+    free(new_ca_cert);
+#endif
     cyw43_arch_disable_sta_mode();
     cyw43_arch_deinit();
     RPI_CONNECT_OTA_DEMO_INFO("Disconnected\n");
