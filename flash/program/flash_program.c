@@ -11,11 +11,17 @@
 #include "pico/flash.h"
 #include "hardware/flash.h"
 
+#if PICO_RP2040
+#define FLASH_TARGET_BASE XIP_BASE
+#else
+#define FLASH_TARGET_BASE XIP_NOCACHE_NOALLOC_NOTRANSLATE_BASE
+#endif
+
 // We're going to erase and reprogram a region 256k from the start of flash.
-// Once done, we can access this at XIP_BASE + 256k.
+// Once done, we can access this at FLASH_TARGET_BASE + 256k.
 #define FLASH_TARGET_OFFSET (256 * 1024)
 
-const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
+const uint8_t *flash_target_contents = (const uint8_t *) (FLASH_TARGET_BASE + FLASH_TARGET_OFFSET);
 
 void print_buf(const uint8_t *buf, size_t len) {
     for (size_t i = 0; i < len; ++i) {
