@@ -26,6 +26,15 @@ add_executable(uart_binary
 # pull in common dependencies
 target_link_libraries(uart_binary pico_stdlib)
 
+# use the QSPI SD2 and SD3 pins as the default UART TX and RX (UART0), which are the same pins as the ROM UART bootloader
+target_compile_definitions(uart_binary PRIVATE
+    PICO_SUPPORT_QSPI_GPIOS=1
+    PICO_DEFAULT_UART=0
+    PICO_DEFAULT_UART_TX_PIN=QSPI_GPIO_SD2
+    PICO_DEFAULT_UART_RX_PIN=QSPI_GPIO_SD3
+    PICO_DEFAULT_UART_BAUD_RATE=1000000
+    )
+
 pico_set_binary_type(uart_binary no_flash)
 
 # package uf2 in flash
