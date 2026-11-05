@@ -1,0 +1,10 @@
+if (NOT TARGET pico_rpi_connect)
+    message("Skipping rpi-connect examples as pico_rpi_connect is unavailable on this platform")
+    return()
+endif()
+if (PICO_ON_DEVICE AND NOT TARGET pico_cyw43_arch)
+    message("Skipping rpi-connect examples as pico_cyw43_arch is unavailable on this platform")
+    return()
+endif()
+
+add_subdirectory_exclude_platforms(rpi-connect-ota-demo)
