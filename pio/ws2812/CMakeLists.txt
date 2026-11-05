@@ -8,6 +8,8 @@ pico_generate_pio_header(pio_ws2812 ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio OUTPUT_
 target_sources(pio_ws2812 PRIVATE ws2812.c)
 
 target_link_libraries(pio_ws2812 PRIVATE pico_stdlib hardware_pio)
+pico_enable_stdio_usb(pio_ws2812 1)
+pico_enable_stdio_uart(pio_ws2812 0)
 pico_add_extra_outputs(pio_ws2812)
 
 # add url via pico_set_program_url
@@ -23,6 +25,8 @@ target_compile_definitions(pio_ws2812_parallel PRIVATE
         PIN_DBG1=3)
 
 target_link_libraries(pio_ws2812_parallel PRIVATE pico_stdlib hardware_pio hardware_dma)
+pico_enable_stdio_usb(pio_ws2812_parallel 1)
+pico_enable_stdio_uart(pio_ws2812_parallel 0)
 pico_add_extra_outputs(pio_ws2812_parallel)
 
 # add url via pico_set_program_url
