@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <time.h>
+
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
 
