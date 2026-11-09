@@ -111,10 +111,6 @@ int main()
     // Buffer for receiving data
     char buffer_rx[sizeof(buffer_tx) - 1] = {0};
 
-#if !USE_PIO_FOR_RX || !USE_PIO_FOR_TX
-    uart_init(HARD_UART_INST, SERIAL_BAUD);
-#endif
-
 #if USE_PIO_FOR_RX
     // setup pio for rx
     if (!pio_claim_free_sm_and_add_program_for_gpio_range(&uart_rx_mini_program, &pio_hw_rx, &pio_sm_rx, &offset_rx, GPIO_RX, 1, true)) {
@@ -135,6 +131,11 @@ int main()
 #else
     // setup the tx gpio for the uart hardware
     gpio_set_function(GPIO_TX, GPIO_FUNC_UART);
+#endif
+
+#if !USE_PIO_FOR_RX || !USE_PIO_FOR_TX
+    // Set up the uart hardware after the gpio functions above to avoid losing data
+    uart_init(HARD_UART_INST, SERIAL_BAUD);
 #endif
 
 #if USE_PIO_FOR_RX && USE_DMA_FOR_RX

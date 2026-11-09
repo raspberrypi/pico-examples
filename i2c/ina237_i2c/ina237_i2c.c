@@ -83,8 +83,9 @@ int main() {
 
     printf("INA237 example\n");
 
-    uart_init(UART_PASSTHROUGH, UART_PASSTHROUGH_BAUD);
+    // Do this before calling uart_init to avoid losing data
     gpio_set_function(UART_PASSTHROUGH_RX, GPIO_FUNC_UART);
+    uart_init(UART_PASSTHROUGH, UART_PASSTHROUGH_BAUD);
 
     uint irq_num = UART_IRQ_NUM(UART_PASSTHROUGH);
     irq_set_exclusive_handler(irq_num, print_uart_passthrough);
