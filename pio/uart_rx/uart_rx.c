@@ -43,8 +43,9 @@ int main() {
     printf("Starting PIO UART RX example\n");
 
     // Set up the hard UART we're going to use to print characters
-    uart_init(HARD_UART_INST, SERIAL_BAUD);
+    // Set the pin function before calling uart_init to avoid losing data
     gpio_set_function(HARD_UART_TX_PIN, GPIO_FUNC_UART);
+    uart_init(HARD_UART_INST, SERIAL_BAUD);
 
     // Set up the state machine we're going to use to receive them.
     PIO pio;

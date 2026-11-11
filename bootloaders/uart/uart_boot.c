@@ -179,9 +179,10 @@ int main()
     stdio_init_all();
 
     // Set up our UART for booting the other device
-    uart_init(UART_ID, 1000000);
+    // Set the pin functions before calling uart_init to avoid losing data
     gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+    uart_init(UART_ID, 1000000);
 
     // Set up run pin
     gpio_init(RUN_PIN);
