@@ -12,15 +12,9 @@
 volatile bool seen_resus;
 
 void resus_callback(void) {
-    // Reconfigure PLL sys back to the default state of 1500 / 6 / 2 = 125MHz
-    pll_init(pll_sys, 1, 1500 * MHZ, 6, 2);
-
-    // CLK SYS = PLL SYS (125MHz) / 1 = 125MHz
-    clock_configure(clk_sys,
-                    CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX,
-                    CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS,
-                    125 * MHZ,
-                    125 * MHZ);
+    // Restart PLL sys and run clk_sys from it at the default system clock
+    // frequency (125MHz on RP2040, 150MHz on RP2350)
+    set_sys_clock_khz(SYS_CLK_KHZ, true);
 
     // Reconfigure uart as clocks have changed
     stdio_init_all();
