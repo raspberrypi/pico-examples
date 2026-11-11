@@ -12,15 +12,14 @@
 volatile bool seen_resus;
 
 void resus_callback(void) {
-    // Reconfigure PLL sys back to the default state of 1500 / 6 / 2 = 125MHz
-    pll_init(pll_sys, 1, 1500 * MHZ, 6, 2);
+    // Reconfigure PLL sys back to the default state
+    pll_init(pll_sys, PLL_SYS_REFDIV, PLL_SYS_VCO_FREQ_HZ, PLL_SYS_POSTDIV1, PLL_SYS_POSTDIV2);
 
-    // CLK SYS = PLL SYS (125MHz) / 1 = 125MHz
-    clock_configure(clk_sys,
+    // CLK SYS = PLL SYS
+    clock_configure_undivided(clk_sys,
                     CLOCKS_CLK_SYS_CTRL_SRC_VALUE_CLKSRC_CLK_SYS_AUX,
                     CLOCKS_CLK_SYS_CTRL_AUXSRC_VALUE_CLKSRC_PLL_SYS,
-                    125 * MHZ,
-                    125 * MHZ);
+                    SYS_CLK_HZ);
 
     // Reconfigure uart as clocks have changed
     stdio_init_all();
