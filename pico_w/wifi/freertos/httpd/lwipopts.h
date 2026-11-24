@@ -10,6 +10,8 @@
 // The following is needed to test mDns
 #define LWIP_MDNS_RESPONDER 1
 #define LWIP_IGMP 1
+// mDNS uses IPv6 multicast; MLD must be enabled for multicast group membership.
+#define LWIP_IPV6_MLD 1
 #define LWIP_NUM_NETIF_CLIENT_DATA 1
 #define MDNS_RESP_USENETIF_EXTCALLBACK  1
 #define MEMP_NUM_SYS_TIMEOUT (LWIP_NUM_SYS_TIMEOUT_INTERNAL + 3)
