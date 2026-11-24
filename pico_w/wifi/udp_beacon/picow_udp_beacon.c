@@ -15,7 +15,10 @@
 
 #define UDP_PORT 4444
 #define BEACON_MSG_LEN_MAX 127
-#define BEACON_TARGET "255.255.255.255"
+// IPv6 all-nodes link-local multicast. The IPv4 broadcast address only
+// reaches hosts on the local network via broadcast; ff02::1 is the IPv6
+// equivalent and is what this example should use with LWIP_IPV6.
+#define BEACON_TARGET "ff02::1"
 #define BEACON_INTERVAL_MS 1000
 
 void run_udp_beacon() {
