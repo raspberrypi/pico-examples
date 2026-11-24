@@ -10,6 +10,7 @@
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
 #include "hardware/gpio.h"
+#include "hardware/clocks.h"
 #include "hardware/interp.h"
 
 #include "st7789_lcd.pio.h"
@@ -28,7 +29,10 @@
 #define PIN_RESET 4
 #define PIN_BL 5
 
-#define SERIAL_CLK_DIV 1.f
+/* Keep SCK at or below the ST7789VW's 62.5 MHz limit. The PIO toggles SCK
+ * every system clock, so on RP2350's default 150 MHz this needs div=2. */
+#define ST7789_MAX_SCK_HZ 62500000.f
+#define ST7789_PIO_CYCLES_PER_SCK 2.f
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -90,7 +94,10 @@ int main() {
     PIO pio = pio0;
     uint sm = 0;
     uint offset = pio_add_program(pio, &st7789_lcd_program);
-    st7789_lcd_program_init(pio, sm, offset, PIN_DIN, PIN_CLK, SERIAL_CLK_DIV);
+    float serial_clk_div = ceilf((float)clock_get_hz(clk_sys) /
+                                 (ST7789_PIO_CYCLES_PER_SCK * ST7789_MAX_SCK_HZ));
+    if (serial_clk_div < 1.f) serial_clk_div = 1.f;
+    st7789_lcd_program_init(pio, sm, offset, PIN_DIN, PIN_CLK, serial_clk_div);
 
     gpio_init(PIN_CS);
     gpio_init(PIN_DC);
