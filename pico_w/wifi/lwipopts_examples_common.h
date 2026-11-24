@@ -45,6 +45,11 @@
 // #define ETH_PAD_SIZE                2
 #define LWIP_CHKSUM_ALGORITHM       3
 #define LWIP_DHCP                   1
+// Accept DHCP (server port 67) packets with a 0.0.0.0 source address even when
+// LWIP_DHCP (the lwIP DHCP *client*) is disabled. Without this, ip4_input()
+// drops DHCPDISCOVER from unconfigured clients before it reaches the DHCP
+// server callback (see the access_point example).
+#define LWIP_IP_ACCEPT_UDP_PORT(port) ((port) == PP_NTOHS(67))
 #define LWIP_IPV4                   1
 #define LWIP_TCP                    1
 #define LWIP_UDP                    1
