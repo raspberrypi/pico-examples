@@ -180,6 +180,10 @@ void usb_setup_endpoints() {
  * @brief Set up the USB controller in device mode, clearing any previous state.
  *
  */
+// RP2350's Hazard3 core does not automatically link a named isr_* function
+// into the vector table, so register the handler explicitly below.
+void isr_usbctrl_callback(void);
+
 void usb_device_init() {
     // Reset usb controller
     reset_unreset_block_num_wait_blocking(RESET_USBCTRL);
@@ -187,7 +191,10 @@ void usb_device_init() {
     // Clear any previous state in dpram just in case
     memset(usb_dpram, 0, sizeof(*usb_dpram)); // <1>
 
-    // Enable USB interrupt at processor
+    // Register the handler explicitly: the isr_* weak-symbol mechanism used
+    // on RP2040 does not apply to Hazard3 (RP2350 RISC-V).
+    irq_add_shared_handler(USBCTRL_IRQ, isr_usbctrl_callback,
+                           PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
     irq_set_enabled(USBCTRL_IRQ, true);
 
     // Mux the controller to the onboard usb phy
@@ -491,7 +498,7 @@ static void usb_handle_buff_status() {
 extern "C" {
 #endif
 /// \tag::isr_setup_packet[]
-void isr_usbctrl(void) {
+void isr_usbctrl_callback(void) {
     // USB interrupt handler
     uint32_t status = usb_hw->ints;
     uint32_t handled = 0;
