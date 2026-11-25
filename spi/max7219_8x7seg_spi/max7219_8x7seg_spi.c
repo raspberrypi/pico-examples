@@ -75,8 +75,6 @@ static void write_register_all(uint8_t reg, uint8_t data) {
     }
     cs_deselect();
 }
-#endif
-
 
 void display_num(int32_t num)
 {
@@ -94,6 +92,7 @@ void clear()
         write_register_all(CMD_DIGIT0 + i, 0);
     }
 }
+#endif
 
 
 int main() {
