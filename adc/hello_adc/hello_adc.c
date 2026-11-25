@@ -21,8 +21,10 @@ int main() {
     adc_select_input(0);
 
     while (1) {
-        // 12-bit conversion, assume max value == ADC_VREF == 3.3 V
-        const float conversion_factor = 3.3f / (1 << 12);
+        // 12-bit conversion, assume max value == ADC_VREF == 3.3 V minus 34 mV filter drop,
+        // for an unclamped ADC_VREF pin. 
+        const float adc_vref = 3.266f; // change to 3.0 when clamped with LM4040 3.0V external shunt reference
+        const float conversion_factor = adc_vref / 4095; // max ADC is 2^12 - 1
         uint16_t result = adc_read();
         printf("Raw value: 0x%03x, voltage: %f V\n", result, result * conversion_factor);
         sleep_ms(500);
