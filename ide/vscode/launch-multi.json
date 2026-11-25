@@ -1,0 +1,410 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {   "name": "RaspPi-SWD", // Human readable name
+            // Raspberry Pi for debugging
+            // https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
+            // *** TOOL CHAIN ***
+            // Host PC      | VS Code | Debug Adapter | GDB           | GDB Server  | Debug Probe  | Target Board
+            // Raspberry Pi | VS Code | Cortex-Debug  | gdb-multiarch | openocd     | Raspberry Pi | pi pico & pico w
+            // The type of this configuration (Cortex-Debug)
+            "type": "cortex-debug",
+
+            // *** GDB SERVER ***
+            // Openocd is a gdb-server to connect an interface and a target (defined by configFiles)
+            // Note: several configFiles can be specified 
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/raspberrypi-swd.cfg",
+                "target/rp2040.cfg"
+            ],
+
+            // *** TARGET DEVICE ***
+            // Standard registers of the microcontroller can be inspected with gdb-multiarch.
+            // However, peripheral registers (and some core registers) are memory-mapped. 
+            // “System View Description” files (SVD files) contain the definitions of the core and peripheral registers of the microcontroller.
+            // If an svdFile is not provided, the Cortex-Debug extension will try to provide one based on the "device".
+            "device": "RP2040",
+            "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+
+            // *** PATHS ON THE HOST PC ***
+            // Current working directory
+            "cwd": "${workspaceRoot}",
+            // If the PATH env variable is not set, give the absolute path (on the PC) to the debugger 
+            //    note: the absolute path is /usr/bin
+            // else just provide the name of the execuatable
+            "gdbPath": "gdb-multiarch",
+            // Give the path (on the PC) to the objdump tool
+            // needed for Cortext-Debug to find globals & statics
+            "objdumpPath": "arm-none-eabi-objdump",
+            // Executable (*.elf) to be run on the target 
+            "executable": "${command:cmake.launchTargetPath}",
+
+            // *** WHAT TO DO ON THE TARGET ***
+            // "Launch" is a recipe for how to start your app in debug mode before VS Code attaches to it.
+            // "Attach" is a recipe for how to connect VS Code's debugger to an app or process that's already running.
+            "request": "launch",
+            // Stop the debugger at the "main" function in the target program
+            "runToEntryPoint": "main",
+            // Give restart the same functionality as runToEntryPoint - main
+            "postRestartCommands": [
+                "break main",
+                "continue"
+            ]
+        },
+        {   "name": "RaspPi-Picoprobe", // Human readable name
+        // Raspberry Pi Picoprobe for debugging
+        // https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
+        // *** TOOL CHAIN ***
+        // Host PC    | VS Code | Debug Adapter | GDB           | GDB Server  | Debug Probe | Target Board
+        // Linux      | VS Code | Cortex-Debug  | gdb-multiarch | openocd     | picoprobe   | pi pico & pico w
+        // The type of this configuration (Cortex-Debug)
+        "type": "cortex-debug",
+
+        // *** GDB SERVER ***
+        // Openocd is a gdb-server to connect an interface and a target (defined by configFiles)
+        // Note: several configFiles can be specified 
+        "servertype": "openocd",
+        "configFiles": [
+            "interface/picoprobe.cfg",
+            "target/rp2040.cfg"
+        ],
+
+        // *** TARGET DEVICE ***
+        // Standard registers of the microcontroller can be inspected with gdb-multiarch.
+        // However, peripheral registers (and some core registers) are memory-mapped. 
+        // “System View Description” files (SVD files) contain the definitions of the core and peripheral registers of the microcontroller.
+        // If an svdFile is not provided, the Cortex-Debug extension will try to provide one based on the "device".
+        "device": "RP2040",
+        "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+
+        // *** UART ***
+        // No configurations needed in launch.json
+        // Tip: To give the RaspPi-Picoprobe UART a permanent name in Linux add the following to /etc/udev/rules.d/99-rp2040.rules
+        // SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{product}=="Picoprobe", SYMLINK+="ttyPicoprobe"
+
+        // *** PATHS ON THE HOST PC ***
+        // Current working directory
+        "cwd": "${workspaceRoot}",
+        // If the PATH env variable is not set, give the absolute path (on the PC) to the debugger 
+        //    note: the absolute path is /usr/bin
+        // else just provide the name of the execuatable
+        "gdbPath": "gdb-multiarch",
+        // Give the path (on the PC) to the objdump tool
+        // needed for Cortext-Debug to find globals & statics
+        "objdumpPath": "arm-none-eabi-objdump",
+        // Executable (*.elf) to be run on the target
+        "executable": "${command:cmake.launchTargetPath}",
+
+        // *** WHAT TO DO ON THE TARGET ***
+        // "Launch" is a recipe for how to start your app in debug mode before VS Code attaches to it.
+        // "Attach" is a recipe for how to connect VS Code's debugger to an app or process that's already running.
+        "request": "launch",
+        // Stop the debugger at the "main" function in the target program
+        "runToEntryPoint": "main",
+        // Give restart the same functionality as runToEntryPoint - main
+        "postRestartCommands": [
+            "break main",
+            "continue"
+        ]
+        },
+        {   "name": "RaspPi-DebugProbe", // Human readable name
+            // Raspberry Pi Debug Probe (CMSIS-DAP) for debugging
+            // https://www.raspberrypi.com/documentation/microcontrollers/debug-probe.html
+            // *** TOOL CHAIN ***
+            // Host PC      | VS Code | Debug Adapter | GDB           | GDB Server  | Debug Probe         | Target Board
+            // Linux        | VS Code | Cortex-Debug  | gdb-multiarch | openocd     | Rasp Pi Debug Probe | pi pico & pico w
+            // The type of this configuration (Cortex-Debug)
+            "type": "cortex-debug",
+
+            // *** GDB SERVER ***
+            // Openocd is a gdb-server to connect an interface and a target (defined by configFiles)
+            // Note: several configFiles can be specified 
+            // Note: "Adapter Speed" is specified in a Launch Command rather than a config file
+            "servertype": "openocd",
+            "configFiles": [
+                "interface/cmsis-dap.cfg",
+                "target/rp2040.cfg"
+            ],
+            "openOCDLaunchCommands": [
+                "adapter speed 5000"],
+
+            // *** TARGET DEVICE ***
+            // Standard registers of the microcontroller can be inspected with gdb-multiarch.
+            // However, peripheral registers (and some core registers) are memory-mapped. 
+            // “System View Description” files (SVD files) contain the definitions of the core and peripheral registers of the microcontroller.
+            // If an svdFile is not provided, the Cortex-Debug extension will try to provide one based on the "device".
+            "device": "RP2040",
+            "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+
+            // *** UART ***
+            // No configurations needed in launch.json
+            // Tip: To give the RaspPi-DebugProbe UART a permanent name in Linux add the following to /etc/udev/rules.d/99-rp2040.rules
+            // SUBSYSTEM=="tty", ATTRS{idVendor}=="2e8a", ATTRS{product}=="Debug Probe (CMSIS-DAP)", SYMLINK+="ttyPicoDbgProbe"
+
+            // *** PATHS ON THE HOST PC ***
+            // Current working directory
+            "cwd": "${workspaceRoot}",
+            // If the PATH env variable is not set, give the absolute path (on the PC) to the debugger 
+            //    note: the absolute path is /usr/bin
+            // else just provide the name of the execuatable
+            "gdbPath": "gdb-multiarch",
+            // Give the path (on the PC) to the objdump tool
+            // needed for Cortext-Debug to find globals & statics
+            "objdumpPath": "arm-none-eabi-objdump",
+            // Executable (*.elf) to be run on the target 
+            "executable": "${command:cmake.launchTargetPath}",
+
+            // *** WHAT TO DO ON THE TARGET ***
+            // "Launch" is a recipe for how to start your app in debug mode before VS Code attaches to it.
+            // "Attach" is a recipe for how to connect VS Code's debugger to an app or process that's already running.
+            "request": "launch",
+            // Stop the debugger at the "main" function in the target program
+            "runToEntryPoint": "main",
+            // Give restart the same functionality as runToEntryPoint - main
+            "postRestartCommands": [
+                "break main",
+                "continue"
+            ]
+        },
+        {   "name": "FTDI 2232H", // Human readable name
+            // FTDI 2 channel serial device for debugging (example uses ch 0 for SWD and ch 1 for UART) 
+            // https://ftdichip.com/wp-content/uploads/2020/07/DS_FT2232H.pdf
+            // SWD must be wired & configured. See "how to" article: 
+            // https://www.allaboutcircuits.com/technical-articles/getting-started-with-openocd-using-ft2232h-adapter-for-swd-debugging/
+            
+            // *** TOOL CHAIN ***
+            // Host PC    | VS Code | Debug Adapter | GDB           | GDB Server  | Debug Probe  | Target Board
+            // Linux      | VS Code | Cortex-Debug  | gdb-multiarch | openocd     | FT2232 board | pi pico & pico w
+            // The type of this configuration (Cortex-Debug)
+            "type": "cortex-debug",
+
+            // *** GDB SERVER ***
+            // Openocd is a gdb-server to connect an interface and a target (defined by configFiles)
+            // Note: Modified the original file interface/ftdi/minimodule-swd.cfg as follows
+            //    Line 43 - uncommented and changed channel number from 1 to 0
+            //    Before                    After
+            //    #ftdi_channel 1           ftdi_channel 0
+            // Note: "Adapter Speed" is specified in a Launch Command rather than a config file
+            "servertype": "openocd",
+            "configFiles": [
+                // !!! Within the file minimodule-swd.cfg, uncomment the lines:
+                //   ftdi_vid_pid 0x0403 0x6010
+                //   ftdi_channel 0
+                "interface/ftdi/minimodule-swd.cfg",
+                "target/rp2040.cfg"
+            ],
+            "openOCDLaunchCommands": [
+                "adapter speed 5000"  // user configurable
+            ], 
+
+            // *** TARGET DEVICE ***
+            // Standard registers of the microcontroller can be inspected with gdb-multiarch.
+            // However, peripheral registers (and some core registers) are memory-mapped. 
+            // “System View Description” files (SVD files) contain the definitions of the core and peripheral registers of the microcontroller.
+            // If an svdFile is not provided, the Cortex-Debug extension will try to provide one based on the "device".
+            "device": "RP2040",
+            "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+
+            // *** UART ***
+            // No configurations needed in launch.json
+            // Note: The UART for serial comms works "out-of-the box". Just connect (ch 1 Tx <-> target Rx) and (ch 1 Rx <-> target Tx)
+            // Tip: To give the FTDI 2232H UART permanent names in Linux create a file /etc/udev/rules.d/99-FTDI.rules with the following:
+            // SUBSYSTEMS=="usb", ENV{.LOCAL_ifNum}="$attr{bInterfaceNumber}"
+            // SUBSYSTEMS=="usb", KERNEL=="ttyUSB*", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", ENV{.LOCAL_ifNum}=="00",  SYMLINK+="ttyFtSwd", GROUP="dialout", MODE="0660"
+            // SUBSYSTEMS=="usb", KERNEL=="ttyUSB*", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", ENV{.LOCAL_ifNum}=="01",  SYMLINK+="ttyFtUart", GROUP="dialout", MODE="0660"
+
+
+            // *** PATHS ON THE HOST PC ***
+            // Current working directory
+            "cwd": "${workspaceRoot}",
+            // If the PATH env variable is not set, give the absolute path (on the PC) to the debugger 
+            //    note: the absolute path is /usr/bin
+            // else just provide the name of the execuatable
+            "gdbPath": "gdb-multiarch",
+            // Give the path (on the PC) to the objdump tool
+            // needed for Cortext-Debug to find globals & statics
+            "objdumpPath": "arm-none-eabi-objdump",
+            // Executable (*.elf) to be run on the target 
+            "executable": "${command:cmake.launchTargetPath}",
+
+            // *** WHAT TO DO ON THE TARGET ***
+            // "Launch" is a recipe for how to start your app in debug mode before VS Code attaches to it.
+            // "Attach" is a recipe for how to connect VS Code's debugger to an app or process that's already running.
+            "request": "launch",
+            // Stop the debugger at the "main" function in the target program
+            "runToEntryPoint": "main",
+            // Give restart the same functionality as runToEntryPoint - main
+            "postRestartCommands": [
+                "break main",
+                "continue"
+            ]
+        },
+        {   "name": "Black Magic Probe", // Human readable name
+            // Black Magic Probe https://black-magic.org/
+            // Nice reference text: https://github.com/compuphase/Black-Magic-Probe-Book/blob/master/BlackMagicProbe.pdf
+            // *** TOOL CHAIN ***
+            // Host PC    | VS Code | Debug Adapter | GDB           | GDB Server        | Debug Probe       | Target Board
+            // Linux      | VS Code | Cortex-Debug  | gdb-multiarch | Black Magic Probe | Black Magic Probe | pi pico & pico w
+            // This is a configuration for the Cortex-Debug extension
+            "type": "cortex-debug",
+
+            // *** GDB SERVER ***
+            // Black Magic Probe (bmp)
+            "servertype": "bmp",
+            // Typically on Linux: /dev/ttyACM0
+            // Tip: In Linux, to use the permanent name (/dev/ttyBmpGdb), add these two lines to the file /etc/udev/rules.d/99-blackmagic.rules
+            //          SUBSYSTEM=="tty", ATTRS{interface}=="Black Magic GDB Server", SYMLINK+="ttyBmpGdb"
+            //          SUBSYSTEM=="tty", ATTRS{interface}=="Black Magic UART Port", SYMLINK+="ttyBmpTarg"
+            // On Windows, this would be the COM port connected to the BMP
+            "BMPGDBSerialPort": "/dev/ttyBmpGdb", // user configurable
+            // If enabled, the BMP will power the target (3.3V & 100mA max) => a USB cable is not required to power the Pico
+            //   Note: The update to BMP firmware v 1.90 fixed prior comm errors when powered from the BMP
+            "powerOverBMP": "enable",  // user configurable
+            // The BMP may find multiple targets on one board(ex RP2040 has 3 possible attachments)
+            // The number tells gdb which one of these targets to attach to. Default is #1.
+            //      1      Raspberry RP2040 M0+
+            //      2      Raspberry RP2040 M0+
+            //      3      Raspberry RP2040 Rescue(Attach to reset!) 
+            "targetId": "1",
+
+            // *** TARGET DEVICE ***
+            // Standard registers of the microcontroller can be inspected with gdb-multiarch.
+            // However, peripheral registers (and some core registers) are memory-mapped. 
+            // “System View Description” files (SVD files) contain the definitions of the core and peripheral registers of the microcontroller.
+            // If an svdFile is not provided, the Cortex-Debug extension will try to provide one based on the "device".
+            "device": "RP2040",
+            "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+
+            // *** PATHS ON THE HOST PC ***
+            // Current working directory
+            "cwd": "${workspaceRoot}",
+            // If the PATH env variable is not set, give the absolute path (on the PC) to the debugger 
+            //    note: the absolute path is /usr/bin
+            // else just provide the name of the execuatable
+            "gdbPath": "gdb-multiarch",
+            // Give the path (on the PC) to the objdump tool
+            // needed for Cortext-Debug to find globals & statics
+            "objdumpPath": "arm-none-eabi-objdump",
+            // Executable (*.elf) to be run on the target 
+            "executable": "${command:cmake.launchTargetPath}",
+
+            // *** WHAT TO DO ON THE TARGET ***
+            // "Launch" is a recipe for how to start your app in debug mode before VS Code attaches to it.
+            // "Attach" is a recipe for how to connect VS Code's debugger to an app or process that's already running.
+            "request": "launch",
+            // Stop the debugger at the "main" function in the target program
+            "runToEntryPoint": "main",
+            // Give restart the same functionality as runToEntryPoint - main
+            "postRestartCommands": [
+                "break main",
+                "continue"
+            ]
+        },
+        {   "name": "Segger J-Link", // Human readable name
+            // Segger J-Link for debugging
+            // https://wiki.segger.com/J-Link_Visual_Studio_Code#Linux_Ubuntu_setup
+            // If not connecting, follow troubleshooting guide at:
+            // https://wiki.segger.com/J-Link_cannot_connect_to_the_CPU
+            // *** TOOL CHAIN ***
+            // Host PC    | VS Code | Debug Adapter | GDB           | GDB Server  | Debug Probe | Target Board
+            // Linux      | VS Code | Cortex-Debug  | gdb-multiarch | jlink       | j-link edu  | pi pico & pico w
+            // The type of this configuration (Cortex-Debug)
+            "type": "cortex-debug",
+
+            // *** GDB SERVER ***
+            // J-Link uses it's own gdb-server
+            "serverpath": "/opt/SEGGER/JLink/JLinkGDBServerCLExe",
+            "servertype": "jlink",
+            "interface": "swd",
+            "serialNumber": "",
+
+            // *** TARGET DEVICE ***
+            // Standard registers of the microcontroller can be inspected with gdb-multiarch.
+            // However, peripheral registers (and some core registers) are memory-mapped. 
+            // “System View Description” files (SVD files) contain the definitions of the core and peripheral registers of the microcontroller.
+            // If an svdFile is not provided, the Cortex-Debug extension will try to provide one based on the "device".
+            "device": "RP2040_M0_0",
+            "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+
+            // *** PATHS ON THE HOST PC ***
+            // Current working directory
+            "cwd": "${workspaceRoot}",
+            // If the PATH env variable is not set, give the absolute path (on the PC) to the debugger 
+            //    note: the absolute path is /usr/bin
+            // else just provide the name of the execuatable
+            "gdbPath": "gdb-multiarch",
+            // Give the path (on the PC) to the objdump tool
+            // needed for Cortext-Debug to find globals & statics
+            "objdumpPath": "arm-none-eabi-objdump",
+            // Executable (*.elf) to be run on the target 
+            "executable": "${command:cmake.launchTargetPath}",
+
+            // *** WHAT TO DO ON THE TARGET ***
+            // "Launch" is a recipe for how to start your app in debug mode before VS Code attaches to it.
+            // "Attach" is a recipe for how to connect VS Code's debugger to an app or process that's already running.
+            "request": "launch",
+            // Stop the debugger at the "main" function in the target program
+            "runToEntryPoint": "main",
+            // Give restart the same functionality as runToEntryPoint - main
+            "postRestartCommands": [
+                "break main",
+                "continue"
+            ]
+        },
+        {   "name": "External GDB Server", // Human readable name
+        // Raspberry Pi for debugging
+        // https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf
+        // *** TOOL CHAIN ***
+        // Host PC      | VS Code | Debug Adapter | GDB           | GDB Server  | Debug Probe  | Target Board
+        // Linux        | VS Code | Cortex-Debug  | gdb-multiarch | external    | any          | pi pico & pico w
+        // The type of this configuration (Cortex-Debug)
+        "type": "cortex-debug",
+
+        // *** GDB SERVER ***
+        // Already running external gdb serever (some possible examples openocd, pyocd, Black Magic Probe )
+        "servertype": "external",
+        // Your (already lauched) external gdb server
+        // Example: The following run from the command line prior to launching debugging
+        // $ openocd -f interface/cmsis-dap.cfg -f target/rp2040.cfg -c "adapter speed 5000"
+        // "localhost" could also be an ip address for remote debugging
+        "gdbTarget": "localhost:3333", //user configuarble
+
+        // *** TARGET DEVICE ***
+        // Standard registers of the microcontroller can be inspected with gdb-multiarch.
+        // However, peripheral registers (and some core registers) are memory-mapped. 
+        // “System View Description” files (SVD files) contain the definitions of the core and peripheral registers of the microcontroller.
+        // If an svdFile is not provided, the Cortex-Debug extension will try to provide one based on the "device".
+        "device": "RP2040",
+        "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+
+        // *** PATHS ON THE HOST PC ***
+        // Current working directory
+        "cwd": "${workspaceRoot}",
+        // If the PATH env variable is not set, give the absolute path (on the PC) to the debugger 
+        //    note: the absolute path is /usr/bin
+        // else just provide the name of the execuatable
+        "gdbPath": "gdb-multiarch",
+        // Give the path (on the PC) to the objdump tool
+        // needed for Cortext-Debug to find globals & statics
+        "objdumpPath": "arm-none-eabi-objdump",
+        // Executable (*.elf) to be run on the target 
+        "executable": "${command:cmake.launchTargetPath}",
+
+        // *** WHAT TO DO ON THE TARGET ***
+        // "Launch" is a recipe for how to start your app in debug mode before VS Code attaches to it.
+        // "Attach" is a recipe for how to connect VS Code's debugger to an app or process that's already running.
+        "request": "launch",
+        // Stop the debugger at the "main" function in the target program
+        "runToEntryPoint": "main",
+        // Give restart the same functionality as runToEntryPoint - main
+        "postRestartCommands": [
+            "break main",
+            "continue"
+        ]
+    },
+    ]
+}
