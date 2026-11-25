@@ -95,8 +95,9 @@ int main() {
     printf("Starting PIO UART RX interrupt example\n");
 
     // Set up the hard UART we're going to use to print characters
-    uart_init(HARD_UART_INST, SERIAL_BAUD);
+    // Set the pin function before calling uart_init to avoid losing data
     gpio_set_function(HARD_UART_TX_PIN, GPIO_FUNC_UART);
+    uart_init(HARD_UART_INST, SERIAL_BAUD);
 
     // create a queue so the irq can save the data somewhere
     queue_init(&fifo, 1, FIFO_SIZE);

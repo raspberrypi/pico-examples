@@ -47,10 +47,11 @@ typedef struct
  */
 void uart_gps_init()
 {
-    uart_init(UART_ID, BAUD_RATE);
-
+    // Do this before calling uart_init to avoid losing data
     gpio_set_function(UART_TX_PIN, GPIO_FUNC_UART);
     gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
+
+    uart_init(UART_ID, BAUD_RATE);
 
     uart_set_hw_flow(UART_ID, false, false);
     uart_set_format(UART_ID, 8, 1, UART_PARITY_NONE);

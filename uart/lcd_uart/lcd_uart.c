@@ -132,9 +132,10 @@ void lcd_init() {
 
 int main() {
     stdio_init_all();
+    // Do this before calling uart_init to avoid losing data
+    gpio_set_function(UART_TX_PIN, UART_FUNCSEL_NUM(UART_ID, UART_TX_PIN));
     uart_init(UART_ID, BAUD_RATE);
     uart_set_translate_crlf(UART_ID, false);
-    gpio_set_function(UART_TX_PIN, UART_FUNCSEL_NUM(UART_ID, UART_TX_PIN));
 
     bi_decl(bi_1pin_with_func(UART_TX_PIN, UART_FUNCSEL_NUM(UART_ID, UART_TX_PIN)));
 
